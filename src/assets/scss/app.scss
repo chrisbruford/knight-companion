@@ -1,0 +1,12 @@
+@import 'global-vars';
+@import 'fonts';
+
+body, html {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    background: $black;
+    color: $white;
+    font-family: Waukegan, Verdana, Geneva, Tahoma, sans-serif;
+    letter-spacing: 1px;
+}

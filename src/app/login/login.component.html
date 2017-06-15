@@ -1,0 +1,12 @@
+<main>
+    <img src="../../assets/images/coat-of-arms.png">
+    <form (ngSubmit)="onSubmit()" #loginForm="ngForm" *ngIf="!authenticated">
+        <label for="username">CMDR NAME</label>
+        <input type="text" placeholder="CMDR NAME" [(ngModel)]="simpleUser.username" name="username">
+
+        <label for="password">PASSWORD</label>
+        <input type="password" placeholder="PASSWORD" [(ngModel)]="simpleUser.password" name="password">
+
+        <button type=submit>Login</button>
+    </form>
+</main>
