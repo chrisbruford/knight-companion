@@ -19,13 +19,16 @@
     "@angular/platform-browser-dynamic": "~4.0.0",
     "@angular/router": "~4.0.0",
     "@types/electron": "^1.4.35",
+    "chokidar": "^1.7.0",
     "core-js": "^2.4.1",
     "rxjs": "5.0.1",
+    "tailing-stream": "^0.2.0",
     "zone.js": "^0.8.4"
   },
   "devDependencies": {
+    "@types/chokidar": "^1.7.0",
     "@types/jasmine": "2.5.36",
-    "@types/node": "^6.0.45",
+    "@types/node": "^6.0.78",
     "angular2-template-loader": "^0.6.0",
     "awesome-typescript-loader": "^3.0.4",
     "css-loader": "^0.26.1",

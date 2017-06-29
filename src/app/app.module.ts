@@ -7,6 +7,9 @@ import { LoginModule } from './login/login.module';
 
 import { AppRoutingModule } from './app-routing.module';
 import { MissionsModule } from './missions/missions.module';
+import { DashboardModule } from './dashboard/dashboard.module';
+
+import { RE } from './shared/services/re.service';
 
 
 @NgModule({
@@ -15,11 +18,13 @@ import { MissionsModule } from './missions/missions.module';
     LoginModule,
     HttpModule,
     MissionsModule,
+    DashboardModule,
     AppRoutingModule
   ],
   declarations: [
     AppComponent
   ],
+  providers: [RE],
   bootstrap: [ AppComponent ]
 })
 export class AppModule { }

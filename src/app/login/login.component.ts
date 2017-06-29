@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { UserService } from '../shared/services/user.service';
 import { User, SimpleUser } from '../shared/interfaces/user';
+import { ActivatedRoute, Router } from '@angular/router';
 
 @Component({
     selector: 'kok-login',
@@ -15,14 +16,17 @@ export class LoginComponent {
     authenticated: boolean;
     submitted: boolean;
     user: User;
-    simpleUser: SimpleUser;
+    simpleUser: SimpleUser = {
+        username: undefined,
+        password: undefined
+    };
 
-    constructor(private userService: UserService) {
+    constructor(
+        private userService: UserService,
+        private activatedRoute: ActivatedRoute,
+        private router: Router
+        ) {
         this.submitted = false;
-        this.simpleUser = {
-            username: "",
-            password: ""
-        }
      }
 
      onSubmit(): void {
@@ -31,6 +35,7 @@ export class LoginComponent {
          .then(user=>{
             this.authenticated = true;
             this.user = user;
+            this.router.navigate(['/dashboard']);
          })
          .catch(err=>{
              this.authenticated = false;

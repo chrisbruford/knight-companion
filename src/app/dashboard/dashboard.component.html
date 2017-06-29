@@ -1,0 +1,7 @@
+<p *ngIf="dir">{{dir}}</p>
+<ng-container *ngIf="!dir">
+    <p>Please tell me where I can find your log files:</p>
+    <button (click)="getDir()">Find Log File Directory</button>
+</ng-container>
+<ng-container *ngIf="dir"></ng-container>
+<router-outlet></router-outlet>
