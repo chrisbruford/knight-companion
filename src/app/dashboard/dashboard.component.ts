@@ -23,11 +23,11 @@ export class DashboardComponent {
 
     ngOnInit() {
         this.getDir();
+        if (this.dir) { this.watchDir(this.dir) }
     }
 
     getDir() {
         this.dir = localStorage.dir || this.selectDirDialog();
-        if (this.dir) { this.watchDir(this.dir) }
     }
 
     selectDirDialog() {
@@ -37,9 +37,8 @@ export class DashboardComponent {
     }
 
     watchDir(dir: string) {
-        this.journalService.monitor(this.dir).then(logFile=>{
-            this.currentLogFile=logFile
-            console.log(this.currentLogFile);
+        this.journalService.monitor(this.dir).subscribe(data=>{
+            console.log(data);
         });
     }
 }

@@ -2,11 +2,13 @@ import { Injectable } from '@angular/core';
 import { RE } from './re.service';
 import * as fs from "fs";
 import * as stream from "stream";
+import { Observable, Subscription, Observer } from "rxjs";
 
 @Injectable()
 export class JournalService {
 
-    stream: fs.ReadStream;
+    streamObservable: Observable<string>;
+    streamObserver: Observer<string>;
     offset = 0;
     logLines: string[] = [];
     currentLogFile: string;
@@ -14,26 +16,19 @@ export class JournalService {
 
     constructor(private re: RE) {}
 
-    monitor(dir: string): Promise<string> {
+    monitor(dir: string): Observable<string> {
         this.logDir = dir;
-
-        //find most recent journal file
-        return new Promise((resolve, reject) => {
-
-            fs.readdir(dir, (err, files) => {
-                this.currentLogFile = this.getCurrentLog(err, files);
-                this.tailStream(`${dir}/${this.currentLogFile}`,{start: this.offset, encoding: 'utf8'});
-                resolve(true);
-            });
-
-            //should seek to end of most recet journal file
-
-            //should emit each new line as they come in
-
-            //should watch directory for new log file creation and switch to new file if so
+        this.streamObserver = Observable.create((observer: Observer<string>)=>{
+            this.streamObserver = observer;
         })
 
+        //find most recent journal file
+        fs.readdir(dir, (err, files) => {
+            this.currentLogFile = this.getCurrentLog(err, files);
+            this.tailStream(`${dir}/${this.currentLogFile}`,{start: this.offset, encoding: 'utf8'});
+        });
 
+        return this.streamObservable;
         
     }
 
@@ -48,13 +43,16 @@ export class JournalService {
         return journalFiles.slice(-1)[0];
     }
 
+    //streams entire file, tracking offset from start, then 
+    //watches for changes and re-streams from the saved offset, updating
+    //offset and re-watching.
     tailStream(path:string, options: {start:number, encoding: string}) {
                 let stream = fs.createReadStream(path, options);
                 
                 stream.on('data',(data:string)=>{
                     this.logLines.push(data);
                     this.offset += data.length;
-                    console.log(data);
+                    this.streamObserver.next(data);
                 })
 
                 stream.on('end',()=>{
@@ -78,6 +76,8 @@ export class JournalService {
                     })
                     
                 })
+
+                return stream;
             }
 
 
