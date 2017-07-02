@@ -24,7 +24,8 @@
     "ndjson": "^1.5.0",
     "rxjs": "5.0.1",
     "tailing-stream": "^0.2.0",
-    "zone.js": "^0.8.4"
+    "zone.js": "^0.8.4",
+    "electron": "^1.6.11"
   },
   "devDependencies": {
     "@types/chokidar": "^1.7.0",
@@ -35,7 +36,6 @@
     "copy-webpack-plugin": "^4.0.1",
     "css-loader": "^0.26.1",
     "css-to-string-loader": "^0.1.2",
-    "electron": "^1.6.11",
     "electron-connect": "^0.6.1",
     "electron-connect-webpack-plugin": "^0.1.1",
     "extract-text-webpack-plugin": "2.0.0-beta.5",
