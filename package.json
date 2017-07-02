@@ -6,7 +6,8 @@
     "start": "webpack-dev-server --inline --progress --port 8080",
     "test": "karma start",
     "build": "rimraf dist && webpack --config config/webpack.prod.js --progress --profile --bail",
-    "electron": "webpack --config config/webpack.dev.js --watch"
+    "electron": "webpack --config config/webpack.dev.js --watch",
+    "package": "electron-package ./dist kokpanion"
   },
   "license": "MIT",
   "dependencies": {
@@ -38,6 +39,7 @@
     "css-to-string-loader": "^0.1.2",
     "electron-connect": "^0.6.1",
     "electron-connect-webpack-plugin": "^0.1.1",
+    "electron-packager": "^8.7.2",
     "extract-text-webpack-plugin": "2.0.0-beta.5",
     "file-loader": "^0.9.0",
     "html-loader": "^0.4.3",
