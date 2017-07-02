@@ -4,6 +4,9 @@
 </ng-container>
 
 <ng-container *ngIf="dir">
-    
+    <h3>Missions Completed : {{missionsCompleted.length}}</h3>
+    <ul>
+        <li *ngFor="let missionCompleted of missionsCompleted">Mission completed for {{missionCompleted.Faction}}</li>
+    </ul>
 </ng-container>
 <router-outlet></router-outlet>
