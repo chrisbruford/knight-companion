@@ -17,8 +17,9 @@ module.exports = webpackMerge(commonConfig, {
 
   plugins: [
     new ExtractTextPlugin('[name].css'),
+    
     new ElectronConnectWebpackPlugin({
-        path: path.join(__dirname,"../src"),
+        path: path.join(__dirname,"../dist"),
         logLevel: 0
     })
   ],
