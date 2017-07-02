@@ -2,41 +2,75 @@ import { Injectable, NgZone } from '@angular/core';
 import { RE } from '../shared/services/re.service';
 import * as fs from "fs";
 import * as stream from "stream";
-import { Observable, Subscription, Observer } from "rxjs";
+import { Observable, Subscription, Observer, Subject } from "rxjs";
 let ndjson = require('ndjson');
+import { JournalEvents } from './journal-events.enum';
+import { JournalEvent, LoadGame, NewCommander } from './models/journal-event-models';
+const { dialog } = require('electron').remote;
 
 @Injectable()
 export class JournalService {
 
-    streamObservable: Observable<string>;
-    streamObserver: Observer<string>;
-    offset = 0;
-    logLines: string[] = [];
-    currentLogFile: string;
-    logDir: string;
+    //private streamObservable: Observable<JournalEvent>;
+    private streamSubject: Subject<JournalEvent>;
+    //private streamObserver: Observer<JournalEvent>;
+    private offset = 0;
+    private logLines: JournalEvent[] = [];
+    private currentLogFile: string;
+    private _logDir: string;
+    private initialStream = true;
+    private _cmdrName: string;
+    private _beta: boolean;
 
     constructor(
         private re: RE,
         private ngZone: NgZone
         ) {}
 
-    monitor(dir: string): Observable<string> {
-        this.logDir = dir;
-        this.streamObservable = Observable.create((observer: Observer<string>)=>{
-            this.streamObserver = observer;
-        })
+    get log(): JournalEvent[] {
+        return this.logLines;
+    }
+
+    get logDirectory() {
+        return this._logDir;
+    }
+
+    get logStream(): Subject<JournalEvent> {
+        if (!this.streamSubject) {
+            this.init();
+        }
+        return this.streamSubject;
+    }
+
+    get cmdrName(): string {
+        return this._cmdrName;
+    }
+
+    get beta(): boolean {
+        return this._beta;
+    }
+
+    //initiates monitoring of the logfile directory
+    //returns if already has been setup
+    private init(): Subject<JournalEvent> {
+        let dir = this.getDir();
+        // this.streamObservable = Observable.create((observer: Observer<JournalEvent>)=>{
+        //     this.streamObserver = observer;
+        // })
+        this.streamSubject = new Subject();
+
+        
 
         //find most recent journal file
         fs.readdir(dir, (err, files) => {
             this.currentLogFile = this.getCurrentLog(err, files);
             this.tailStream(`${dir}/${this.currentLogFile}`,{start: this.offset, encoding: 'utf8'});
         });
-        
-        return this.streamObservable;
-        
+
+        return this.streamSubject;     
     }
 
-    getCurrentLog(err: any, files: string[]): string {
+    private getCurrentLog(err: any, files: string[]): string {
         //filter to just journal files, then sort and return the last
         //(most recent) one
 
@@ -52,26 +86,48 @@ export class JournalService {
     //streams entire file, tracking offset from start, then 
     //watches for changes and re-streams from the saved offset, updating
     //offset and re-watching.
-    tailStream(path:string, options: {start:number, encoding: string}) {
+    private tailStream(path:string, options: {start:number, encoding: string}) {
         let stream = fs.createReadStream(path, options)
         //sets offset based on chars streamed from file so far
         //so next stream resumes where this one leaves off
         .on('data',(data:string)=>{
             this.offset += data.length;
         })
-        //parse chars into Objects
         .pipe(ndjson.parse())
-        //handle parsed objects
-        .on('data',(data:string)=>{
+        .on('data',(data:JournalEvent)=>{
             this.logLines.push(data);
-            //.next call needs to be brought back into Angular Zone
-            //to be spotted by change detection
-            this.ngZone.run(()=>this.streamObserver.next(data));
+            //we're only interested in events taking place while running so
+            //don't emit events from the first stream as this is an existing
+            //file
+            if (!this.initialStream) {
+                //.next call needs to be brought back into Angular Zone
+                //to be spotted by change detection
+                this.ngZone.run(()=>this.streamSubject.next(data));
+            }
+
+            //keep an eye out for some interesting events to record on the service
+            switch (data.event) {
+                case JournalEvents.LoadGame: {
+                    let loadGame: LoadGame = Object.assign(new LoadGame(), data);
+                    this.ngZone.run(()=>this._cmdrName = loadGame.Commander);
+                    this.ngZone.run(()=>this.streamSubject.next(data));
+                    break;
+                }
+                case JournalEvents.NewCommander: {
+                    let newCommander: NewCommander = Object.assign(new NewCommander(), data);
+                    this.ngZone.run(()=>this._cmdrName = newCommander.Name);
+                    this.ngZone.run(()=>this.streamSubject.next(data));
+                    break;
+                }
+            }
         })
 
         .on('end',()=>{
+            //mark end of first stream so that we know future streams are for 
+            //the current session
+            this.initialStream = false;
             //got to end of file. Start watching for additions.
-            let watcher = fs.watch(this.logDir);
+            let watcher = fs.watch(this._logDir);
             
             watcher.on('change',(event:string,eventPath:string)=>{
                 if ((event === "rename" || event === "change") && this.re.logfile.test(eventPath)) {
@@ -80,7 +136,7 @@ export class JournalService {
                     this.currentLogFile = eventPath;
                     //stop watcher and restart tailStream at offset
                     watcher.close();
-                    this.tailStream(`${this.logDir}/${this.currentLogFile}`,{
+                    this.tailStream(`${this._logDir}/${this.currentLogFile}`,{
                         start: this.offset,
                         encoding: 'utf8'
                     })
@@ -90,6 +146,19 @@ export class JournalService {
         })
 
         return stream;
+    }
+
+    private getDir(): string {
+        return this._logDir = localStorage.dir || this.selectDirDialog()[0];
+    }
+
+    private selectDirDialog() {
+        let selectedDir = dialog.showOpenDialog({
+            properties: ['openDirectory','showHiddenFiles'],
+            message: 'Please select your Elite Dangerous save game directory'
+        });
+        if (selectedDir) { localStorage.dir = selectedDir } ;
+        return selectedDir;
     }
 
 
