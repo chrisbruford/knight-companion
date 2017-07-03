@@ -7,7 +7,7 @@ export class InterdictionService {
     constructor(private commsService: CommsService) { }
 
     interdictedAlert(interdicted: Interdicted,cmdrName: string):void {
-            this.commsService.post(`https://www.knightsofkarma.com/api/interdicted/${cmdrName}`,interdicted)
+            this.commsService.post(`https://www.knightsofkarma.com/api/interdicted/${cmdrName}`,{interdicted})
             .subscribe((res:any)=>{
                 console.log(res);
             })
