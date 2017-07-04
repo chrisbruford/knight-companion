@@ -122,6 +122,8 @@ export class JournalService {
             }
         })
 
+        .on('error',(err: any)=>console.dir(err))
+
         .on('end',()=>{
             //mark end of first stream so that we know future streams are for 
             //the current session
