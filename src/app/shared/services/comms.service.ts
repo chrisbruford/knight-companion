@@ -10,7 +10,6 @@ export class CommsService {
 
     post(url: string,data: any): Observable<any> {
         return this.http.post(url,data)
-            .map((res: Response)=>res.json().data)
             .catch((err)=>{
                 console.log(err);
                 return Observable.throw(err);
