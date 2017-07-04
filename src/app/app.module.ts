@@ -10,8 +10,7 @@ import { MissionsModule } from './missions/missions.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 
 import { RE } from './shared/services/re.service';
-import { CommsService } from './shared/services/comms.service';
-
+import { LoggerService } from './shared/services/logger.service';
 
 @NgModule({
   imports: [
@@ -27,7 +26,7 @@ import { CommsService } from './shared/services/comms.service';
   ],
   providers: [
       RE,
-      CommsService
+      LoggerService
     ],
   bootstrap: [ AppComponent ]
 })
