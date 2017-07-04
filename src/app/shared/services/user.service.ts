@@ -5,6 +5,8 @@ import { User, SimpleUser } from '../interfaces/user';
 @Injectable()
 export class UserService {
 
+    user: User;
+
     constructor(private http: Http) {}
     
     authenticate(user: SimpleUser): Promise<User> {
@@ -14,6 +16,7 @@ export class UserService {
             .then(res => res.json())
             .then(data=>{
                 if (data) {
+                    this.user = data;
                     resolve(data);
                 } else {
                     reject(null);

@@ -6,7 +6,8 @@
     "start": "webpack-dev-server --inline --progress --port 8080",
     "test": "karma start",
     "build": "rimraf dist && webpack --config config/webpack.prod.js --progress --profile --bail",
-    "electron": "webpack --config config/webpack.dev.js --watch"
+    "electron": "webpack --config config/webpack.dev.js --watch",
+    "package": "electron-package ./dist kokpanion"
   },
   "license": "MIT",
   "dependencies": {
@@ -19,20 +20,26 @@
     "@angular/platform-browser-dynamic": "~4.0.0",
     "@angular/router": "~4.0.0",
     "@types/electron": "^1.4.35",
+    "chokidar": "^1.7.0",
     "core-js": "^2.4.1",
+    "ndjson": "^1.5.0",
     "rxjs": "5.0.1",
-    "zone.js": "^0.8.4"
+    "tailing-stream": "^0.2.0",
+    "zone.js": "^0.8.4",
+    "electron": "^1.6.11"
   },
   "devDependencies": {
+    "@types/chokidar": "^1.7.0",
     "@types/jasmine": "2.5.36",
-    "@types/node": "^6.0.45",
+    "@types/node": "^6.0.78",
     "angular2-template-loader": "^0.6.0",
     "awesome-typescript-loader": "^3.0.4",
+    "copy-webpack-plugin": "^4.0.1",
     "css-loader": "^0.26.1",
     "css-to-string-loader": "^0.1.2",
-    "electron": "^1.6.11",
     "electron-connect": "^0.6.1",
     "electron-connect-webpack-plugin": "^0.1.1",
+    "electron-packager": "^8.7.2",
     "extract-text-webpack-plugin": "2.0.0-beta.5",
     "file-loader": "^0.9.0",
     "html-loader": "^0.4.3",

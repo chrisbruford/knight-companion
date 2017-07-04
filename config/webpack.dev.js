@@ -10,15 +10,16 @@ module.exports = webpackMerge(commonConfig, {
 
   output: {
     path: helpers.root('dist'),
-    publicPath: '/Dev/kok-app/dist/',
+    publicPath: `${path.resolve(__dirname,'../dist')}/`,
     filename: '[name].js',
     chunkFilename: '[id].chunk.js'
   },
 
   plugins: [
     new ExtractTextPlugin('[name].css'),
+    
     new ElectronConnectWebpackPlugin({
-        path: path.join(__dirname,"../src"),
+        path: path.join(__dirname,"../dist"),
         logLevel: 0
     })
   ],

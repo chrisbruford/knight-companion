@@ -2,6 +2,7 @@ var webpack = require('webpack');
 var HtmlWebpackPlugin = require('html-webpack-plugin');
 var ExtractTextPlugin = require('extract-text-webpack-plugin');
 var helpers = require('./helpers');
+const CopyWebpackPlugin = require('copy-webpack-plugin');
 
 module.exports = {
     entry: {
@@ -80,13 +81,15 @@ module.exports = {
             helpers.root('./src'), // location of your src
             {} // a map of your routes
         ),
-
+        
         new webpack.optimize.CommonsChunkPlugin({
             name: ['app', 'vendor', 'polyfills']
         }),
 
         new HtmlWebpackPlugin({
             template: 'src/index.html'
-        })
+        }),
+
+        new CopyWebpackPlugin([{from: helpers.root('./src/index.js'),to: helpers.root('./dist/index.js')}])
     ]
 };

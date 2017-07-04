@@ -35,10 +35,6 @@ module.exports = webpackMerge(commonConfig, {
       htmlLoader: {
         minimize: false // workaround for ng2
       }
-    }),
-    new ElectronConnectWebpackPlugin({
-        path: path.join(__dirname,"../src"),
-        logLevel: 0
     })
   ]
 });
