@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Http } from '@angular/http';
 import { Observable } from 'rxjs';
-import { Interdicted } from '../journal/models/journal-event-models';
+import { Interdicted } from 'cmdr-journal';
 import { LoggerService } from '../shared/services/logger.service';
 
 @Injectable()

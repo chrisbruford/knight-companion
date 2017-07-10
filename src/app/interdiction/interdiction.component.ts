@@ -1,7 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { JournalService } from '../journal/journal.service';
-import { JournalEvents } from '../journal/journal-events.enum';
-import { JournalEvent, Interdicted } from '../journal/models/journal-event-models';
+import { JournalEvents, JournalEvent, Interdicted } from 'cmdr-journal';
 import { Subscription } from 'rxjs';
 import { InterdictionService } from './interdiction.service';
 
@@ -23,7 +22,7 @@ export class InterdictionComponent implements OnInit {
         this.journalSubscription = this.journalService.logStream
         .subscribe((data: JournalEvent)=>{
             switch (data.event) {
-                case JournalEvents.Interdicted: {
+                case JournalEvents.interdicted: {
                     let interdicted: Interdicted = Object.assign(new Interdicted(), data);
                     if (interdicted.IsPlayer) {
                         this.distressBeacon(interdicted);

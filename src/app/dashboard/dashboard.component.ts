@@ -2,9 +2,7 @@ import { Component, ChangeDetectorRef } from '@angular/core';
 const fs = require('fs');
 const tailingStream = require('tailing-stream');
 import { JournalService } from '../journal/journal.service';
-import { JournalEvents } from '../journal/journal-events.enum';
-
-import { JournalEvent, MissionCompleted, LoadGame, NewCommander } from '../journal/models/journal-event-models';
+import { JournalEvents, JournalEvent, MissionCompleted, LoadGame, NewCommander } from 'cmdr-journal';
 import { Subscription } from 'rxjs';
 
 @Component({
@@ -34,19 +32,19 @@ export class DashboardComponent {
         .subscribe((data:JournalEvent)=>{
             //handle log events
             switch (data.event) {
-                case JournalEvents.MissionCompleted: {
+                case JournalEvents.missionCompleted: {
                     let missionCompleted: MissionCompleted = Object.assign(new MissionCompleted(), data);
                     this.missionsCompleted.push(missionCompleted);
                     break;
                 }
 
-                case JournalEvents.LoadGame: {
+                case JournalEvents.loadGame: {
                     let loadGame: LoadGame = Object.assign(new LoadGame(),data);
                     this.cmdrName = loadGame.Commander;
                     break;
                 }
 
-                case JournalEvents.NewCommander: {
+                case JournalEvents.newCommander: {
                     let newCommander: NewCommander = Object.assign(new NewCommander(), data);
                     this.cmdrName = newCommander.Name;
                     break;

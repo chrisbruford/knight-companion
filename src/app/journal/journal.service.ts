@@ -4,8 +4,7 @@ import * as fs from "fs";
 import * as stream from "stream";
 import { Observable, Subscription, Observer, Subject } from "rxjs";
 let ndjson = require('ndjson');
-import { JournalEvents } from './journal-events.enum';
-import { JournalEvent, LoadGame, NewCommander } from './models/journal-event-models';
+import {JournalEvents, JournalEvent, LoadGame, NewCommander} from 'cmdr-journal';
 const { dialog } = require('electron').remote;
 
 @Injectable()
@@ -107,13 +106,13 @@ export class JournalService {
 
             //keep an eye out for some interesting events to record on the service
             switch (data.event) {
-                case JournalEvents.LoadGame: {
+                case JournalEvents.loadGame: {
                     let loadGame: LoadGame = Object.assign(new LoadGame(), data);
                     this.ngZone.run(()=>this._cmdrName = loadGame.Commander);
                     this.ngZone.run(()=>this.streamSubject.next(data));
                     break;
                 }
-                case JournalEvents.NewCommander: {
+                case JournalEvents.newCommander: {
                     let newCommander: NewCommander = Object.assign(new NewCommander(), data);
                     this.ngZone.run(()=>this._cmdrName = newCommander.Name);
                     this.ngZone.run(()=>this.streamSubject.next(data));
