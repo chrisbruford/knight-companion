@@ -53,12 +53,7 @@ export class JournalService {
     //returns if already has been setup
     private init(): Subject<JournalEvent> {
         let dir = this.getDir();
-        // this.streamObservable = Observable.create((observer: Observer<JournalEvent>)=>{
-        //     this.streamObserver = observer;
-        // })
         this.streamSubject = new Subject();
-
-        
 
         //find most recent journal file
         fs.readdir(dir, (err, files) => {
@@ -87,8 +82,6 @@ export class JournalService {
     //offset and re-watching.
     private tailStream(path:string, options: {start:number, encoding: string}) {
         let stream = fs.createReadStream(path, options)
-        //sets offset based on chars streamed from file so far
-        //so next stream resumes where this one leaves off
         .on('data',(data:string)=>{
             this.offset += data.length;
         })
