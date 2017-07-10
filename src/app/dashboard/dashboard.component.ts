@@ -1,4 +1,4 @@
-import { Component, ChangeDetectorRef } from '@angular/core';
+import { Component } from '@angular/core';
 const fs = require('fs');
 const tailingStream = require('tailing-stream');
 import { JournalService } from '../journal/journal.service';
@@ -20,7 +20,6 @@ export class DashboardComponent {
 
     constructor(
         private journalService: JournalService,
-        private ref: ChangeDetectorRef
     ){}
 
     ngOnInit() {
@@ -32,12 +31,6 @@ export class DashboardComponent {
         .subscribe((data:JournalEvent)=>{
             //handle log events
             switch (data.event) {
-                case JournalEvents.missionCompleted: {
-                    let missionCompleted: MissionCompleted = Object.assign(new MissionCompleted(), data);
-                    this.missionsCompleted.push(missionCompleted);
-                    break;
-                }
-
                 case JournalEvents.loadGame: {
                     let loadGame: LoadGame = Object.assign(new LoadGame(),data);
                     this.cmdrName = loadGame.Commander;

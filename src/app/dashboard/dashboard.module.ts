@@ -4,17 +4,19 @@ import { DashboardComponent } from './dashboard.component';
 import { DashboardRoutingModule } from './dashboard-routing.module';
 import { JournalModule } from '../journal/journal.module';
 import { FormsModule } from '@angular/forms';
-import { InterdictionModule } from '../interdiction/interdiction.module';
+import { MissionsComponent } from './missions/missions.component';
+import { InterdictionComponent } from './interdiction/interdiction.component';
+import { InterdictionService } from './interdiction/interdiction.service';
 
 @NgModule({
     imports: [
         FormsModule,
         CommonModule,
         DashboardRoutingModule,
-        JournalModule,
-        InterdictionModule
+        JournalModule
         ],
-    declarations: [DashboardComponent],
-    exports: [DashboardComponent]
+    declarations: [DashboardComponent, MissionsComponent, InterdictionComponent],
+    exports: [DashboardComponent],
+    providers: [InterdictionService]
 }) 
 export class DashboardModule {}

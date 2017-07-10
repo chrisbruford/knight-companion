@@ -5,19 +5,13 @@
  
 <ng-container *ngIf="journalSubscription">
     <h2>Welcome back {{cmdrName}}</h2>
-
     <label for="faction">Your faction</label>
     <input type="text" id="faction" name="faction" [(ngModel)]="trackingFaction">
 
-    <h3>Missions Completed : {{missionsCompleted.length}}</h3>
-    <ul>
-        <li *ngFor="let missionCompleted of missionsCompleted">
-            <ng-container *ngIf="missionCompleted.Faction === trackingFaction">
-                Mission completed for {{missionCompleted.Faction}}
-            </ng-container>
-        </li>
-    </ul>
+    <app-missions></app-missions>
+
+    <app-interdiction></app-interdiction>
+    
 </ng-container>
 <hr>
-<app-interdiction></app-interdiction>
 <router-outlet></router-outlet>

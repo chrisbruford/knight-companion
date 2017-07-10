@@ -1,0 +1,10 @@
+<ng-container *ngIf="journalSubscription">
+    <h3>Missions Completed : {{missionsCompleted.length}}</h3>
+    <ul>
+        <li *ngFor="let missionCompleted of missionsCompleted">
+            <ng-container *ngIf="missionCompleted.Faction === trackingFaction">
+                Mission completed for {{missionCompleted.Faction}}
+            </ng-container>
+        </li>
+    </ul>
+</ng-container>

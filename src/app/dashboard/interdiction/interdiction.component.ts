@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { JournalService } from '../journal/journal.service';
+import { JournalService } from '../../journal/journal.service';
 import { JournalEvents, JournalEvent, Interdicted } from 'cmdr-journal';
 import { Subscription } from 'rxjs';
 import { InterdictionService } from './interdiction.service';
