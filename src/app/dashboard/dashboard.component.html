@@ -7,11 +7,10 @@
     <h2>Welcome back {{cmdrName}}</h2>
     <label for="faction">Your faction</label>
     <input type="text" id="faction" name="faction" [(ngModel)]="trackingFaction">
-
-    <app-missions></app-missions>
-
-    <app-interdiction></app-interdiction>
+    <section class="panels">
+        <app-missions class="panel"></app-missions>
+        <app-interdiction class="panel"></app-interdiction>
+    </section>
     
 </ng-container>
-<hr>
 <router-outlet></router-outlet>
