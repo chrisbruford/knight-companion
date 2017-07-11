@@ -9,8 +9,7 @@ import { AppRoutingModule } from './app-routing.module';
 import { MissionsModule } from './missions/missions.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 
-import { RE } from './shared/services/re.service';
-import { LoggerService } from './shared/services/logger.service';
+import { SharedModule } from './shared/shared.module';
 
 @NgModule({
   imports: [
@@ -19,15 +18,13 @@ import { LoggerService } from './shared/services/logger.service';
     HttpModule,
     MissionsModule,
     DashboardModule,
-    AppRoutingModule
+    AppRoutingModule,
+    SharedModule
   ],
   declarations: [
     AppComponent
   ],
-  providers: [
-      RE,
-      LoggerService
-    ],
+  providers: [],
   bootstrap: [ AppComponent ]
 })
 export class AppModule { }
