@@ -14,10 +14,9 @@ export class JournalService {
     private streamSubject: Subject<JournalEvent>;
     //private streamObserver: Observer<JournalEvent>;
     private offset = 0;
-    private logLines: JournalEvent[] = [];
     private currentLogFile: string;
     private _logDir: string;
-    private initialStream = true;
+    private firstStream = true;
     private _cmdrName: string;
     private _beta: boolean;
 
@@ -25,10 +24,6 @@ export class JournalService {
         private re: RE,
         private ngZone: NgZone
         ) {}
-
-    get log(): JournalEvent[] {
-        return this.logLines;
-    }
 
     get logDirectory() {
         return this._logDir;
@@ -87,16 +82,6 @@ export class JournalService {
         })
         .pipe(ndjson.parse())
         .on('data',(data:JournalEvent)=>{
-            this.logLines.push(data);
-            //we're only interested in events taking place while running so
-            //don't emit events from the first stream as this is an existing
-            //file
-            if (!this.initialStream) {
-                //.next call needs to be brought back into Angular Zone
-                //to be spotted by change detection
-                this.ngZone.run(()=>this.streamSubject.next(data));
-            }
-
             //keep an eye out for some interesting events to record on the service
             switch (data.event) {
                 case JournalEvents.loadGame: {
@@ -111,6 +96,13 @@ export class JournalService {
                     this.ngZone.run(()=>this.streamSubject.next(data));
                     break;
                 }
+                default: {
+                    if (!this.firstStream) {
+                        //.next call needs to be brought back into Angular Zone
+                        //to be spotted by change detection
+                        this.ngZone.run(()=>this.streamSubject.next(data));
+                    }
+                }
             }
         })
 
@@ -119,7 +111,7 @@ export class JournalService {
         .on('end',()=>{
             //mark end of first stream so that we know future streams are for 
             //the current session
-            this.initialStream = false;
+            this.firstStream = false;
             //got to end of file. Start watching for additions.
             let watcher = fs.watch(this._logDir);
             
