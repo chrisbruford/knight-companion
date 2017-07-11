@@ -1,10 +1,7 @@
+<h3>Missions</h3>
 <ng-container *ngIf="journalSubscription">
-    <h3>Missions Completed : {{missionsCompleted.length}}</h3>
-    <ul>
-        <li *ngFor="let missionCompleted of missionsCompleted">
-            <ng-container *ngIf="missionCompleted.Faction === trackingFaction">
-                Mission completed for {{missionCompleted.Faction}}
-            </ng-container>
-        </li>
-    </ul>
+    <section class="missions-completed">
+        <h1 class="header-text">{{missionsCompleted.length}}</h1>
+        <p class="subtext">Missions completed</p>
+    </section>
 </ng-container>
