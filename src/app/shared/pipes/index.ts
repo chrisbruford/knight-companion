@@ -1,0 +1,1 @@
+export { FactionPipe } from './faction.pipe';

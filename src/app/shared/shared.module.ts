@@ -1,10 +1,11 @@
 import { NgModule } from '@angular/core';
+import { FactionPipe } from './pipes';
 import { LoggerService, UserService, RE } from './services';
 
 @NgModule({
     imports: [],
-    exports: [],
-    declarations: [],
+    exports: [FactionPipe],
+    declarations: [FactionPipe],
     providers: [
         LoggerService,
         UserService,
