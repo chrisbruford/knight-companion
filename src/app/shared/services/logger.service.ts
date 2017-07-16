@@ -1,8 +1,9 @@
 import { Injectable } from '@angular/core';
+import { ErrorReport } from '../interfaces/errorReport';
 
 @Injectable()
 export class LoggerService {
-    error(err: any): void {
-        console.error(err);
+    error(err: ErrorReport): void {
+        console.error(err.message,[err]);
     }
 }
