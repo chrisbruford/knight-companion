@@ -7,13 +7,15 @@ import { FormsModule } from '@angular/forms';
 import { MissionsComponent } from './missions/missions.component';
 import { InterdictionComponent } from './interdiction/interdiction.component';
 import { InterdictionService } from './interdiction/interdiction.service';
+import { SharedModule } from '../shared/shared.module';
 
 @NgModule({
     imports: [
         FormsModule,
         CommonModule,
         DashboardRoutingModule,
-        JournalModule
+        JournalModule,
+        SharedModule
         ],
     declarations: [DashboardComponent, MissionsComponent, InterdictionComponent],
     exports: [DashboardComponent],

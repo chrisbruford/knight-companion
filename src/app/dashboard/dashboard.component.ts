@@ -3,47 +3,25 @@ const fs = require('fs');
 const tailingStream = require('tailing-stream');
 import { JournalService } from '../journal/journal.service';
 import { JournalEvents, JournalEvent, MissionCompleted, LoadGame, NewCommander } from 'cmdr-journal';
-import { Subscription } from 'rxjs';
+import { BehaviorSubject } from 'rxjs';
 
 @Component({
     templateUrl: 'dashboard.component.html',
     styleUrls: ['dashboard.component.scss'],
-    selector: 'app-dashboard',
-    providers: [JournalService]
+    selector: 'app-dashboard'
 })
 export class DashboardComponent {
 
     missionsCompleted: MissionCompleted[] = [];
     trackingFaction: string;
-    journalSubscription: Subscription;
-    cmdrName: string;
+    cmdrName: BehaviorSubject<string>;
 
     constructor(
         private journalService: JournalService,
-    ){}
-
-    ngOnInit() {
-       this.watchDir();
+    ){
+        this.cmdrName = journalService.cmdrName;
     }
 
-    watchDir() {
-        this.journalSubscription = this.journalService.logStream
-        .subscribe((data:JournalEvent)=>{
-            //handle log events
-            switch (data.event) {
-                case JournalEvents.loadGame: {
-                    let loadGame: LoadGame = Object.assign(new LoadGame(),data);
-                    this.cmdrName = loadGame.Commander;
-                    break;
-                }
+    ngOnInit() { }
 
-                case JournalEvents.newCommander: {
-                    let newCommander: NewCommander = Object.assign(new NewCommander(), data);
-                    this.cmdrName = newCommander.Name;
-                    break;
-                }
-            }
-
-        });
-    }
 }

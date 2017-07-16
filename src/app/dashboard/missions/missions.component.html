@@ -1,7 +1,7 @@
 <h3>Missions</h3>
 <ng-container *ngIf="journalSubscription">
     <section class="missions-completed">
-        <h1 class="header-text">{{missionsCompleted.length}}</h1>
+        <h1 class="header-text">{{factionMissionsCompleted.length + '/' + missionsCompleted.length}}</h1>
         <p class="subtext">Missions completed</p>
     </section>
 </ng-container>

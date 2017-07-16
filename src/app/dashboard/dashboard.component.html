@@ -1,16 +1,9 @@
-<ng-container *ngIf="!journalSubscription">
-    <p>Please tell me where I can find your log files:</p>
-    <button (click)="getDir()">Find Log File Directory</button>
-</ng-container>
- 
-<ng-container *ngIf="journalSubscription">
-    <h2>Welcome back {{cmdrName}}</h2>
-    <label for="faction">Your faction</label>
-    <input type="text" id="faction" name="faction" [(ngModel)]="trackingFaction">
-    <section class="panels">
-        <app-missions class="panel"></app-missions>
-        <app-interdiction class="panel"></app-interdiction>
-    </section>
-    
-</ng-container>
+
+<h2>Welcome back {{cmdrName | async}}</h2>
+<label for="faction">Your faction</label>
+<input type="text" id="faction" name="faction" [(ngModel)]="trackingFaction">
+<section class="panels">
+    <app-missions class="panel" [trackingFaction]="trackingFaction"></app-missions>
+    <app-interdiction class="panel"></app-interdiction>
+</section>
 <router-outlet></router-outlet>
