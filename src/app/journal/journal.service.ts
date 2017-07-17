@@ -4,7 +4,7 @@ import * as fs from "fs";
 import * as stream from "stream";
 import { Observable, Subscription, Observer, Subject, BehaviorSubject } from "rxjs";
 let ndjson = require('ndjson');
-import { JournalEvents, JournalEvent, LoadGame, NewCommander, MissionAccepted, Docked } from 'cmdr-journal';
+import * as journal from 'cmdr-journal';
 const { dialog } = require('electron').remote;
 import { JournalDBService } from './db/journal-db.service';
 import { LoggerService } from '../shared/services/logger.service';
@@ -12,7 +12,7 @@ import { LoggerService } from '../shared/services/logger.service';
 @Injectable()
 export class JournalService {
 
-    private streamSubject: Subject<JournalEvent>;
+    private streamSubject: Subject<journal.JournalEvent>;
     private offset = 0;
     private currentLogFile: string;
     private firstStream = true;
@@ -20,9 +20,8 @@ export class JournalService {
 
     private _logDir: string;
     private _beta: boolean;
-    private _currentSystem: string;
-
-    public cmdrName: BehaviorSubject<string>;
+    private _currentSystem: BehaviorSubject<string>;
+    private _cmdrName: BehaviorSubject<string>;
 
 
     constructor(
@@ -31,7 +30,8 @@ export class JournalService {
         private journalDB: JournalDBService,
         private logger: LoggerService
     ) {
-        this.cmdrName = new BehaviorSubject("CMDR");
+        this._cmdrName = new BehaviorSubject("CMDR");
+        this._currentSystem = new BehaviorSubject("Unknown");
 
         //reads all journal files and persists the data to IDB, keeps record
         //of files it's seen already so doesn't re-stream them
@@ -51,7 +51,7 @@ export class JournalService {
                     .then(data => {
                         if (!data) {
                             this.streamJournalFile(`${dir}/${path}`)
-                                .on('data', (data: JournalEvent) => this.handleEvent(data))
+                                .on('data', (data: journal.JournalEvent) => this.handleEvent(data))
                                 .on('end', () => this.journalDB.addEntry('completedJournalFiles', { filename: path }))
                         }
                     })
@@ -70,12 +70,16 @@ export class JournalService {
         return this._logDir;
     }
 
-    get logStream(): Subject<JournalEvent> {
+    get logStream(): Subject<journal.JournalEvent> {
         return this.streamSubject;
     }
 
-    get currentSystem(): string {
-        return this._currentSystem;
+    get currentSystem(): Observable<string> {
+        return this._currentSystem.asObservable();
+    }
+
+    get cmdrName(): Observable<string> {
+        return this._cmdrName.asObservable();
     }
 
     get beta(): boolean {
@@ -97,8 +101,8 @@ export class JournalService {
                 this.offset += data.length;
             })
             .pipe(ndjson.parse())
-            .on('data', (data: JournalEvent) => {
-                this.handleEvent(data);
+            .on('data', (data: journal.JournalEvent) => {
+                this.ngZone.run(() => this.handleEvent(data));
                 //emit events as they're occuring in-session here
                 if (!this.firstStream) {
                     this.ngZone.run(() => this.streamSubject.next(data));
@@ -133,14 +137,14 @@ export class JournalService {
         return stream;
     }
 
-    private handleEvent(data: JournalEvent) {
+    private handleEvent(data: journal.JournalEvent) {
         //all journal events come here to be checked for interest
         //at service level and whether should be persisted to IDB
         switch (data.event) {
-            case JournalEvents.missionAccepted: {
-                this.journalDB.getEntry(JournalEvents.missionAccepted, (<MissionAccepted>data).MissionID).then(result => {
+            case journal.JournalEvents.missionAccepted: {
+                this.journalDB.getEntry(journal.JournalEvents.missionAccepted, (<journal.MissionAccepted>data).MissionID).then(result => {
                     if (!result) {
-                        this.journalDB.addEntry(JournalEvents.missionAccepted, data)
+                        this.journalDB.addEntry(journal.JournalEvents.missionAccepted, data)
                             .catch(err => {
                                 let report = {
                                     originalError: err,
@@ -155,22 +159,48 @@ export class JournalService {
                 break;
             }
             
-            case JournalEvents.loadGame: {
-                let loadGame: LoadGame = Object.assign(new LoadGame(), data);
-                this.cmdrName.next(loadGame.Commander);
+            case journal.JournalEvents.loadGame: {
+                let loadGame: journal.LoadGame = Object.assign(new journal.LoadGame(), data);
+                this._cmdrName.next(loadGame.Commander);
                 break;
             }
             
-            case JournalEvents.newCommander: {
-                let newCommander: NewCommander = Object.assign(new NewCommander(), data);
-                this.cmdrName.next(newCommander.Name);
+            case journal.JournalEvents.newCommander: {
+                let newCommander: journal.NewCommander = Object.assign(new journal.NewCommander(), data);
+                this._cmdrName.next(newCommander.Name);
                 break;
             }
 
-            case JournalEvents.docked: {
-                let docked: Docked = Object.assign(new Docked(), data);
-                
+            case journal.JournalEvents.docked: {
+                let docked: journal.Docked = Object.assign(new journal.Docked(), data);
+                this._currentSystem.next(docked.StarSystem);
+                break;
             }
+
+            case journal.JournalEvents.location: {
+                let location: journal.Location = Object.assign(new journal.Location(), data);
+                this._currentSystem.next(location.StarSystem);
+                break;
+            }
+
+            case journal.JournalEvents.fsdJump: {
+                let fsdJump: journal.FSDJump = Object.assign(new journal.FSDJump(), data);
+                this._currentSystem.next(fsdJump.StarSystem);
+                break;
+            }
+
+            case journal.JournalEvents.supercruiseEntry: {
+                let supercruiseEntry: journal.SupercruiseEntry = Object.assign(new journal.SupercruiseEntry(), data);
+                this._currentSystem.next(supercruiseEntry.Starsystem);
+                break;
+            }
+
+            case journal.JournalEvents.supercruiseExit: {
+                let supercruiseExit: journal.SupercruiseExit = Object.assign(new journal.SupercruiseExit(),data);
+                this._currentSystem.next(supercruiseExit.Starsystem);
+                break;
+            }
+
         }
     }
 
