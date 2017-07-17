@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, Input } from '@angular/core';
 import { JournalService } from '../../journal/journal.service';
 import { JournalEvents, JournalEvent, Interdicted } from 'cmdr-journal';
 import { Subscription } from 'rxjs';
@@ -11,7 +11,10 @@ import { InterdictionService } from './interdiction.service';
 })
 export class InterdictionComponent implements OnInit {
 
-    private journalSubscription: Subscription
+    private journalSubscription: Subscription;
+    private cmdrName: string;
+    private currentSystem: string;
+    
 
     constructor(
         private journalService: JournalService,
@@ -30,11 +33,19 @@ export class InterdictionComponent implements OnInit {
                     break;
                 }
             }
+        });
+
+        this.journalService.currentSystem.subscribe(system=>{
+            this.currentSystem = system;
+        })
+
+        this.journalService.cmdrName.subscribe(name=>{
+            this.cmdrName = name;
         })
     }
 
     distressBeacon(evt: Interdicted): void {
-        this.interdictionService.interdictedAlert(evt,this.journalService.cmdrName)
+        this.interdictionService.interdictedAlert(evt,this.cmdrName,this.currentSystem).subscribe(res=>console.log(res));
     }
 
 }

@@ -3,7 +3,7 @@ const fs = require('fs');
 const tailingStream = require('tailing-stream');
 import { JournalService } from '../journal/journal.service';
 import { JournalEvents, JournalEvent, MissionCompleted, LoadGame, NewCommander } from 'cmdr-journal';
-import { BehaviorSubject } from 'rxjs';
+import { Observable } from 'rxjs';
 
 @Component({
     templateUrl: 'dashboard.component.html',
@@ -14,12 +14,14 @@ export class DashboardComponent {
 
     missionsCompleted: MissionCompleted[] = [];
     trackingFaction: string;
-    cmdrName: BehaviorSubject<string>;
+    currentSystem: Observable<string>;
+    cmdrName: Observable<string>;
 
     constructor(
         private journalService: JournalService,
     ){
         this.cmdrName = journalService.cmdrName;
+        this.currentSystem = journalService.currentSystem;
     }
 
     ngOnInit() { }
