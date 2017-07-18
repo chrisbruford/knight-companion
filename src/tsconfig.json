@@ -6,6 +6,8 @@
         "sourceMap": true,
         "emitDecoratorMetadata": true,
         "experimentalDecorators": true,
+        //until RxJS is bumped to v6 due to https://github.com/ReactiveX/rxjs/issues/2539
+        "noStrictGenericChecks": true, 
         "lib": [
             "es2015",
             "dom"

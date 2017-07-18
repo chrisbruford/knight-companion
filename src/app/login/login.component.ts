@@ -16,6 +16,7 @@ export class LoginComponent {
     authenticated: boolean;
     submitted: boolean;
     user: User;
+    
     simpleUser: SimpleUser = {
         username: undefined,
         password: undefined

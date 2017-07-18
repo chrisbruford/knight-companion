@@ -10,6 +10,7 @@ import { MissionsModule } from './missions/missions.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 
 import { SharedModule } from './shared/shared.module';
+import {APP_BASE_HREF} from '@angular/common';
 
 @NgModule({
   imports: [
@@ -24,7 +25,7 @@ import { SharedModule } from './shared/shared.module';
   declarations: [
     AppComponent
   ],
-  providers: [],
+  providers: [{provide: APP_BASE_HREF, useValue : '/' }],
   bootstrap: [ AppComponent ]
 })
 export class AppModule { }

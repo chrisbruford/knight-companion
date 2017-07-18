@@ -90,6 +90,9 @@ module.exports = {
             template: 'src/index.html'
         }),
 
-        new CopyWebpackPlugin([{from: helpers.root('./src/index.js'),to: helpers.root('./dist/index.js')}])
+        new CopyWebpackPlugin([
+            {from: helpers.root('./src/index.js'),to: helpers.root('./dist/index.js')},
+            {from: helpers.root('./package.json'),to: helpers.root('./dist/package.json')}
+        ])
     ]
 };
