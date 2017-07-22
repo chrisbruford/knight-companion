@@ -1,5 +1,5 @@
 <main>
-    <img src="../../assets/images/coat-of-arms.png">
+    <img [src]="logoURL">
     <form (ngSubmit)="onSubmit()" #loginForm="ngForm" *ngIf="!authenticated">
         <label for="username">CMDR NAME</label>
         <input type="text" placeholder="CMDR NAME" [(ngModel)]="simpleUser.username" name="username">
