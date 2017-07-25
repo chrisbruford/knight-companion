@@ -16,8 +16,7 @@ export class LoginComponent {
     authenticated: boolean;
     submitted: boolean;
     user: User;
-    logoURL = require(__dirname + '../../../assets/images/coat-of-arms.png');
-    
+        
     simpleUser: SimpleUser = {
         username: undefined,
         password: undefined
@@ -29,8 +28,6 @@ export class LoginComponent {
         private router: Router
         ) {
         this.submitted = false;
-        console.log(__dirname);
-        console.log(this.logoURL);
      }
 
      onSubmit(): void {
