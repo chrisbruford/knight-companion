@@ -8,6 +8,7 @@
     },
     "nsis": {
         "oneClick": false,
-        "allowToChangeInstallationDirectory": true
+        "allowToChangeInstallationDirectory": true,
+        "installerIcon": "./src/assets/icons/icon.ico"
     }
 }
