@@ -1,0 +1,13 @@
+{
+    "directories": {
+        "output": "./dist/installers",
+        "app": "./dist"
+    },
+    "win": {
+        "icon": "./src/assets/icons/icon.ico"
+    },
+    "nsis": {
+        "oneClick": false,
+        "allowToChangeInstallationDirectory": true
+    }
+}
