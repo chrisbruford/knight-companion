@@ -10,5 +10,11 @@
         "oneClick": false,
         "allowToChangeInstallationDirectory": true,
         "installerIcon": "./src/assets/icons/icon.ico"
+    },
+    "mac": {
+        "icon": "./src/assets/icons/icon.icns"
+    },
+    "dmg": {
+        "icon": "./src/assets/icons/icon.icns"
     }
 }
