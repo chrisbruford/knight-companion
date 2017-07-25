@@ -13,8 +13,10 @@ import { OriginatedMission } from './originatedMission';
 export class MissionsComponent {
 
     missionsCompleted: OriginatedMission[] = [];
+    oldMissionsCompleted: OriginatedMission[] = [];
     factionMissionsCompleted: OriginatedMission[] = [];
     @Input() trackingFaction: string;
+    oldTrackingFaction: string;
     journalSubscription: Subscription;
     cmdrName: string;
 
@@ -27,8 +29,24 @@ export class MissionsComponent {
         this.watchDir();
     }
 
+    ngDoCheck() {
+        console.log('ngDoCheck');
+        console.log(`missionsCompleted.length: ${this.missionsCompleted.length}`)
+        console.log(`oldMissionsCompleted.length: ${this.oldMissionsCompleted.length}`)
+        if (this.missionsCompleted.length !== this.oldMissionsCompleted.length) {
+            console.log('filtering missions');
+            this.factionMissionsCompleted = this.filterMissions(this.missionsCompleted);
+            this.oldMissionsCompleted = Array.from(this.missionsCompleted);
+            console.dir(this.factionMissionsCompleted);
+        }
+        console.log('done');
+    }
+
     ngOnChanges() {
-        this.factionMissionsCompleted = this.filterMissions(this.missionsCompleted);
+        if (this.trackingFaction !== this.oldTrackingFaction) {
+            this.factionMissionsCompleted = this.filterMissions(this.missionsCompleted);
+            this.trackingFaction = this.oldTrackingFaction;
+        }
     }
 
     async watchDir() {
