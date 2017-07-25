@@ -98,7 +98,7 @@ export class JournalDBService {
                 let request = objectStore.add(entry);
 
                 request.onerror = (err) => {
-                    console.dir(err);
+                    this.logger.error({originalError: err, message:"addEntry request error"});
                 }
             })
             .catch(err=>{
