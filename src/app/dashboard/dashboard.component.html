@@ -1,5 +1,6 @@
 
 <h2>Welcome back {{cmdrName | async}}</h2>
+<p><small>Current system: {{currentSystem | async}}</small></p>
 <label for="faction">Your faction</label>
 <input type="text" id="faction" name="faction" [(ngModel)]="trackingFaction">
 <section class="panels">
