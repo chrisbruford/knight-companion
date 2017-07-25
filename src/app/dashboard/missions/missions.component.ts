@@ -30,22 +30,17 @@ export class MissionsComponent {
     }
 
     ngDoCheck() {
-        console.log('ngDoCheck');
-        console.log(`missionsCompleted.length: ${this.missionsCompleted.length}`)
-        console.log(`oldMissionsCompleted.length: ${this.oldMissionsCompleted.length}`)
         if (this.missionsCompleted.length !== this.oldMissionsCompleted.length) {
-            console.log('filtering missions');
             this.factionMissionsCompleted = this.filterMissions(this.missionsCompleted);
             this.oldMissionsCompleted = Array.from(this.missionsCompleted);
             console.dir(this.factionMissionsCompleted);
         }
-        console.log('done');
     }
 
-    ngOnChanges() {
+    ngOnChanges(changes:any) {
         if (this.trackingFaction !== this.oldTrackingFaction) {
             this.factionMissionsCompleted = this.filterMissions(this.missionsCompleted);
-            this.trackingFaction = this.oldTrackingFaction;
+            this.oldTrackingFaction = this.trackingFaction;
         }
     }
 
@@ -70,7 +65,7 @@ export class MissionsComponent {
 
     filterMissions(allMissions: OriginatedMission[]): OriginatedMission[] {
         return allMissions.filter((mission: OriginatedMission) => {
-            return mission.originator === this.trackingFaction;
+            return mission.originator.toLowerCase() === this.trackingFaction.toLowerCase();
         })
     }
 }
