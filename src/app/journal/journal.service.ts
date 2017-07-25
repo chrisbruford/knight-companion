@@ -30,8 +30,9 @@ export class JournalService {
         private logger: LoggerService,
         private journalQueue: JournalQueueService
     ) {
-        this._cmdrName = new BehaviorSubject("CMDR");
-        this._currentSystem = new BehaviorSubject("Unknown");
+        this._cmdrName = new BehaviorSubject(localStorage.cmdrName || "CMDR");
+        this._currentSystem = new BehaviorSubject(localStorage.currentSystem || "Unknown");
+
 
         //reads all journal files and persists the data to IDB, keeps record
         //of files it's seen already so doesn't re-stream them
@@ -102,8 +103,7 @@ export class JournalService {
         let stream = fs.createReadStream(path, options).pause()
             .on('data', (data: string) => {
                 this.offset += data.length;
-            });
-
+            })
         let newStream = this.journalQueue.addStream(stream);
         newStream.on('data', (data: journal.JournalEvent) => {
             newStream.pause();
@@ -116,6 +116,7 @@ export class JournalService {
             })
             .catch((reason: string)=>{
                 this.logger.error({originalError: reason, message: "handleEvent rejected in tailStream"})
+                newStream.resume();
             })
         })
 
@@ -176,6 +177,7 @@ export class JournalService {
                 case journal.JournalEvents.loadGame: {
                     let loadGame: journal.LoadGame = Object.assign(new journal.LoadGame(), data);
                     this.ngZone.run(() => this._cmdrName.next(loadGame.Commander));
+                    localStorage.cmdrName = loadGame.Commander;
                     resolve(data);
                     break;
                 }
@@ -183,6 +185,7 @@ export class JournalService {
                 case journal.JournalEvents.newCommander: {
                     let newCommander: journal.NewCommander = Object.assign(new journal.NewCommander(), data);
                     this.ngZone.run(() => this._cmdrName.next(newCommander.Name));
+                    localStorage.cmdrName = newCommander.Name;
                     resolve(data);
                     break;
                 }
@@ -190,6 +193,7 @@ export class JournalService {
                 case journal.JournalEvents.docked: {
                     let docked: journal.Docked = Object.assign(new journal.Docked(), data);
                     this.ngZone.run(() => this._currentSystem.next(docked.StarSystem));
+                    localStorage.currentSystem = docked.StarSystem;
                     resolve(data);
                     break;
                 }
@@ -197,6 +201,7 @@ export class JournalService {
                 case journal.JournalEvents.location: {
                     let location: journal.Location = Object.assign(new journal.Location(), data);
                     this.ngZone.run(() => this._currentSystem.next(location.StarSystem));
+                    localStorage.currentSystem = location.StarSystem;
                     resolve(data);
                     break;
                 }
@@ -204,6 +209,7 @@ export class JournalService {
                 case journal.JournalEvents.fsdJump: {
                     let fsdJump: journal.FSDJump = Object.assign(new journal.FSDJump(), data);
                     this.ngZone.run(() => this._currentSystem.next(fsdJump.StarSystem));
+                    localStorage.currentSystem = fsdJump.StarSystem;
                     resolve(data);
                     break;
                 }
@@ -211,6 +217,7 @@ export class JournalService {
                 case journal.JournalEvents.supercruiseEntry: {
                     let supercruiseEntry: journal.SupercruiseEntry = Object.assign(new journal.SupercruiseEntry(), data);
                     this.ngZone.run(() => this._currentSystem.next(supercruiseEntry.Starsystem));
+                    localStorage.currentSystem = supercruiseEntry.Starsystem;
                     resolve(data);
                     break;
                 }
@@ -218,6 +225,7 @@ export class JournalService {
                 case journal.JournalEvents.supercruiseExit: {
                     let supercruiseExit: journal.SupercruiseExit = Object.assign(new journal.SupercruiseExit(), data);
                     this.ngZone.run(() => this._currentSystem.next(supercruiseExit.Starsystem));
+                    localStorage.currentSystem = supercruiseExit.Starsystem;
                     resolve(data);
                     break;
                 }
