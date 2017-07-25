@@ -1,6 +1,7 @@
 import { NgModule } from '@angular/core';
 import { JournalService } from './journal.service';
 import { JournalDBService } from './db/journal-db.service';
+import { JournalQueueService } from './journalQueue.service';
 
 @NgModule({
     imports: [],
@@ -8,7 +9,8 @@ import { JournalDBService } from './db/journal-db.service';
     declarations:[],
     providers: [
         JournalService,
-        JournalDBService
+        JournalDBService,
+        JournalQueueService
     ]
 })
 export class JournalModule { }

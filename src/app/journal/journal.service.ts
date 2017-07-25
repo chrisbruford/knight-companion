@@ -8,6 +8,7 @@ import * as journal from 'cmdr-journal';
 const { dialog } = require('electron').remote;
 import { JournalDBService } from './db/journal-db.service';
 import { LoggerService } from '../shared/services/logger.service';
+import { JournalQueueService } from './journalQueue.service';
 
 @Injectable()
 export class JournalService {
@@ -16,19 +17,18 @@ export class JournalService {
     private offset = 0;
     private currentLogFile: string;
     private firstStream = true;
-    private newFilesAvailable = true;
 
     private _logDir: string;
     private _beta: boolean;
     private _currentSystem: BehaviorSubject<string>;
     private _cmdrName: BehaviorSubject<string>;
 
-
     constructor(
         private re: RE,
         private ngZone: NgZone,
         private journalDB: JournalDBService,
-        private logger: LoggerService
+        private logger: LoggerService,
+        private journalQueue: JournalQueueService
     ) {
         this._cmdrName = new BehaviorSubject("CMDR");
         this._currentSystem = new BehaviorSubject("Unknown");
@@ -45,24 +45,27 @@ export class JournalService {
             }).sort();
 
             //stream all but the last file as last file will be tailstreamed
-            for (let i = 0; i < journalFilePaths.length - 1; i++) {
-                let path = journalFilePaths[i];
-                this.journalDB.getEntry('completedJournalFiles', path)
-                    .then(data => {
-                        if (!data) {
-                            this.streamJournalFile(`${dir}/${path}`)
-                                .on('data', (data: journal.JournalEvent) => this.handleEvent(data))
-                                .on('end', () => this.journalDB.addEntry('completedJournalFiles', { filename: path }))
-                        }
-                    })
-                    .catch(err => {
-                        this.logger.error(err);
-                    })
-            }
-
-            //tailstream last file
-            this.currentLogFile = journalFilePaths.slice(-1)[0];
-            this.tailStream(`${dir}/${this.currentLogFile}`, { start: this.offset, encoding: 'utf8' });
+            let historicLogs = (async () => {
+                for (let i = 0; i < journalFilePaths.length - 1; i++) {
+                    let path = journalFilePaths[i];
+                    await this.journalDB.getEntry('completedJournalFiles', path)
+                        .then(data => {
+                            if (!data) {
+                                this.journalQueue.addPath(`${dir}/${path}`)
+                                    .on('data', (data: journal.JournalEvent) => this.handleEvent(data))
+                                    .on('end', () => this.journalDB.addEntry('completedJournalFiles', { filename: path }))
+                            }
+                        })
+                        .catch(err => {
+                            this.logger.error(err);
+                        })
+                }
+            })()
+                .then(() => {
+                    //tailstream last file
+                    this.currentLogFile = journalFilePaths.slice(-1)[0];
+                    this.tailStream(`${dir}/${this.currentLogFile}`, { start: this.offset, encoding: 'utf8' });
+                })
         });
     }
 
@@ -96,29 +99,36 @@ export class JournalService {
             if (!data) { this.journalDB.addEntry('completedJournalFiles', { filename: currentLogFile }) }
         });
 
-        let stream = fs.createReadStream(path, options)
+        let stream = fs.createReadStream(path, options).pause()
             .on('data', (data: string) => {
                 this.offset += data.length;
-            })
-            .pipe(ndjson.parse())
-            .on('data', (data: journal.JournalEvent) => {
-                this.ngZone.run(() => this.handleEvent(data));
+            });
+
+        let newStream = this.journalQueue.addStream(stream);
+        newStream.on('data', (data: journal.JournalEvent) => {
+            newStream.pause();
+            this.handleEvent(data).then(() => {
                 //emit events as they're occuring in-session here
                 if (!this.firstStream) {
                     this.ngZone.run(() => this.streamSubject.next(data));
                 }
+                newStream.resume();
             })
+            .catch((reason: string)=>{
+                this.logger.error({originalError: reason, message: "handleEvent rejected in tailStream"})
+            })
+        })
 
             .on('error', (err: any) => console.dir(err))
 
             .on('end', () => {
-                //mark end of first stream so that we know future streams are for 
-                //the current session
-                this.firstStream = false;
                 //got to end of file. Start watching for additions.
                 let watcher = fs.watch(this._logDir);
 
                 watcher.on('change', (event: string, eventPath: string) => {
+                    //mark end of first stream so that we know future streams are for 
+                    //the current session
+                    this.firstStream = false;
                     if ((event === "rename" || event === "change") && this.re.logfile.test(eventPath)) {
                         //logfile changed. Reset offset if it's a new logfile
                         this.offset -= currentLogFile === eventPath ? 0 : this.offset;
@@ -137,76 +147,88 @@ export class JournalService {
         return stream;
     }
 
-    private handleEvent(data: journal.JournalEvent) {
+    private async handleEvent(data: journal.JournalEvent): Promise<any> {
         //all journal events come here to be checked for interest
         //at service level and whether should be persisted to IDB
-        switch (data.event) {
-            case journal.JournalEvents.missionAccepted: {
-                this.journalDB.getEntry(journal.JournalEvents.missionAccepted, (<journal.MissionAccepted>data).MissionID).then(result => {
-                    if (!result) {
-                        this.journalDB.addEntry(journal.JournalEvents.missionAccepted, data)
-                            .catch(err => {
-                                let report = {
-                                    originalError: err,
-                                    message: 'journalService.handleEvent error',
-                                    data
-                                }
-                                this.logger.error(report);
-                            })
-                    }
-                })
+        return new Promise((resolve, reject) => {
+            switch (data.event) {
+                case journal.JournalEvents.missionAccepted: {
+                    this.journalDB.getEntry(journal.JournalEvents.missionAccepted, (<journal.MissionAccepted>data).MissionID).then(result => {
+                        if (!result) {
+                            this.journalDB.addEntry(journal.JournalEvents.missionAccepted, data)
+                                .then(() => { resolve(data) })
+                                .catch(err => {
+                                    let report = {
+                                        originalError: err,
+                                        message: 'journalService.handleEvent error',
+                                        data
+                                    }
+                                    this.logger.error(report);
+                                    reject(report);
+                                })
+                        } else {
+                            reject("Mission already exists");
+                        }
+                    })
+                    break;
+                }
 
-                break;
-            }
-            
-            case journal.JournalEvents.loadGame: {
-                let loadGame: journal.LoadGame = Object.assign(new journal.LoadGame(), data);
-                this._cmdrName.next(loadGame.Commander);
-                break;
-            }
-            
-            case journal.JournalEvents.newCommander: {
-                let newCommander: journal.NewCommander = Object.assign(new journal.NewCommander(), data);
-                this._cmdrName.next(newCommander.Name);
-                break;
-            }
+                case journal.JournalEvents.loadGame: {
+                    let loadGame: journal.LoadGame = Object.assign(new journal.LoadGame(), data);
+                    this.ngZone.run(() => this._cmdrName.next(loadGame.Commander));
+                    resolve(data);
+                    break;
+                }
 
-            case journal.JournalEvents.docked: {
-                let docked: journal.Docked = Object.assign(new journal.Docked(), data);
-                this._currentSystem.next(docked.StarSystem);
-                break;
+                case journal.JournalEvents.newCommander: {
+                    let newCommander: journal.NewCommander = Object.assign(new journal.NewCommander(), data);
+                    this.ngZone.run(() => this._cmdrName.next(newCommander.Name));
+                    resolve(data);
+                    break;
+                }
+
+                case journal.JournalEvents.docked: {
+                    let docked: journal.Docked = Object.assign(new journal.Docked(), data);
+                    this.ngZone.run(() => this._currentSystem.next(docked.StarSystem));
+                    resolve(data);
+                    break;
+                }
+
+                case journal.JournalEvents.location: {
+                    let location: journal.Location = Object.assign(new journal.Location(), data);
+                    this.ngZone.run(() => this._currentSystem.next(location.StarSystem));
+                    resolve(data);
+                    break;
+                }
+
+                case journal.JournalEvents.fsdJump: {
+                    let fsdJump: journal.FSDJump = Object.assign(new journal.FSDJump(), data);
+                    this.ngZone.run(() => this._currentSystem.next(fsdJump.StarSystem));
+                    resolve(data);
+                    break;
+                }
+
+                case journal.JournalEvents.supercruiseEntry: {
+                    let supercruiseEntry: journal.SupercruiseEntry = Object.assign(new journal.SupercruiseEntry(), data);
+                    this.ngZone.run(() => this._currentSystem.next(supercruiseEntry.Starsystem));
+                    resolve(data);
+                    break;
+                }
+
+                case journal.JournalEvents.supercruiseExit: {
+                    let supercruiseExit: journal.SupercruiseExit = Object.assign(new journal.SupercruiseExit(), data);
+                    this.ngZone.run(() => this._currentSystem.next(supercruiseExit.Starsystem));
+                    resolve(data);
+                    break;
+                }
+
+                default: {
+                    resolve(data);
+                }
+
             }
+        })
 
-            case journal.JournalEvents.location: {
-                let location: journal.Location = Object.assign(new journal.Location(), data);
-                this._currentSystem.next(location.StarSystem);
-                break;
-            }
-
-            case journal.JournalEvents.fsdJump: {
-                let fsdJump: journal.FSDJump = Object.assign(new journal.FSDJump(), data);
-                this._currentSystem.next(fsdJump.StarSystem);
-                break;
-            }
-
-            case journal.JournalEvents.supercruiseEntry: {
-                let supercruiseEntry: journal.SupercruiseEntry = Object.assign(new journal.SupercruiseEntry(), data);
-                this._currentSystem.next(supercruiseEntry.Starsystem);
-                break;
-            }
-
-            case journal.JournalEvents.supercruiseExit: {
-                let supercruiseExit: journal.SupercruiseExit = Object.assign(new journal.SupercruiseExit(),data);
-                this._currentSystem.next(supercruiseExit.Starsystem);
-                break;
-            }
-
-        }
-    }
-
-    private streamJournalFile(path: string): fs.ReadStream {
-        return fs.createReadStream(path, { encoding: 'utf8' })
-            .pipe(ndjson.parse({ strict: false }))
     }
 
     private getDir(): string {
