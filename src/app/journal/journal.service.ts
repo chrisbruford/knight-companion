@@ -2,10 +2,11 @@ import { Injectable, NgZone } from '@angular/core';
 import { RE } from '../shared/services/re.service';
 import * as fs from "fs";
 import * as stream from "stream";
+import * as os from "os";
 import { Observable, Subscription, Observer, Subject, BehaviorSubject } from "rxjs";
 let ndjson = require('ndjson');
 import * as journal from 'cmdr-journal';
-const { dialog } = require('electron').remote;
+const { dialog, app } = require('electron').remote;
 import { JournalDBService } from './db/journal-db.service';
 import { LoggerService } from '../shared/services/logger.service';
 import { JournalQueueService } from './journalQueue.service';
@@ -13,15 +14,16 @@ import { JournalQueueService } from './journalQueue.service';
 @Injectable()
 export class JournalService {
 
-    private streamSubject: Subject<journal.JournalEvent>;
+    private streamSubject: Subject<journal.JournalEvent> = new Subject();
     private offset = 0;
     private currentLogFile: string;
     private firstStream = true;
+    private _streamLive = false;
 
     private _logDir: string;
     private _beta: boolean;
-    private _currentSystem: BehaviorSubject<string>;
-    private _cmdrName: BehaviorSubject<string>;
+    private _currentSystem: BehaviorSubject<string> = new BehaviorSubject(localStorage.currentSystem || "Unknown");
+    private _cmdrName: BehaviorSubject<string> = new BehaviorSubject(localStorage.cmdrName || "CMDR");
 
     constructor(
         private re: RE,
@@ -30,44 +32,9 @@ export class JournalService {
         private logger: LoggerService,
         private journalQueue: JournalQueueService
     ) {
-        this._cmdrName = new BehaviorSubject(localStorage.cmdrName || "CMDR");
-        this._currentSystem = new BehaviorSubject(localStorage.currentSystem || "Unknown");
-
-
-        //reads all journal files and persists the data to IDB, keeps record
-        //of files it's seen already so doesn't re-stream them
-        let dir = this.getDir();
-        this.streamSubject = new Subject();
-
-        fs.readdir(dir, (err, files) => {
-
-            let journalFilePaths = files.filter((path: string): boolean => {
-                return this.re.logfile.test(path)
-            }).sort();
-
-            //stream all but the last file as last file will be tailstreamed
-            let historicLogs = (async () => {
-                for (let i = 0; i < journalFilePaths.length - 1; i++) {
-                    let path = journalFilePaths[i];
-                    await this.journalDB.getEntry('completedJournalFiles', path)
-                        .then(data => {
-                            if (!data) {
-                                this.journalQueue.addPath(`${dir}/${path}`)
-                                    .on('data', (data: journal.JournalEvent) => this.handleEvent(data))
-                                    .on('end', () => this.journalDB.addEntry('completedJournalFiles', { filename: path }))
-                            }
-                        })
-                        .catch(err => {
-                            this.logger.error(err);
-                        })
-                }
-            })()
-                .then(() => {
-                    //tailstream last file
-                    this.currentLogFile = journalFilePaths.slice(-1)[0];
-                    this.tailStream(`${dir}/${this.currentLogFile}`, { start: this.offset, encoding: 'utf8' });
-                })
-        });
+        localStorage.logDir = this._logDir = localStorage.logDir || this.detectDir() || this.selectDirDialog();
+        this.streamAll(this._logDir);
+        
     }
 
     get logDirectory() {
@@ -90,14 +57,55 @@ export class JournalService {
         return this._beta;
     }
 
+    get isStreaming(): boolean {
+        return this._streamLive;
+    }
+
+    private streamAll(dir: string) {
+        if (!dir) { return }
+        //reads all journal files and persists the data to IDB, keeps record
+        //of files it's seen already so doesn't re-stream them
+            fs.readdir(dir, (err, files) => {
+                if (!files) { return }
+                let journalFilePaths = files.filter((path: string): boolean => {
+                    return this.re.logfile.test(path)
+                }).sort();
+                if (journalFilePaths.length === 0) { return }
+
+                //stream all but the last file as last file will be tailstreamed
+                this._streamLive = true;
+                let historicLogs = (async () => {
+                    for (let i = 0; i < journalFilePaths.length - 1; i++) {
+                        let path = journalFilePaths[i];
+                        await this.journalDB.getEntry('completedJournalFiles', path)
+                            .then(data => {
+                                if (!data) {
+                                    this.journalQueue.addPath(`${dir}/${path}`)
+                                        .on('data', (data: journal.JournalEvent) => this.handleEvent(data))
+                                        .on('end', () => this.journalDB.addEntry('completedJournalFiles', { filename: path }))
+                                }
+                            })
+                            .catch(err => {
+                                this.logger.error(err);
+                            })
+                    }
+                })()
+                    .then(() => {
+                        //tailstream last file
+                        this.currentLogFile = journalFilePaths.slice(-1)[0];
+                        this.tailStream(`${dir}/${this.currentLogFile}`, { start: this.offset, encoding: 'utf8' });
+                    })
+            });
+    }
+
     //streams entire file, tracking offset from start, then 
     //watches for changes and re-streams from the saved offset, updating
     //offset and re-watching.
     private tailStream(path: string, options: { start: number, encoding: string }) {
+        console.log('tail stream started');
         //avoid situation where logfile changes before async operations complete
-        let currentLogFile = this.currentLogFile;
-        this.journalDB.getEntry('completedJournalFiles', currentLogFile).then(data => {
-            if (!data) { this.journalDB.addEntry('completedJournalFiles', { filename: currentLogFile }) }
+        this.journalDB.getEntry('completedJournalFiles', this.currentLogFile).then(data => {
+            if (!data) { this.journalDB.addEntry('completedJournalFiles', { filename: this.currentLogFile }) }
         });
 
         let stream = fs.createReadStream(path, options).pause()
@@ -114,38 +122,38 @@ export class JournalService {
                 }
                 newStream.resume();
             })
-            .catch((reason: string)=>{
-                this.logger.error({originalError: reason, message: "handleEvent rejected in tailStream"})
-                newStream.resume();
-            })
+                .catch((reason: string) => {
+                    this.logger.error({ originalError: reason, message: "handleEvent rejected in tailStream" })
+                    newStream.resume();
+                })
         })
 
             .on('error', (err: any) => console.dir(err))
 
-            .on('end', () => {
-                //got to end of file. Start watching for additions.
-                let watcher = fs.watch(this._logDir);
-
-                watcher.on('change', (event: string, eventPath: string) => {
-                    //mark end of first stream so that we know future streams are for 
-                    //the current session
-                    this.firstStream = false;
-                    if ((event === "rename" || event === "change") && this.re.logfile.test(eventPath)) {
-                        //logfile changed. Reset offset if it's a new logfile
-                        this.offset -= currentLogFile === eventPath ? 0 : this.offset;
-                        this.currentLogFile = eventPath;
-                        //stop watcher and restart tailStream at offset
-                        watcher.close();
-                        this.tailStream(`${this._logDir}/${this.currentLogFile}`, {
-                            start: this.offset,
-                            encoding: 'utf8'
-                        })
-                    }
-                })
-
-            })
+            .on('end', () => this.watchLogDir())
 
         return stream;
+    }
+
+    public watchLogDir(): void {
+        let watcher = fs.watch(this._logDir);
+
+        watcher.on('change', (event: string, eventPath: string) => {
+            //mark end of first stream so that we know future streams are for 
+            //the current session
+            this.firstStream = false;
+            if ((event === "rename" || event === "change") && this.re.logfile.test(eventPath)) {
+                //logfile changed. Reset offset if it's a new logfile
+                this.offset -= this.currentLogFile === eventPath ? 0 : this.offset;
+                this.currentLogFile = eventPath;
+                //stop watcher and restart tailStream at offset
+                watcher.close();
+                this.tailStream(`${this._logDir}/${this.currentLogFile}`, {
+                    start: this.offset,
+                    encoding: 'utf8'
+                })
+            }
+        })
     }
 
     private async handleEvent(data: journal.JournalEvent): Promise<any> {
@@ -239,17 +247,31 @@ export class JournalService {
 
     }
 
-    private getDir(): string {
-        return this._logDir = localStorage.dir || this.selectDirDialog()[0];
+    private detectDir() {
+        let defaultPath: string;
+        switch (os.platform()) {
+            case 'darwin': {
+                defaultPath = `${app.getPath('appData')}/Frontier Developments/Elite Dangerous`;
+                break;
+            }
+            case 'win32': {
+                defaultPath = `${app.getPath('home')}/Saved Games/Frontier Developments/Elite Dangerous`;
+                break;
+            }
+        }
+        return defaultPath
     }
 
     private selectDirDialog() {
+        let defaultPath = this.detectDir();
+
         let selectedDir = dialog.showOpenDialog({
             properties: ['openDirectory', 'showHiddenFiles'],
-            message: 'Please select your Elite Dangerous save game directory'
+            message: 'Select Elite Dangerous log directory',
+            defaultPath
         });
-        if (selectedDir) { localStorage.dir = selectedDir };
-        return selectedDir;
+
+        return selectedDir ? selectedDir[0]:undefined;
     }
 
 
