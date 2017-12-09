@@ -17,7 +17,6 @@ export class MissionsComponent {
     factionMissionsCompleted: OriginatedMission[] = [];
     @Input() trackingFaction: string;
     oldTrackingFaction: string;
-    journalSubscription: Subscription;
     cmdrName: string;
 
     constructor(
@@ -26,7 +25,7 @@ export class MissionsComponent {
     ) { }
 
     ngOnInit() {
-        this.watchDir();
+        this.watchMissions();
     }
 
     ngDoCheck() {
@@ -37,30 +36,23 @@ export class MissionsComponent {
         }
     }
 
-    ngOnChanges(changes:any) {
+    ngOnChanges(changes: any) {
         if (this.trackingFaction !== this.oldTrackingFaction) {
             this.factionMissionsCompleted = this.filterMissions(this.missionsCompleted);
             this.oldTrackingFaction = this.trackingFaction;
         }
     }
 
-    async watchDir() {
-        this.journalSubscription = this.journalService.logStream
-            .subscribe(async (data: JournalEvent) => {
-                switch (data.event) {
-                    case JournalEvents.missionCompleted: {
-                        let completedMission = Object.assign(new MissionCompleted(), data);
-                        let originalMission: MissionAccepted =  await this.journalDB.getEntry(JournalEvents.missionAccepted, completedMission.MissionID);
-                            
-                        if (!originalMission) { return }
-                        let originatedMission: OriginatedMission = Object.assign({ originator: originalMission.Faction }, completedMission)
-                        this.missionsCompleted.push(originatedMission);
-                            
-                        break;
-                    }
-                }
+    async watchMissions() {
+        this.journalService.on(JournalEvents.missionCompleted, async (data: JournalEvent) => {
 
-            });
+            let completedMission = Object.assign(new MissionCompleted(), data);
+            let originalMission: MissionAccepted = await this.journalDB.getEntry(JournalEvents.missionAccepted, completedMission.MissionID);
+
+            if (!originalMission) { return }
+            let originatedMission: OriginatedMission = Object.assign({ originator: originalMission.Faction }, completedMission)
+            this.missionsCompleted.push(originatedMission);
+        })
     }
 
     filterMissions(allMissions: OriginatedMission[]): OriginatedMission[] {

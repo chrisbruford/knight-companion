@@ -5,7 +5,7 @@
   "author": "Chris Bruford",
   "description": "A companion app for members of the Knights of Karma",
   "scripts": {
-    "electron": "webpack --config config/webpack.dev.js --watch",
+    "start": "webpack --config config/webpack.dev.js --watch",
     "package": "rimraf dist && webpack --config config/webpack.prod.js --progress --profile --bail && electron-packager ./dist kokpanion --overwrite --out=packages --icon=./src/assets/icons/icon.icns && electron-builder --config builder.config.json"
   },
   "license": "MIT",

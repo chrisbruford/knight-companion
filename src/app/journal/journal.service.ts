@@ -10,11 +10,11 @@ const { dialog, app } = require('electron').remote;
 import { JournalDBService } from './db/journal-db.service';
 import { LoggerService } from '../shared/services/logger.service';
 import { JournalQueueService } from './journalQueue.service';
+import { EventEmitter } from 'events';
 
 @Injectable()
-export class JournalService {
+export class JournalService extends EventEmitter {
 
-    private streamSubject: Subject<journal.JournalEvent> = new Subject();
     private offset = 0;
     private currentLogFile: string;
     private firstStream = true;
@@ -32,6 +32,7 @@ export class JournalService {
         private logger: LoggerService,
         private journalQueue: JournalQueueService
     ) {
+        super();
         localStorage.logDir = this._logDir = localStorage.logDir || this.detectDir() || this.selectDirDialog();
         this.streamAll(this._logDir);
         
@@ -39,10 +40,6 @@ export class JournalService {
 
     get logDirectory() {
         return this._logDir;
-    }
-
-    get logStream(): Subject<journal.JournalEvent> {
-        return this.streamSubject;
     }
 
     get currentSystem(): Observable<string> {
@@ -102,7 +99,6 @@ export class JournalService {
     //watches for changes and re-streams from the saved offset, updating
     //offset and re-watching.
     private tailStream(path: string, options: { start: number, encoding: string }) {
-        console.log('tail stream started');
         //avoid situation where logfile changes before async operations complete
         this.journalDB.getEntry('completedJournalFiles', this.currentLogFile).then(data => {
             if (!data) { this.journalDB.addEntry('completedJournalFiles', { filename: this.currentLogFile }) }
@@ -118,7 +114,7 @@ export class JournalService {
             this.handleEvent(data).then(() => {
                 //emit events as they're occuring in-session here
                 if (!this.firstStream) {
-                    this.ngZone.run(() => this.streamSubject.next(data));
+                    this.ngZone.run(() => this.emit(data.event, data));
                 }
                 newStream.resume();
             })
