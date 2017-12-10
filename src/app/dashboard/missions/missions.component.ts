@@ -4,6 +4,7 @@ import { JournalDBService } from '../../journal/db/journal-db.service';
 import { JournalEvents, JournalEvent, MissionCompleted, MissionAccepted, MissionAbandoned, MissionFailed, LoadGame, NewCommander } from 'cmdr-journal';
 import { Subscription } from 'rxjs';
 import { OriginatedMission } from './originatedMission';
+import { MissionService } from './mission.service';
 
 @Component({
     templateUrl: 'missions.component.html',
@@ -21,11 +22,13 @@ export class MissionsComponent {
 
     constructor(
         private journalService: JournalService,
-        private journalDB: JournalDBService
+        private journalDB: JournalDBService,
+        private missionService: MissionService
     ) { }
 
     ngOnInit() {
         this.watchMissions();
+        this.journalService.cmdrName.subscribe(name=>this.cmdrName = name);
     }
 
     ngDoCheck() {
@@ -52,6 +55,7 @@ export class MissionsComponent {
             if (!originalMission) { return }
             let originatedMission: OriginatedMission = Object.assign({ originator: originalMission.Faction }, completedMission)
             this.missionsCompleted.push(originatedMission);
+            this.missionService.completedMission(originatedMission, this.cmdrName);
         })
     }
 

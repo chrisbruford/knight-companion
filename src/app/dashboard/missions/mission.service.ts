@@ -4,13 +4,14 @@ import { MissionCompleted } from "cmdr-journal/dist";
 import { AppSettingsService } from "../../core/app-settings.service";
 
 @Injectable()
-class MissionService {
+export class MissionService {
     constructor(
         private http: HttpClient,
         private appSettings: AppSettingsService,
     ) {}
 
-    completedMission(missionCompleted: MissionCompleted) {
-        this.http.post(`${AppSettingsService.API_ENDPOINT}/missions/completed`,missionCompleted);
+    completedMission(missionCompleted: MissionCompleted, cmdrName: string) {
+        console.log(`${AppSettingsService.API_ENDPOINT}/missions/completed/${cmdrName}`,{missionCompleted})
+        this.http.post(`${AppSettingsService.API_ENDPOINT}/missions/completed/${cmdrName}`,{missionCompleted});
     }
 }
