@@ -8,7 +8,6 @@ import { AppComponent } from './app.component';
 import { LoginModule } from './login/login.module';
 
 import { AppRoutingModule } from './app-routing.module';
-import { MissionsModule } from './missions/missions.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 
 import { SharedModule } from './shared/shared.module';
@@ -21,7 +20,6 @@ import {APP_BASE_HREF} from '@angular/common';
     LoginModule,
     HttpModule,
     HttpClientModule,
-    MissionsModule,
     DashboardModule,
     AppRoutingModule,
     SharedModule
