@@ -8,16 +8,31 @@ main {
 }
 
 img {
-    max-width: 80%;
+    max-width: 70%;
 }
 
 form {
     display: flex;
     flex-flow: column nowrap;
     justify-content: space-between;
+    flex: 0 1 auto;
+    width: 50%;
 }
 
 
 label {
     clear: both;
+    margin-top: 1rem;
+}
+
+button {
+    margin-top: 0.7rem;
+    text-transform: uppercase;
+    font: inherit;
+    border: none;
+    background-color: #fff;
+}
+
+input {
+    margin-top: 0.7rem;
 }
