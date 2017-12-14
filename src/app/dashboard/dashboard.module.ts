@@ -9,6 +9,8 @@ import { InterdictionComponent } from './interdiction/interdiction.component';
 import { InterdictionService } from './interdiction/interdiction.service';
 import { SharedModule } from '../shared/shared.module';
 import { MissionService } from './missions/mission.service';
+import { ExplorationComponent } from './exploration/exploration.component';
+import { ExplorationService } from './exploration/exploration.service';
 
 @NgModule({
     imports: [
@@ -18,8 +20,17 @@ import { MissionService } from './missions/mission.service';
         JournalModule,
         SharedModule
         ],
-    declarations: [DashboardComponent, MissionsComponent, InterdictionComponent],
+    declarations: [
+        DashboardComponent, 
+        MissionsComponent, 
+        InterdictionComponent,
+        ExplorationComponent
+    ],
     exports: [DashboardComponent],
-    providers: [InterdictionService, MissionService]
+    providers: [
+        InterdictionService, 
+        MissionService,
+        ExplorationService
+    ]
 }) 
 export class DashboardModule {}
