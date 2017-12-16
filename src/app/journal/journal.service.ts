@@ -3,6 +3,7 @@ import { RE } from '../shared/services/re.service';
 import * as fs from "fs";
 import * as stream from "stream";
 import * as os from "os";
+import * as util from "util";
 import { Observable, Subscription, Observer, Subject, BehaviorSubject } from "rxjs";
 let ndjson = require('ndjson');
 import * as journal from 'cmdr-journal';
@@ -11,6 +12,7 @@ import { JournalDBService } from './db/journal-db.service';
 import { LoggerService } from '../shared/services/logger.service';
 import { JournalQueueService } from './journalQueue.service';
 import { EventEmitter } from 'events';
+import { setInterval, clearInterval } from 'timers';
 
 @Injectable()
 export class JournalService extends EventEmitter {
@@ -35,7 +37,7 @@ export class JournalService extends EventEmitter {
         super();
         localStorage.logDir = this._logDir = localStorage.logDir || this.detectDir() || this.selectDirDialog();
         this.streamAll(this._logDir);
-        
+
     }
 
     get logDirectory() {
@@ -62,37 +64,39 @@ export class JournalService extends EventEmitter {
         if (!dir) { return }
         //reads all journal files and persists the data to IDB, keeps record
         //of files it's seen already so doesn't re-stream them
-            fs.readdir(dir, (err, files) => {
-                if (!files) { return }
-                let journalFilePaths = files.filter((path: string): boolean => {
-                    return this.re.logfile.test(path)
-                }).sort();
-                if (journalFilePaths.length === 0) { return }
+        fs.readdir(dir, (err, files) => {
+            if (!files) { return }
+            let journalFilePaths = files.filter((path: string): boolean => {
+                return this.re.logfile.test(path)
+            }).sort();
+            if (journalFilePaths.length === 0) { return }
 
-                //stream all but the last file as last file will be tailstreamed
-                this._streamLive = true;
-                let historicLogs = (async () => {
-                    for (let i = 0; i < journalFilePaths.length - 1; i++) {
-                        let path = journalFilePaths[i];
-                        await this.journalDB.getEntry('completedJournalFiles', path)
-                            .then(data => {
-                                if (!data) {
-                                    this.journalQueue.addPath(`${dir}/${path}`)
-                                        .on('data', (data: journal.JournalEvent) => this.handleEvent(data))
-                                        .on('end', () => this.journalDB.addEntry('completedJournalFiles', { filename: path }))
-                                }
-                            })
-                            .catch(err => {
-                                this.logger.error(err);
-                            })
-                    }
-                })()
-                    .then(() => {
-                        //tailstream last file
-                        this.currentLogFile = journalFilePaths.slice(-1)[0];
-                        this.tailStream(`${dir}/${this.currentLogFile}`, { start: this.offset, encoding: 'utf8' });
-                    })
-            });
+            //stream all but the last file as last file will be tailstreamed
+            this._streamLive = true;
+            //TODO: Don't think this needs to be assigned or async - can make whole StreamAll
+            //function async instead
+            let historicLogs = (async () => {
+                for (let i = 0; i < journalFilePaths.length - 1; i++) {
+                    let path = journalFilePaths[i];
+                    await this.journalDB.getEntry('completedJournalFiles', path)
+                        .then(data => {
+                            if (!data) {
+                                this.journalQueue.addPath(`${dir}/${path}`)
+                                    .on('data', (data: journal.JournalEvent) => this.handleEvent(data))
+                                    .on('end', () => this.journalDB.addEntry('completedJournalFiles', { filename: path }))
+                            }
+                        })
+                        .catch(err => {
+                            this.logger.error(err);
+                        })
+                }
+            })()
+                .then(() => {
+                    //tailstream last file
+                    this.currentLogFile = journalFilePaths.slice(-1)[0];
+                    this.tailStream(`${dir}/${this.currentLogFile}`, { start: this.offset, encoding: 'utf8' });
+                })
+        });
     }
 
     //streams entire file, tracking offset from start, then 
@@ -132,24 +136,59 @@ export class JournalService extends EventEmitter {
     }
 
     public watchLogDir(): void {
-        let watcher = fs.watch(this._logDir);
 
-        watcher.on('change', (event: string, eventPath: string) => {
-            //mark end of first stream so that we know future streams are for 
-            //the current session
-            this.firstStream = false;
-            if ((event === "rename" || event === "change") && this.re.logfile.test(eventPath)) {
-                //logfile changed. Reset offset if it's a new logfile
-                this.offset -= this.currentLogFile === eventPath ? 0 : this.offset;
-                this.currentLogFile = eventPath;
-                //stop watcher and restart tailStream at offset
-                watcher.close();
-                this.tailStream(`${this._logDir}/${this.currentLogFile}`, {
-                    start: this.offset,
-                    encoding: 'utf8'
-                })
-            }
+        new Promise((resolve,reject)=>{
+            fs.open(`${this._logDir}/${this.currentLogFile}`, 'r',(err,fd)=>{
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(fd);
+                }
+
+            })
         })
+        
+            .then((fd: number) => {
+                //watch whole dir for changes (to pick up new files)
+                let watcher = fs.watch(this._logDir);
+
+                let poll = setInterval(() => {
+                    let stats = fs.fstatSync(fd);
+                    let size = stats.size;
+                    
+                    if (stats.size > this.offset) {
+                        console.log(`stats.size: ${stats.size} greater than offset ${this.offset}`);
+                        watcher.close();
+                        clearInterval(poll);
+                        fs.close(fd,()=>{});
+                        
+                        this.tailStream(`${this._logDir}/${this.currentLogFile}`, {
+                            start: this.offset,
+                            encoding: 'utf8'
+                        }) 
+                    }
+                }, 1000);
+                
+                watcher.on('change', (event: string, eventPath: string) => {
+                    //cancel polling and watcher before going any further
+                    watcher.close();
+                    clearInterval(poll);
+
+                    //mark end of first stream so that we know future streams are for 
+                    //the current session
+                    this.firstStream = false;
+                    if ((event === "rename" || event === "change") && this.re.logfile.test(eventPath)) {
+                        //logfile changed. Reset offset if it's a new logfile
+                        this.offset -= this.currentLogFile === eventPath ? 0 : this.offset;
+                        this.currentLogFile = eventPath;
+                        //restart tailStream at offset
+                        this.tailStream(`${this._logDir}/${this.currentLogFile}`, {
+                            start: this.offset,
+                            encoding: 'utf8'
+                        })
+                    }
+                });
+            });
     }
 
     private async handleEvent(data: journal.JournalEvent): Promise<any> {
@@ -220,16 +259,16 @@ export class JournalService extends EventEmitter {
 
                 case journal.JournalEvents.supercruiseEntry: {
                     let supercruiseEntry: journal.SupercruiseEntry = Object.assign(new journal.SupercruiseEntry(), data);
-                    this.ngZone.run(() => this._currentSystem.next(supercruiseEntry.Starsystem));
-                    localStorage.currentSystem = supercruiseEntry.Starsystem;
+                    this.ngZone.run(() => this._currentSystem.next(supercruiseEntry.StarSystem));
+                    localStorage.currentSystem = supercruiseEntry.StarSystem;
                     resolve(data);
                     break;
                 }
 
                 case journal.JournalEvents.supercruiseExit: {
                     let supercruiseExit: journal.SupercruiseExit = Object.assign(new journal.SupercruiseExit(), data);
-                    this.ngZone.run(() => this._currentSystem.next(supercruiseExit.Starsystem));
-                    localStorage.currentSystem = supercruiseExit.Starsystem;
+                    this.ngZone.run(() => this._currentSystem.next(supercruiseExit.StarSystem));
+                    localStorage.currentSystem = supercruiseExit.StarSystem;
                     resolve(data);
                     break;
                 }
@@ -267,7 +306,7 @@ export class JournalService extends EventEmitter {
             defaultPath
         });
 
-        return selectedDir ? selectedDir[0]:undefined;
+        return selectedDir ? selectedDir[0] : undefined;
     }
 
 
