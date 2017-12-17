@@ -136,6 +136,10 @@ export class JournalService extends EventEmitter {
     }
 
     public watchLogDir(): void {
+        //once here first stream must be done so
+        //we can be sure all future events are 'live'
+        //so can be emitted out
+        this.firstStream = false;
 
         new Promise((resolve,reject)=>{
             fs.open(`${this._logDir}/${this.currentLogFile}`, 'r',(err,fd)=>{
@@ -157,7 +161,6 @@ export class JournalService extends EventEmitter {
                     let size = stats.size;
                     
                     if (stats.size > this.offset) {
-                        console.log(`stats.size: ${stats.size} greater than offset ${this.offset}`);
                         watcher.close();
                         clearInterval(poll);
                         fs.close(fd,()=>{});
@@ -176,7 +179,6 @@ export class JournalService extends EventEmitter {
 
                     //mark end of first stream so that we know future streams are for 
                     //the current session
-                    this.firstStream = false;
                     if ((event === "rename" || event === "change") && this.re.logfile.test(eventPath)) {
                         //logfile changed. Reset offset if it's a new logfile
                         this.offset -= this.currentLogFile === eventPath ? 0 : this.offset;
