@@ -1,6 +1,5 @@
 import { Component } from '@angular/core';
 const fs = require('fs');
-const tailingStream = require('tailing-stream');
 import { JournalService } from '../journal/journal.service';
 import { JournalEvents, JournalEvent, MissionCompleted, LoadGame, NewCommander } from 'cmdr-journal';
 import { Observable } from 'rxjs';
