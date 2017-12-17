@@ -37,7 +37,7 @@ export class ExplorationService {
         }
 
         if (this.firstJumpTime !== this.lastJumpTime) {
-            this._averageSpeed = (this._distanceTravelled/1000) / ((this.lastJumpTime.getTime() - this.firstJumpTime.getTime())/(1000*60*60));
+            this._averageSpeed = (this._distanceTravelled) / ((this.lastJumpTime.getTime() - this.firstJumpTime.getTime())/(1000*60*60));
             this.averageSpeed.next(this._averageSpeed);
         }
     }
