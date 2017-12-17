@@ -12,7 +12,7 @@ import { Observable } from 'rxjs';
 export class DashboardComponent {
 
     missionsCompleted: MissionCompleted[] = [];
-    trackingFaction: string;
+    trackingFaction = '';
     currentSystem: Observable<string>;
     cmdrName: Observable<string>;
 
