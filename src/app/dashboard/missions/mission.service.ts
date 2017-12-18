@@ -11,6 +11,8 @@ export class MissionService {
     ) {}
 
     completedMission(missionCompleted: MissionCompleted, cmdrName: string) {
+        cmdrName = encodeURIComponent(cmdrName);
+        
         console.log(`${AppSettingsService.API_ENDPOINT}/missions/completed/${cmdrName}`,{missionCompleted})
         this.http.post(`${AppSettingsService.API_ENDPOINT}/missions/completed/${cmdrName}`,{missionCompleted});
     }
