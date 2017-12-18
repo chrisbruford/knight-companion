@@ -1,3 +1,4 @@
+const webpack = require('webpack');
 const webpackMerge = require('webpack-merge');
 const ExtractTextPlugin = require('extract-text-webpack-plugin');
 const commonConfig = require('./webpack.common.js');
@@ -6,25 +7,31 @@ const ElectronConnectWebpackPlugin = require('electron-connect-webpack-plugin');
 const path = require('path');
 
 module.exports = webpackMerge(commonConfig, {
-  devtool: 'cheap-module-eval-source-map',
+    devtool: 'cheap-module-eval-source-map',
 
-  output: {
-    path: helpers.root('dist'),
-    filename: '[name].js',
-    chunkFilename: '[id].chunk.js'
-  },
+    output: {
+        path: helpers.root('dist'),
+        filename: '[name].js',
+        chunkFilename: '[id].chunk.js'
+    },
 
-  plugins: [
-    new ExtractTextPlugin('[name].css'),
-    
-    new ElectronConnectWebpackPlugin({
-        path: path.join(__dirname,"../dist"),
-        logLevel: 0
-    })
-  ],
+    plugins: [
+        new ExtractTextPlugin('[name].css'),
 
-  devServer: {
-    historyApiFallback: true,
-    stats: 'minimal'
-  }
+        new webpack.DefinePlugin({
+            'process.env': {
+                'API_ENDPOINT': JSON.stringify('http://localhost:3876/api')
+            }
+        }),
+
+        new ElectronConnectWebpackPlugin({
+            path: path.join(__dirname, "../dist"),
+            logLevel: 0
+        })
+    ],
+
+    devServer: {
+        historyApiFallback: true,
+        stats: 'minimal'
+    }
 });

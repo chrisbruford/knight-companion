@@ -21,7 +21,8 @@ module.exports = webpackMerge(commonConfig, {
     new ExtractTextPlugin('[name].[hash].css'),
     new webpack.DefinePlugin({
       'process.env': {
-        'ENV': JSON.stringify(ENV)
+        'ENV': JSON.stringify(ENV),
+        'API_ENDPOINT': JSON.stringify('https://www.knightsofkarma.com/api')
       }
     }),
     new webpack.LoaderOptionsPlugin({
