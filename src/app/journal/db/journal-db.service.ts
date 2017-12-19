@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { LoggerService } from '../../shared/services/logger.service';
+import { LoggerService } from '../../core/services/logger.service';
 import { JournalEvents } from 'cmdr-journal';
 
 @Injectable()

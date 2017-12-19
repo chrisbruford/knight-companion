@@ -1,5 +1,5 @@
 import { Injectable, NgZone } from '@angular/core';
-import { RE } from '../shared/services/re.service';
+import { RE } from '../core/services/re.service';
 import * as fs from "fs";
 import * as stream from "stream";
 import * as os from "os";
@@ -9,7 +9,7 @@ let ndjson = require('ndjson');
 import * as journal from 'cmdr-journal';
 const { dialog, app } = require('electron').remote;
 import { JournalDBService } from './db/journal-db.service';
-import { LoggerService } from '../shared/services/logger.service';
+import { LoggerService } from '../core/services/logger.service';
 import { JournalQueueService } from './journalQueue.service';
 import { EventEmitter } from 'events';
 import { setInterval, clearInterval } from 'timers';

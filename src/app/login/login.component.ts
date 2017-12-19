@@ -1,8 +1,9 @@
 import { Component, OnInit } from '@angular/core';
-import { UserService } from '../shared/services/user.service';
-import { LoggerService } from '../shared/services/logger.service';
+import { UserService } from '../core/services/user.service';
+import { LoggerService } from '../core/services/logger.service';
 import { User, SimpleUser } from '../shared/interfaces/user';
 import { ActivatedRoute, Router } from '@angular/router';
+import { HttpResponse } from '@angular/common/http';
 
 @Component({
     selector: 'kok-login',
@@ -34,10 +35,10 @@ export class LoginComponent implements OnInit {
 
      ngOnInit() {
         this.userService.authCheck().subscribe(
-            res=>{
+            (res: any)=>{
                 this.router.navigate(['/dashboard'])
             },
-            err=>this.logger.error({originalError: err, message: 'AuthCheck Error'})
+            (err: any)=>this.logger.error({originalError: err, message: 'AuthCheck Error'})
         )
      }
 

@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { ErrorReport } from '../interfaces/errorReport';
+import { ErrorReport } from '../../shared/interfaces/errorReport';
 
 @Injectable()
 export class LoggerService {
