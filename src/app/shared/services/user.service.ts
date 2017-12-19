@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Http } from '@angular/http';
 import { User, SimpleUser } from '../interfaces/user';
+import 'rxjs/add/operator/map';
 
 @Injectable()
 export class UserService {
@@ -11,7 +12,8 @@ export class UserService {
     
     authenticate(user: SimpleUser): Promise<User> {
         return new Promise((resolve,reject)=>{
-            this.http.post(`${process.env.API_ENDPOINT}/login`, user)
+            let data = Object.assign({remember: true}, user);
+            this.http.post(`${process.env.API_ENDPOINT}/login`, data)
             .toPromise()
             .then(res => res.json())
             .then(data=>{
@@ -24,6 +26,11 @@ export class UserService {
             })
             .catch(err=>reject(err));
         });
+    }
+
+    authCheck() {
+        return this.http.get(`${process.env.API_ENDPOINT}/authcheck`)
+            .map(res=>res.json());
     }
     
 }

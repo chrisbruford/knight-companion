@@ -1,5 +1,6 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { UserService } from '../shared/services/user.service';
+import { LoggerService } from '../shared/services/logger.service';
 import { User, SimpleUser } from '../shared/interfaces/user';
 import { ActivatedRoute, Router } from '@angular/router';
 
@@ -11,7 +12,7 @@ import { ActivatedRoute, Router } from '@angular/router';
         UserService
     ]
 })
-export class LoginComponent {
+export class LoginComponent implements OnInit {
 
     authenticated: boolean;
     submitted: boolean;
@@ -25,9 +26,19 @@ export class LoginComponent {
     constructor(
         private userService: UserService,
         private activatedRoute: ActivatedRoute,
-        private router: Router
+        private router: Router,
+        private logger: LoggerService
         ) {
         this.submitted = false;
+     }
+
+     ngOnInit() {
+        this.userService.authCheck().subscribe(
+            res=>{
+                this.router.navigate(['/dashboard'])
+            },
+            err=>this.logger.error({originalError: err, message: 'AuthCheck Error'})
+        )
      }
 
      onSubmit(): void {
