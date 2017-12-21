@@ -53,9 +53,9 @@ export class MissionsComponent {
             let originalMission: MissionAccepted = await this.journalDB.getEntry(JournalEvents.missionAccepted, completedMission.MissionID);
 
             if (!originalMission) { return }
-            let originatedMission: OriginatedMission = Object.assign({ originator: originalMission.Faction }, completedMission)
+            let originatedMission: OriginatedMission = Object.assign({ originator: originalMission.Faction, LocalisedName: originalMission.LocalisedName }, completedMission)
             this.missionsCompleted.push(originatedMission);
-            this.missionService.completedMission(originatedMission, this.cmdrName);
+            this.missionService.completedMission(originatedMission, this.cmdrName).subscribe();
         })
     }
 
