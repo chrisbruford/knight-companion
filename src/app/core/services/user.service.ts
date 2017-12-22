@@ -1,7 +1,9 @@
 import { Injectable } from '@angular/core';
 import { Http } from '@angular/http';
 import { User, SimpleUser } from '../../shared/interfaces/user';
+import { Observable } from 'rxjs';
 import 'rxjs/add/operator/map';
+import 'rxjs/add/operator/catch';
 
 @Injectable()
 export class UserService {
@@ -28,9 +30,10 @@ export class UserService {
         });
     }
 
-    authCheck() {
+    authCheck(): Observable<User | null> {
         return this.http.get(`${process.env.API_ENDPOINT}/authcheck`)
-            .map(res=>res.json());
+            .map(res=>res.json())
+            .catch(err=>Observable.throw(err))
     }
     
 }
