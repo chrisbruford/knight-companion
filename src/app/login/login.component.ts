@@ -3,7 +3,8 @@ import { UserService } from '../core/services/user.service';
 import { LoggerService } from '../core/services/logger.service';
 import { User, SimpleUser } from '../shared/interfaces/user';
 import { ActivatedRoute, Router } from '@angular/router';
-import { HttpResponse } from '@angular/common/http';
+import { Observable } from 'rxjs/Observable';
+import { map } from 'rxjs/operators';
 
 @Component({
     selector: 'kok-login',
@@ -18,7 +19,7 @@ export class LoginComponent implements OnInit {
     authenticated: boolean;
     submitted: boolean;
     user: User;
-        
+
     simpleUser: SimpleUser = {
         username: undefined,
         password: undefined
@@ -29,36 +30,36 @@ export class LoginComponent implements OnInit {
         private activatedRoute: ActivatedRoute,
         private router: Router,
         private logger: LoggerService
-        ) {
+    ) {
         this.submitted = false;
-     }
+    }
 
-     ngOnInit() {
+    ngOnInit() {
         this.userService.authCheck().subscribe(
-            (res: any)=>{
+            (res: any) => {
                 this.router.navigate(['/dashboard'])
             },
-            (err: any)=>this.logger.error({originalError: err, message: 'AuthCheck Error'})
+            (err: any) => this.logger.error({ originalError: err, message: 'AuthCheck Error' })
         )
-     }
-
-     onSubmit(): void {
-         this.submitted = true;
-         this.authenticate(this.simpleUser)
-         .then(user=>{
-            this.authenticated = true;
-            this.user = user;
-            this.router.navigate(['/dashboard']);
-         })
-         .catch(err=>{
-             this.authenticated = false;
-             this.user = null;
-         })
-     }
-
-    authenticate(user: SimpleUser): Promise<User> {
-        return this.userService.authenticate(user)
-        .then(result=>result);
     }
-    
- }
+
+    onSubmit(): void {
+        this.submitted = true;
+        this.authenticate(this.simpleUser)
+            .subscribe(user => {
+                this.authenticated = true;
+                this.user = user;
+                this.router.navigate(['/dashboard']);
+            },
+            err => {
+                this.authenticated = false;
+                this.user = null;
+            })
+    }
+
+    authenticate(user: SimpleUser): Observable<User> {
+        return this.userService.authenticate(user)
+            .map(result => result);
+    }
+
+}

@@ -1,39 +1,37 @@
 import { Injectable } from '@angular/core';
-import { Http } from '@angular/http';
+import { HttpClient } from '@angular/common/http';
 import { User, SimpleUser } from '../../shared/interfaces/user';
 import { Observable } from 'rxjs';
-import 'rxjs/add/operator/map';
-import 'rxjs/add/operator/catch';
+import { map, catchError } from 'rxjs/operators';
 
 @Injectable()
 export class UserService {
 
     user: User;
 
-    constructor(private http: Http) {}
-    
-    authenticate(user: SimpleUser): Promise<User> {
-        return new Promise((resolve,reject)=>{
-            let data = Object.assign({remember: true}, user);
-            this.http.post(`${process.env.API_ENDPOINT}/login`, data)
-            .toPromise()
-            .then(res => res.json())
-            .then(data=>{
-                if (data) {
-                    this.user = data;
-                    resolve(data);
+    constructor(private http: HttpClient) { }
+
+    authenticate(user: SimpleUser): Observable<User> {
+        let data = Object.assign({ remember: true }, user);
+        return this.http.post<User>(`${process.env.API_ENDPOINT}/login`, data)
+            .map(user => {
+                if (user) {
+                    this.user = user;
+                    return user;
                 } else {
-                    reject(null);
+                    return Observable.throw(new Error("No such user found"));
                 }
             })
-            .catch(err=>reject(err));
-        });
-    }
+            .pipe(
+                catchError(err => Observable.throw(err))
+            )
+    };
 
     authCheck(): Observable<User | null> {
-        return this.http.get(`${process.env.API_ENDPOINT}/authcheck`)
-            .map(res=>res.json())
-            .catch(err=>Observable.throw(err))
+        return this.http.get<User | null>(`${process.env.API_ENDPOINT}/authcheck`)
+            .pipe(
+            catchError(err => Observable.throw(err))
+            )
     }
-    
+
 }
