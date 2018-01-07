@@ -23,7 +23,7 @@ export class UserService {
                 }
             })
             .pipe(
-                catchError(err => Observable.throw(err))
+            catchError(err => Observable.throw(err))
             )
     };
 
@@ -32,6 +32,13 @@ export class UserService {
             .pipe(
             catchError(err => Observable.throw(err))
             )
+    }
+
+    logout(): Observable<boolean> {
+        return this.http.get<boolean>(`${process.env.API_ENDPOINT}/logout`)
+            .pipe(
+            catchError(err => Observable.throw(err))
+            );
     }
 
 }

@@ -12,6 +12,7 @@ import { DashboardModule } from './dashboard/dashboard.module';
 
 import { SharedModule } from './shared/shared.module';
 import {APP_BASE_HREF} from '@angular/common';
+import { TopbarModule } from './topbar/topbar.module';
 
 @NgModule({
   imports: [
@@ -21,6 +22,7 @@ import {APP_BASE_HREF} from '@angular/common';
     HttpModule,
     HttpClientModule,
     DashboardModule,
+    TopbarModule,
     AppRoutingModule,
     SharedModule
   ],
