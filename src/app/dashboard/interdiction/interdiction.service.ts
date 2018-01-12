@@ -12,7 +12,7 @@ export class InterdictionService {
         ) { }
 
     interdictedAlert(interdicted: Interdicted,cmdrName: string, system: string):Observable<boolean> {
-            return this.http.post(`https://www.knightsofkarma.com/api/interdicted/${cmdrName}`,{interdicted, system})
+            return this.http.post(`${process.env.API_ENDPOINT}/interdicted/${cmdrName}`,{interdicted, system})
                 .catch((err: any) =>{
                     this.logger.error(err);
                     return Observable.throw(err);
