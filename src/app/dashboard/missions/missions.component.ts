@@ -35,7 +35,6 @@ export class MissionsComponent {
         if (this.missionsCompleted.length !== this.oldMissionsCompleted.length) {
             this.factionMissionsCompleted = this.filterMissions(this.missionsCompleted);
             this.oldMissionsCompleted = Array.from(this.missionsCompleted);
-            console.dir(this.factionMissionsCompleted);
         }
     }
 
