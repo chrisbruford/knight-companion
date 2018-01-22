@@ -5,6 +5,7 @@ import { User, SimpleUser } from '../shared/interfaces/user';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Observable } from 'rxjs/Observable';
 import { map } from 'rxjs/operators';
+import { FormGroup, FormControl, FormBuilder } from '@angular/forms';
 
 @Component({
     selector: 'kok-login',
@@ -19,22 +20,25 @@ export class LoginComponent implements OnInit {
     authenticated: boolean;
     submitted: boolean;
     user: User;
-
-    simpleUser: SimpleUser = {
-        username: undefined,
-        password: undefined
-    };
-
+    loginForm: FormGroup;
+    
     constructor(
         private userService: UserService,
         private activatedRoute: ActivatedRoute,
         private router: Router,
-        private logger: LoggerService
+        private logger: LoggerService,
+        private fb: FormBuilder
     ) {
         this.submitted = false;
     }
 
     ngOnInit() {
+
+        this.loginForm = this.fb.group({
+            username: '',
+            password: ''
+        })
+
         this.userService.authCheck().subscribe(
             (res: any) => {
                 this.router.navigate(['/dashboard'])
@@ -45,7 +49,10 @@ export class LoginComponent implements OnInit {
 
     onSubmit(): void {
         this.submitted = true;
-        this.authenticate(this.simpleUser)
+        this.authenticate({
+            username: this.loginForm.get('username').value, 
+            password: this.loginForm.get('password').value
+        })
             .subscribe(user => {
                 this.authenticated = true;
                 this.user = user;

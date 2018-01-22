@@ -1,12 +1,16 @@
 <main>
     <img src="../../assets/images/coat-of-arms.png">
-    <form (ngSubmit)="onSubmit()" #loginForm="ngForm" *ngIf="!authenticated">
+    <form (ngSubmit)="onSubmit()" *ngIf="!authenticated" [formGroup]="loginForm">
         <!-- <label for="username">CMDR NAME</label> -->
-        <input type="text" placeholder="CMDR NAME" [(ngModel)]="simpleUser.username" name="username">
+        <mat-form-field>
+            <input type="text" placeholder="CMDR NAME" formControlName="username" matInput name="username">
+        </mat-form-field>
 
         <!-- <label for="password">PASSWORD</label> -->
-        <input type="password" placeholder="PASSWORD" [(ngModel)]="simpleUser.password" name="password">
+        <mat-form-field>
+            <input type="password" placeholder="PASSWORD" formControlName="password" matInput name="password">
+        </mat-form-field>
 
-        <button type=submit>Login</button>
+        <button type="submit" mat-raised-button>Login</button>
     </form>
 </main>
