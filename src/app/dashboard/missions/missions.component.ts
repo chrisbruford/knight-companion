@@ -49,7 +49,7 @@ export class MissionsComponent {
         this.journalService.on(JournalEvents.missionCompleted, async (data: JournalEvent) => {
 
             let completedMission = Object.assign(new MissionCompleted(), data);
-            let originalMission: MissionAccepted = await this.journalDB.getEntry(JournalEvents.missionAccepted, completedMission.MissionID);
+            let originalMission: MissionAccepted = await this.journalDB.getEntry<MissionAccepted>(JournalEvents.missionAccepted, completedMission.MissionID);
 
             if (!originalMission) { return }
             let originatedMission: OriginatedMission = Object.assign({ originator: originalMission.Faction, LocalisedName: originalMission.LocalisedName }, completedMission)

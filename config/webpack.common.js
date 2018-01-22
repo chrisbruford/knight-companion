@@ -3,6 +3,7 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 const ExtractTextPlugin = require('extract-text-webpack-plugin');
 const helpers = require('./helpers');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
+const path = require('path');
 
 module.exports = {
     entry: {
@@ -51,7 +52,8 @@ module.exports = {
                 {
                     loader: "sass-loader", 
                     options: {
-                        sourceMaps: true
+                        sourceMaps: true,
+                        includePaths: [path.resolve(__dirname, '../src/assets/scss')]
                     }
                 }]
             },
@@ -63,7 +65,10 @@ module.exports = {
                         loader: 'raw-loader'
                     },
                     {
-                        loader: "sass-loader"
+                        loader: "sass-loader",
+                        options: {
+                            includePaths: [path.resolve(__dirname, '../src/assets/scss')]
+                        }
                     }
                 ]
             }

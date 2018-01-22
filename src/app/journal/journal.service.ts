@@ -198,6 +198,8 @@ export class JournalService extends EventEmitter {
         //at service level and whether should be persisted to IDB
         return new Promise((resolve, reject) => {
             switch (data.event) {
+                
+                //mission accepted events
                 case journal.JournalEvents.missionAccepted: {
                     this.journalDB.getEntry(journal.JournalEvents.missionAccepted, (<journal.MissionAccepted>data).MissionID).then(result => {
                         if (!result) {
@@ -219,6 +221,7 @@ export class JournalService extends EventEmitter {
                     break;
                 }
 
+                //loadgame
                 case journal.JournalEvents.loadGame: {
                     let loadGame: journal.LoadGame = Object.assign(new journal.LoadGame(), data);
                     this.ngZone.run(() => this._cmdrName.next(loadGame.Commander));
@@ -227,6 +230,7 @@ export class JournalService extends EventEmitter {
                     break;
                 }
 
+                //new commander
                 case journal.JournalEvents.newCommander: {
                     let newCommander: journal.NewCommander = Object.assign(new journal.NewCommander(), data);
                     this.ngZone.run(() => this._cmdrName.next(newCommander.Name));
@@ -235,6 +239,7 @@ export class JournalService extends EventEmitter {
                     break;
                 }
 
+                //docked
                 case journal.JournalEvents.docked: {
                     let docked: journal.Docked = Object.assign(new journal.Docked(), data);
                     this.ngZone.run(() => this._currentSystem.next(docked.StarSystem));
@@ -243,6 +248,7 @@ export class JournalService extends EventEmitter {
                     break;
                 }
 
+                //location
                 case journal.JournalEvents.location: {
                     let location: journal.Location = Object.assign(new journal.Location(), data);
                     this.ngZone.run(() => this._currentSystem.next(location.StarSystem));
@@ -251,14 +257,26 @@ export class JournalService extends EventEmitter {
                     break;
                 }
 
+                //fsd jump
                 case journal.JournalEvents.fsdJump: {
                     let fsdJump: journal.FSDJump = Object.assign(new journal.FSDJump(), data);
                     this.ngZone.run(() => this._currentSystem.next(fsdJump.StarSystem));
                     localStorage.currentSystem = fsdJump.StarSystem;
+
+                    for (let faction of fsdJump.Factions) {
+                        this.journalDB.addEntry("factions",faction)
+                            .catch(err=>this.logger.error({
+                                originalError: err,
+                                message: "Faction failed to write to DB",
+                                data: faction
+                            }))
+                    }
+                    
                     resolve(data);
                     break;
                 }
 
+                //supercruise entry
                 case journal.JournalEvents.supercruiseEntry: {
                     let supercruiseEntry: journal.SupercruiseEntry = Object.assign(new journal.SupercruiseEntry(), data);
                     this.ngZone.run(() => this._currentSystem.next(supercruiseEntry.StarSystem));
@@ -267,6 +285,7 @@ export class JournalService extends EventEmitter {
                     break;
                 }
 
+                //supercruise exit
                 case journal.JournalEvents.supercruiseExit: {
                     let supercruiseExit: journal.SupercruiseExit = Object.assign(new journal.SupercruiseExit(), data);
                     this.ngZone.run(() => this._currentSystem.next(supercruiseExit.StarSystem));

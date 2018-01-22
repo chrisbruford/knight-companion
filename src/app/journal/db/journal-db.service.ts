@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { LoggerService } from '../../core/services/logger.service';
-import { JournalEvents } from 'cmdr-journal';
+import { JournalEvents, FSDJump } from 'cmdr-journal';
 
 @Injectable()
 export class JournalDBService {
@@ -10,7 +10,7 @@ export class JournalDBService {
         private logger: LoggerService
     ) {
         let indexedDB = window.indexedDB;
-        let dbVersion = 1;
+        let dbVersion = 2;
 
         let openRequest = indexedDB.open("journal", dbVersion);
 
@@ -33,6 +33,11 @@ export class JournalDBService {
                 if (!upgradeDB.objectStoreNames.contains("completedJournalFiles")) {
                     let completedJournalFilesStore = upgradeDB.createObjectStore("completedJournalFiles", { keyPath: "filename" });
                     completedJournalFilesStore.createIndex("filename", "filename", { unique: true });
+                }
+
+                if (!upgradeDB.objectStoreNames.contains("factions")) {
+                    let factionsStore = upgradeDB.createObjectStore("factions", { keyPath: "Name" });
+                    factionsStore.createIndex("Name", "Name", { unique: true });
                 }
             }
         }
@@ -98,25 +103,25 @@ export class JournalDBService {
                 let request = objectStore.add(entry);
 
                 request.onerror = (err) => {
-                    this.logger.error({originalError: err, message:"addEntry request error"});
+                    this.logger.error({ originalError: err, message: "addEntry request error" });
                 }
             })
-            .catch(err=>{
-                this.logger.error({
-                    originalError: err,
-                    message: 'journalDBService.addEntry error',
-                    data: {
-                        store,
-                        entry
-                    }
-                });
-            })
+                .catch(err => {
+                    this.logger.error({
+                        originalError: err,
+                        message: 'journalDBService.addEntry error',
+                        data: {
+                            store,
+                            entry
+                        }
+                    });
+                })
         })
     }
 
-    getEntry(store: string, key:any): Promise<any> {
-        return new Promise<any>((resolve,reject)=>{
-            this.dbPromise.then(db=>{
+    getEntry<T>(store: string, key: any): Promise<T> {
+        return new Promise<T>((resolve, reject) => {
+            this.dbPromise.then(db => {
                 let transaction = db.transaction(store, "readonly");
                 let objectStore = transaction.objectStore(store);
                 let request = objectStore.get(key)
@@ -136,15 +141,45 @@ export class JournalDBService {
                     });
                 }
             })
-            .catch(err=>{
-                let report = {
-                    originalError: err,
-                    message: 'journalDBService.addEntry error',
-                    data: {
-                        store,
-                        key
+                .catch(err => {
+                    let report = {
+                        originalError: err,
+                        message: 'journalDBService.getEntry error',
+                        data: {
+                            store,
+                            key
+                        }
+                    };
+                })
+        })
+    }
+
+    getAll<T>(store: string): Promise<T[]> {
+        return new Promise<T[]>((resolve, reject) => {
+            this.dbPromise.then(db => {
+                let transaction = db.transaction(store, "readonly");
+                let objectStore = transaction.objectStore(store);
+                let request = objectStore.openCursor();
+
+                let results: T[] = [];
+                request.onsuccess = evt => {
+                    let cursor: IDBCursorWithValue = (<IDBRequest>event.target).result;
+
+                    if (cursor) {
+                        cursor.continue();
+                        results.push(cursor.value);
+                    } else {
+                        resolve(results);
                     }
-                };
+                }
+
+                request.onerror = err => {
+                    this.logger.error({
+                        originalError: err,
+                        message: "Error in getAll transaction"
+                    })
+                    reject(err);
+                }
             })
         })
     }
