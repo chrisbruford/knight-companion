@@ -1,13 +1,14 @@
 
 <h2>Welcome back {{cmdrName | async}}</h2>
 <p><small>Current system: {{currentSystem | async}}</small></p>
-<label for="faction">Your faction</label>
-<mat-form-field>
-    <input type="text" matInput [formControl]="trackingFaction" [matAutocomplete]="autoCompleteFaction">
-</mat-form-field>
-<mat-autocomplete #autoCompleteFaction="matAutocomplete">
-    <mat-option *ngFor="let faction of filteredKnownFactions | async" [value]="faction.Name">{{faction.Name}}</mat-option>
-</mat-autocomplete>
+<div class="tracking-faction-container">
+    <mat-form-field>
+        <input type="text" matInput [formControl]="trackingFaction" [matAutocomplete]="autoCompleteFaction" placeholder="Your Faction">
+    </mat-form-field>
+    <mat-autocomplete #autoCompleteFaction="matAutocomplete">
+        <mat-option *ngFor="let faction of filteredKnownFactions | async" [value]="faction.Name">{{faction.Name}}</mat-option>
+    </mat-autocomplete>
+</div>
 
 <section class="panels">
     <app-missions class="panel" [trackingFaction]="trackingFaction.value"></app-missions>

@@ -3,6 +3,11 @@ ul {
     padding: 0;
 }
 
+.tracking-faction-container {
+    display: flex;
+    flex-flow: column nowrap;
+}
+
 .panels {
     display: flex;
     flex-flow: row wrap;
