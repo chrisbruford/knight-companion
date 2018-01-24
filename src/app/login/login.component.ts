@@ -10,10 +10,7 @@ import { FormGroup, FormControl, FormBuilder } from '@angular/forms';
 @Component({
     selector: 'kok-login',
     templateUrl: './login.component.html',
-    styleUrls: ['./login.component.scss'],
-    providers: [
-        UserService
-    ]
+    styleUrls: ['./login.component.scss']
 })
 export class LoginComponent implements OnInit {
 
