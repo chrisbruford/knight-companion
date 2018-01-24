@@ -9,5 +9,5 @@ import { AppError } from "./app-error.model";
 export class ErrorBarComponent {
     @Input() errors: AppError[];
     
-    constructor() {}
+    constructor() { }
 }
