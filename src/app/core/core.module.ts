@@ -5,11 +5,13 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { AppErrorService } from './services/app-error.service';
 import { BrowserModule } from '@angular/platform-browser';
 import { ErrorBarComponent } from './error-bar/error-bar.component';
+import { SharedModule } from '../shared/shared.module';
 
 @NgModule({
     imports: [
         BrowserModule,
-        BrowserAnimationsModule
+        BrowserAnimationsModule,
+        SharedModule
     ],
     exports: [
         BrowserAnimationsModule,

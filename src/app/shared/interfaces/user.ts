@@ -1,4 +1,5 @@
 export interface User {
+    username: string,
     level: number,
     gameRole: string,
     platform: string,
