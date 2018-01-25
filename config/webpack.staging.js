@@ -20,6 +20,7 @@ module.exports = webpackMerge(commonConfig, {
 
         new webpack.DefinePlugin({
             'process.env': {
+                'ENV': JSON.stringify('development'),
                 'API_ENDPOINT': JSON.stringify('https://knightsofkarma-staging.azurewebsites.net/api')
             }
         }),
