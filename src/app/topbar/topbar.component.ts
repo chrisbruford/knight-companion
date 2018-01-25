@@ -17,18 +17,5 @@ export class TopbarComponent {
         private logger: LoggerService
     ) {}
 
-    logout() {
-        this.userService.logout().subscribe(
-            success =>{
-                if (success) {
-                    this.router.navigate(['/'])
-                } else {
-                    this.logger.error({originalError: new Error(''), message: 'Failed to log out user'});
-                }
-            },
-            err => {
-                this.logger.error({originalError: err, message: 'Error thrown while logging out'});
-            }
-        )
-    }
+    
 }
