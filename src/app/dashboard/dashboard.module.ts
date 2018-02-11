@@ -5,8 +5,8 @@ import { DashboardRoutingModule } from './dashboard-routing.module';
 import { JournalModule } from '../journal/journal.module';
 import { ReactiveFormsModule } from '@angular/forms';
 import { MissionsComponent } from './missions/missions.component';
-import { InterdictionComponent } from './interdiction/interdiction.component';
-import { InterdictionService } from './interdiction/interdiction.service';
+import { CombatComponent } from './combat/combat.component';
+import { CombatService } from './combat/combat.service';
 import { SharedModule } from '../shared/shared.module';
 import { MissionService } from './missions/mission.service';
 import { ExplorationComponent } from './exploration/exploration.component';
@@ -25,12 +25,12 @@ import { KokMaterialModule } from '../kok-material/kok-material.module';
     declarations: [
         DashboardComponent, 
         MissionsComponent, 
-        InterdictionComponent,
+        CombatComponent,
         ExplorationComponent
     ],
     exports: [DashboardComponent],
     providers: [
-        InterdictionService, 
+        CombatService, 
         MissionService,
         ExplorationService
     ]
