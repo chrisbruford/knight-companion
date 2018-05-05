@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { JournalService } from '../../journal/journal.service';
-import { JournalEvents } from 'cmdr-journal/dist/journal-events.enum';
-import { FSDJump } from 'cmdr-journal/dist';
+import { JournalEvents } from 'cmdr-journal';
+import { FSDJump } from 'cmdr-journal';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 
 @Injectable()

@@ -38,7 +38,8 @@ export class JournalQueueService {
         stream.on('end',()=>{
             this.digesting = false;
             this.digestQueue();
-        }).resume();
+        })
+        .resume();
     }
     
 }

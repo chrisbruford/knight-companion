@@ -13,6 +13,8 @@ import { LoggerService } from '../core/services/logger.service';
 import { JournalQueueService } from './journalQueue.service';
 import { EventEmitter } from 'events';
 import { setInterval, clearInterval } from 'timers';
+import { FileHeader, FSDJump } from 'cmdr-journal';
+import { EDDNService } from './eddn.service';
 
 @Injectable()
 export class JournalService extends EventEmitter {
@@ -32,7 +34,8 @@ export class JournalService extends EventEmitter {
         private ngZone: NgZone,
         private journalDB: JournalDBService,
         private logger: LoggerService,
-        private journalQueue: JournalQueueService
+        private journalQueue: JournalQueueService,
+        private eddn: EDDNService
     ) {
         super();
         localStorage.logDir = this._logDir = localStorage.logDir || this.detectDir() || this.selectDirDialog();
@@ -141,8 +144,11 @@ export class JournalService extends EventEmitter {
         //so can be emitted out
         this.firstStream = false;
 
-        new Promise((resolve,reject)=>{
-            fs.open(`${this._logDir}/${this.currentLogFile}`, 'r',(err,fd)=>{
+        //test if this file is Beta
+        this._beta = /beta/i.test(this.currentLogFile);
+
+        new Promise((resolve, reject) => {
+            fs.open(`${this._logDir}/${this.currentLogFile}`, 'r', (err, fd) => {
                 if (err) {
                     reject(err);
                 } else {
@@ -151,44 +157,64 @@ export class JournalService extends EventEmitter {
 
             })
         })
-        
+
             .then((fd: number) => {
                 //watch whole dir for changes (to pick up new files)
                 let watcher = fs.watch(this._logDir);
 
+                //poll current logfile for changes
                 let poll = setInterval(() => {
                     let stats = fs.fstatSync(fd);
                     let size = stats.size;
-                    
+
                     if (stats.size > this.offset) {
                         watcher.close();
                         clearInterval(poll);
-                        fs.close(fd,()=>{});
-                        
+                        fs.close(fd, () => { });
+
                         this.tailStream(`${this._logDir}/${this.currentLogFile}`, {
                             start: this.offset,
                             encoding: 'utf8'
-                        }) 
+                        });
                     }
                 }, 1000);
-                
-                watcher.on('change', (event: string, eventPath: string) => {
-                    //cancel polling and watcher before going any further
-                    watcher.close();
-                    clearInterval(poll);
 
-                    //mark end of first stream so that we know future streams are for 
-                    //the current session
-                    if ((event === "rename" || event === "change") && this.re.logfile.test(eventPath)) {
-                        //logfile changed. Reset offset if it's a new logfile
+                //respond to watcher changes
+                watcher.on('change', (event: string, eventPath: string) => {
+                    if (this.re.logfile.test(eventPath)) {
+                        //cancel polling and watcher before going any further
+                        watcher.close();
+                        clearInterval(poll);
+
+                        //Reset offset and restart tailstream if this is a new logfile 
+                        //(can happen after very long game session)
                         this.offset -= this.currentLogFile === eventPath ? 0 : this.offset;
                         this.currentLogFile = eventPath;
+
                         //restart tailStream at offset
                         this.tailStream(`${this._logDir}/${this.currentLogFile}`, {
                             start: this.offset,
                             encoding: 'utf8'
-                        })
+                        });
+                        
                     }
+                    //TODO: Add handling for new file types emitted by game
+                    else if (/$Status.json^/.test(eventPath)) {
+
+                    }
+                    else if (/$ModulesInfo.json^/.test(eventPath)) {
+
+                    }
+                    else if (/$Outfitting.json^/.test(eventPath)) {
+
+                    }
+                    else if (/$Shipyard.json^/.test(eventPath)) {
+
+                    }
+                    else if (/$Market.json^/.test(eventPath)) {
+
+                    }
+
                 });
             });
     }
@@ -198,7 +224,13 @@ export class JournalService extends EventEmitter {
         //at service level and whether should be persisted to IDB
         return new Promise((resolve, reject) => {
             switch (data.event) {
-                
+
+                case journal.JournalEvents.fileHeader: {
+                    this._beta = /beta/i.test((<FileHeader>data).gameversion);
+                    resolve(data);
+                    break;
+                }
+
                 //mission accepted events
                 case journal.JournalEvents.missionAccepted: {
                     this.journalDB.getEntry(journal.JournalEvents.missionAccepted, (<journal.MissionAccepted>data).MissionID).then(result => {
@@ -259,19 +291,28 @@ export class JournalService extends EventEmitter {
 
                 //fsd jump
                 case journal.JournalEvents.fsdJump: {
+
                     let fsdJump: journal.FSDJump = Object.assign(new journal.FSDJump(), data);
                     this.ngZone.run(() => this._currentSystem.next(fsdJump.StarSystem));
                     localStorage.currentSystem = fsdJump.StarSystem;
 
-                    for (let faction of fsdJump.Factions) {
-                        this.journalDB.addEntry("factions",faction)
-                            .catch(err=>this.logger.error({
-                                originalError: err,
-                                message: "Faction failed to write to DB",
-                                data: faction
-                            }))
+                    if (!this.firstStream) {
+                        this._cmdrName.subscribe(cmdrName => {
+                            this.eddn.sendJournalEvent(fsdJump, cmdrName);
+                        });
                     }
-                    
+
+                    if (fsdJump.Factions) {
+                        for (let faction of fsdJump.Factions) {
+                            this.journalDB.addEntry("factions", faction)
+                                .catch(err => this.logger.error({
+                                    originalError: err,
+                                    message: "Faction failed to write to DB",
+                                    data: faction
+                                }));
+                        }
+                    }
+
                     resolve(data);
                     break;
                 }
