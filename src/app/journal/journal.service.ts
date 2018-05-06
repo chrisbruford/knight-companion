@@ -285,6 +285,14 @@ export class JournalService extends EventEmitter {
                     let location: journal.Location = Object.assign(new journal.Location(), data);
                     this.ngZone.run(() => this._currentSystem.next(location.StarSystem));
                     localStorage.currentSystem = location.StarSystem;
+
+                    if (!this.firstStream && !this.beta) {
+                        let location = Object.assign(new journal.Location(),data);
+                        this.cmdrName.subscribe(cmdrName=>{
+                            this.eddn.sendJournalEvent(location,cmdrName);
+                        });
+                    }
+
                     resolve(data);
                     break;
                 }
@@ -296,7 +304,7 @@ export class JournalService extends EventEmitter {
                     this.ngZone.run(() => this._currentSystem.next(fsdJump.StarSystem));
                     localStorage.currentSystem = fsdJump.StarSystem;
 
-                    if (!this.firstStream) {
+                    if (!this.firstStream && !this.beta) {
                         this._cmdrName.subscribe(cmdrName => {
                             this.eddn.sendJournalEvent(fsdJump, cmdrName);
                         });
@@ -334,7 +342,7 @@ export class JournalService extends EventEmitter {
                     resolve(data);
                     break;
                 }
-
+                
                 default: {
                     resolve(data);
                 }

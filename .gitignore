@@ -2,3 +2,5 @@ node_modules/
 dist/
 dummy-data/
 packages/
+.DS_Store
+.vscode/

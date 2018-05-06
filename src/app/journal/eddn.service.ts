@@ -58,10 +58,10 @@ export class EDDNService {
         else if  (evt instanceof Location) {
             delete evt.Latitude;
             delete evt.Longitude;
-            delete evt.Security_Localised;
             delete evt.SystemEconomy_Localised;
             delete evt.SystemGovernment_Localised;
             delete evt.SystemSecondEconomy_Localised;
+            delete evt.SystemSecurity_Localised;
         }
 
         let submission = {
