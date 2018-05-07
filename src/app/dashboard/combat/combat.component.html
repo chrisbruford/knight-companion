@@ -1,2 +1,7 @@
 <h3>Combat Ops</h3>
-<p>Combat bonds redeemed: {{combatBondsRedeemed}} Cr</p>
+<section class="combat-ops">
+    <p>Combat bonds redeemed: {{combatBondsRedeemed}} Cr</p>
+    <p class="subtext" *ngIf="trackingFaction">{{factionCombatBondsRedeemed}} Cr for {{trackingFaction}}</p>
+    <p>Bounty vouchers redeemed: {{bountyVouchersRedeemed}} Cr</p>
+    <p class="subtext" *ngIf="trackingFaction">{{factionBountyVouchersRedeemed}} Cr for {{trackingFaction}}</p>
+</section>

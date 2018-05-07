@@ -20,7 +20,7 @@ export class CombatService {
             })
     }
 
-    combatBondsAlert(redeemVoucher: RedeemVoucher, cmdrName: string): Observable<boolean> {
+    bondsAlert(redeemVoucher: RedeemVoucher, cmdrName: string): Observable<boolean> {
         return this.http.post(`${process.env.API_ENDPOINT}/combat/redeemVoucher`, {redeemVoucher, cmdrName})
             .pipe(catchError((err: any)=>{
                 this.logger.error(err);

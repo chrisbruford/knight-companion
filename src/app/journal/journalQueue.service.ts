@@ -39,6 +39,9 @@ export class JournalQueueService {
             this.digesting = false;
             this.digestQueue();
         })
+        .on('data',(data)=>{
+            console.log(data);
+        })
         .resume();
     }
     
