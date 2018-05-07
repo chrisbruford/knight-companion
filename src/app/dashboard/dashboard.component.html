@@ -12,7 +12,7 @@
 
 <section class="panels">
     <app-missions class="panel" [trackingFaction]="trackingFaction.value"></app-missions>
-    <app-combat class="panel"></app-combat>
+    <app-combat class="panel" [trackingFaction]="trackingFaction.value"></app-combat>
     <app-exploration class="panel"></app-exploration>
 </section>
 <router-outlet></router-outlet>
