@@ -3,7 +3,7 @@ const fs = require('fs');
 import { JournalService } from '../journal/journal.service';
 import { JournalEvents, JournalEvent, MissionCompleted, LoadGame, NewCommander } from 'cmdr-journal';
 import { Observable } from 'rxjs/observable';
-import { map, merge } from 'rxjs/operators';
+import { map, merge, tap } from 'rxjs/operators';
 import { of } from 'rxjs/observable/of';
 import { FactionService } from '../core/services/faction.service';
 import { Faction } from 'cmdr-journal';
@@ -59,7 +59,8 @@ export class DashboardComponent {
         })
 
         //tracking faction
-        this.trackingFaction.setValue("");
+        let storedTrackingFaction = localStorage.getItem("trackingFaction");
+        this.trackingFaction.setValue(storedTrackingFaction || "");
 
         this.factionService.getAllFactions()
             .then(factions => {
@@ -71,6 +72,9 @@ export class DashboardComponent {
             }));
 
         this.trackingFaction.valueChanges.pipe(
+            tap(inputValue=>{
+                localStorage.setItem("trackingFaction",inputValue);
+            }),
             map(inputValue => {
                 let outputArray = this.knownFactions.filter(faction => {
                     let escapedInputValue = inputValue.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
@@ -79,7 +83,10 @@ export class DashboardComponent {
                 });
                 return of(outputArray);
             })
-        ).subscribe(filteredKnownFactions => this.filteredKnownFactions = filteredKnownFactions);
+        ).subscribe(filteredKnownFactions => {
+            this.filteredKnownFactions = filteredKnownFactions;
+            
+        });
     }
 
     checkNameMismatch() {
