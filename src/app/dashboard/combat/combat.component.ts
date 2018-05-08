@@ -54,7 +54,7 @@ export class CombatComponent implements OnInit {
                         }
                     }
             }
-            this.combatService.bondsAlert(redeemVoucher, this.cmdrName).subscribe(res=>console.log(res));
+            this.combatService.bondsAlert(redeemVoucher, this.cmdrName).subscribe();
         })
 
         this.journalService.currentSystem.subscribe(system => {
@@ -67,7 +67,7 @@ export class CombatComponent implements OnInit {
     }
 
     interdictedAlert(evt: Interdicted): void {
-        this.combatService.interdictedAlert(evt, this.cmdrName, this.currentSystem).subscribe(res => console.log(res));
+        this.combatService.interdictedAlert(evt, this.cmdrName, this.currentSystem).subscribe();
     }
 
 }
