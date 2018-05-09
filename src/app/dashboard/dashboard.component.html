@@ -7,9 +7,15 @@
     </mat-autocomplete>
 </div>
 
-<section class="panels">
-    <app-missions class="panel" [trackingFaction]="trackingFaction.value"></app-missions>
-    <app-combat class="panel" [trackingFaction]="trackingFaction.value"></app-combat>
-    <app-exploration class="panel"></app-exploration>
-</section>
-<router-outlet></router-outlet>
+<mat-tab-group>
+    <mat-tab label="Missions">
+        <app-missions [trackingFaction]="trackingFaction.value"></app-missions>
+    </mat-tab>
+    <mat-tab label="Combat">
+        <app-combat [trackingFaction]="trackingFaction.value"></app-combat>
+    </mat-tab>
+    <mat-tab label="Exploration">
+            <app-exploration></app-exploration>
+        </mat-tab>
+</mat-tab-group>
+

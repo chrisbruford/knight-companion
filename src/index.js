@@ -11,7 +11,7 @@ function createWindow() {
     // Create the browser window.
     mainWindow = new BrowserWindow({
         width: 400,
-        height: 700,
+        height: 500,
         backgroundColor: '#000',
         icon: './icons/icon.png'
     });
@@ -34,7 +34,7 @@ function createWindow() {
     if (process.env.ENV === "development") {
         menuTemplate.push({
             label: "Dev",
-            role: "toggledevtools"
+            submenu: [{label: "Dev tools", role: "toggledevtools"}]
         });
     }
 
