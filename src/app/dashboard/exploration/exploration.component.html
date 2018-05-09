@@ -1,6 +1,5 @@
-<h3>Exploration</h3>
 <section class="exploration">
-    <h1 class="header-text">{{distanceTravelled | async | number: '1.0-0' | ly }}</h1>
+    <h1 class="header-text">{{distanceTravelled | async | number: '1.0-0' | ly }}</h1><small>travelled</small>
     <p class="subtext">Average speed: {{averageSpeed | async | number: '1.0-0' | ly}}/hr</p>
     <p class="subtext">Jumps completed: {{jumpsCompleted | async}}</p>
 </section>
