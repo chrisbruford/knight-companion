@@ -9,6 +9,7 @@ let mainWindow;
 
 function createWindow() {
     // Create the browser window.
+    
     mainWindow = new BrowserWindow({
         width: 400,
         height: 550,
@@ -36,6 +37,7 @@ function createWindow() {
             label: "Dev",
             submenu: [{label: "Dev tools", role: "toggledevtools"}]
         });
+        mainWindow.webContents.openDevTools();
     }
 
     const menu = Menu.buildFromTemplate(menuTemplate);
