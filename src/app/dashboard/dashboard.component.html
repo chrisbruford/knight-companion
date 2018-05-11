@@ -7,7 +7,7 @@
     </mat-autocomplete>
 </div>
 
-<mat-tab-group dynamicHeight>
+<mat-tab-group dynamicHeight [(selectedIndex)]="selectedDashboardTab" (selectedTabChange)="doTabChange($event)">
     <mat-tab label="Missions">
         <app-missions [trackingFaction]="trackingFaction.value"></app-missions>
     </mat-tab>
