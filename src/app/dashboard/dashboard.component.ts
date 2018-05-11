@@ -11,6 +11,7 @@ import { LoggerService } from '../core/services/logger.service';
 import { FormControl } from '@angular/forms';
 import { UserService } from '../core/services/user.service';
 import { AppErrorService } from '../core/services/app-error.service';
+import { MatTabChangeEvent } from '@angular/material';
 
 @Component({
     templateUrl: 'dashboard.component.html',
@@ -26,6 +27,8 @@ export class DashboardComponent {
     username: string;
     knownFactions: Faction[];
     filteredKnownFactions: Observable<Faction[]>;
+    selectedDashboardTab: number;
+
 
     constructor(
         private journalService: JournalService,
@@ -38,6 +41,12 @@ export class DashboardComponent {
     }
 
     ngOnInit() {
+        try {
+            this.selectedDashboardTab = Number.parseInt(localStorage.getItem("selectedDashboardTab"));
+        } catch (err) {
+            this.logger.error(err);
+            this.selectedDashboardTab = 0;
+        }
 
         //username/cmdrname check
         this.journalService.cmdrName.subscribe(cmdrName => {
@@ -95,5 +104,9 @@ export class DashboardComponent {
         } else {
             this.appErrorService.removeError("cmdrNameMismatch");
         }
+    }
+
+    doTabChange(e: MatTabChangeEvent) {
+        localStorage.setItem("selectedDashboardTab",e.index.toString());
     }
 }
