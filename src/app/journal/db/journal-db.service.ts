@@ -52,19 +52,17 @@ export class JournalDBService {
                 let db = (<IDBOpenDBRequest>evt.target).result;
 
                 db.onerror = (err: any) => {
-                    this.logger.error(err);
+                    reject(err);
                 }
 
                 resolve(db);
             }
 
             openRequest.onblocked = (block: any) => {
-                this.logger.error(block);
                 reject(block);
             }
 
             openRequest.onerror = (err: any) => {
-                this.logger.error(err);
                 reject(err);
             }
         });
@@ -82,7 +80,7 @@ export class JournalDBService {
                 }
 
                 transaction.onerror = (err: any) => {
-                    this.logger.error({
+                    reject({
                         originalError: err,
                         message: 'transaction error',
                         data: {
@@ -90,11 +88,10 @@ export class JournalDBService {
                             entry
                         }
                     });
-                    reject(err);
                 }
 
                 transaction.onabort = (evt: any) => {
-                    this.logger.error({
+                    reject({
                         originalError: evt,
                         message: 'transaction aborted',
                         data: {
@@ -102,7 +99,6 @@ export class JournalDBService {
                             entry
                         }
                     })
-                    reject(evt);
                 }
 
                 let objectStore = transaction.objectStore(store);
@@ -110,7 +106,7 @@ export class JournalDBService {
                 let request = objectStore.put(entry);
 
                 request.onerror = (err) => {
-                    this.logger.error({ originalError: err, message: "putCurrentState request error" });
+                    reject({ originalError: err, message: "putCurrentState request error" });
                 }
             })
                 .catch(err => {
@@ -136,7 +132,7 @@ export class JournalDBService {
                 }
 
                 transaction.onerror = (err: any) => {
-                    this.logger.error({
+                    reject({
                         originalError: err,
                         message: 'transaction error',
                         data: {
@@ -144,11 +140,10 @@ export class JournalDBService {
                             entry
                         }
                     });
-                    reject(err);
                 }
 
                 transaction.onabort = (evt: any) => {
-                    this.logger.error({
+                    reject({
                         originalError: evt,
                         message: 'transaction aborted',
                         data: {
@@ -156,7 +151,6 @@ export class JournalDBService {
                             entry
                         }
                     })
-                    reject(evt);
                 }
 
                 let objectStore = transaction.objectStore(store);
@@ -164,7 +158,7 @@ export class JournalDBService {
                 let request = objectStore.add(entry);
 
                 request.onerror = (err) => {
-                    this.logger.error({ originalError: err, message: "addEntry request error" });
+                    reject({ originalError: err, message: "addEntry request error" });
                 }
             })
                 .catch(err => {
@@ -192,7 +186,7 @@ export class JournalDBService {
                 }
 
                 request.onerror = (err) => {
-                    this.logger.error({
+                    reject({
                         originalError: err,
                         message: 'journalDBService.getEntry request error',
                         data: {
@@ -235,11 +229,10 @@ export class JournalDBService {
                 }
 
                 request.onerror = err => {
-                    this.logger.error({
+                    reject({
                         originalError: err,
                         message: "Error in getAll transaction"
                     })
-                    reject(err);
                 }
             })
         })
