@@ -65,7 +65,7 @@ export class EDDNService {
         }
 
         let submission = {
-            $schemaRef: "https://eddn.edcd.io/schemas/journal/1",
+            $schemaRef: "https://eddn.edcd.io/schemas/journal/1/test",
             header: {
                 uploaderID: cmdrName,
                 softwareName: "Knights of Karma Companion",
