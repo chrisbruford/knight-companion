@@ -10,7 +10,7 @@ export class JournalDBService {
         private logger: LoggerService
     ) {
         let indexedDB = window.indexedDB;
-        let dbVersion = 2;
+        let dbVersion = 3;
 
         let openRequest = indexedDB.open("journal", dbVersion);
 
@@ -39,6 +39,11 @@ export class JournalDBService {
                     let factionsStore = upgradeDB.createObjectStore("factions", { keyPath: "Name" });
                     factionsStore.createIndex("Name", "Name", { unique: true });
                 }
+
+                if (!upgradeDB.objectStoreNames.contains("currentState")) {
+                    let currentStateStore = upgradeDB.createObjectStore("currentState", {keyPath: "key"});
+                    currentStateStore.createIndex("key","key",{unique: true});
+                }
             }
         }
 
@@ -63,6 +68,62 @@ export class JournalDBService {
                 reject(err);
             }
         });
+    }
+
+    putCurrentState(entry: {key: string, value: any}): Promise<boolean> {
+        let store = "currentState"
+
+        return new Promise<boolean>((resolve, reject) => {
+            this.dbPromise.then(db => {
+                let transaction = db.transaction(store, "readwrite");
+
+                transaction.oncomplete = (evt: any) => {
+                    resolve(true);
+                }
+
+                transaction.onerror = (err: any) => {
+                    this.logger.error({
+                        originalError: err,
+                        message: 'transaction error',
+                        data: {
+                            store,
+                            entry
+                        }
+                    });
+                    reject(err);
+                }
+
+                transaction.onabort = (evt: any) => {
+                    this.logger.error({
+                        originalError: evt,
+                        message: 'transaction aborted',
+                        data: {
+                            store,
+                            entry
+                        }
+                    })
+                    reject(evt);
+                }
+
+                let objectStore = transaction.objectStore(store);
+
+                let request = objectStore.put(entry);
+
+                request.onerror = (err) => {
+                    this.logger.error({ originalError: err, message: "putCurrentState request error" });
+                }
+            })
+                .catch(err => {
+                    this.logger.error({
+                        originalError: err,
+                        message: 'journalDBService.addEntry error',
+                        data: {
+                            store,
+                            entry
+                        }
+                    });
+                })
+        })
     }
 
     addEntry(store: string, entry: any): Promise<boolean> {
