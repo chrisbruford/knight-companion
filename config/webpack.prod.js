@@ -22,7 +22,8 @@ module.exports = webpackMerge(commonConfig, {
     new webpack.DefinePlugin({
       'process.env': {
         'ENV': JSON.stringify(ENV),
-        'API_ENDPOINT': JSON.stringify('https://www.knightsofkarma.com/api')
+        'API_ENDPOINT': JSON.stringify('https://www.knightsofkarma.com/api'),
+        'EDDN_JOURNAL_ENDPOINT': JSON.stringify('https://eddn.edcd.io/schemas/journal/1')
       }
     }),
     new webpack.LoaderOptionsPlugin({
