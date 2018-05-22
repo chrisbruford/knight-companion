@@ -13,7 +13,8 @@ export interface User {
     token: string,
     expire: Date,
     createdAt: Date,
-    wings: object[]
+    wings: object[],
+    discordID?: string
 }
 
 export interface SimpleUser {

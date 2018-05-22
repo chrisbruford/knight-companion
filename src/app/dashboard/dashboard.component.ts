@@ -62,8 +62,14 @@ export class DashboardComponent {
             if (user) {
                 this.username = user.username;
                 this.checkNameMismatch();
+                if (!user.discordID || !user.discordID.length) {
+                    this.appErrorService.addError("no-discord",{message: `️️️️️️️⚠️️️️Your account has not been linked with Discord`});
+                } else {
+                    this.appErrorService.removeError("no-discord");
+                }
             } else {
                 this.appErrorService.removeError("cmdrNameMismatch");
+                this.appErrorService.removeError("no-discord");
             }
         })
 
@@ -100,7 +106,7 @@ export class DashboardComponent {
 
     checkNameMismatch() {
         if (this.cmdrName !== this.username) {
-            this.appErrorService.addError("cmdrNameMismatch", { message: `⚠️You are logged in as ${this.username} but appear to be playing as ${this.cmdrName}` });
+            this.appErrorService.addError("cmdrNameMismatch", { message: `⚠️️️️You are logged in as ${this.username} but appear to be playing as ${this.cmdrName}` });
         } else {
             this.appErrorService.removeError("cmdrNameMismatch");
         }
