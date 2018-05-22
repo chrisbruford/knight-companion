@@ -8,7 +8,7 @@ import { map, catchError, tap } from 'rxjs/operators';
 @Injectable()
 export class UserService {
 
-    private _user = new BehaviorSubject<any>(null);
+    private _user = new BehaviorSubject<User | null>(null);
     
     get user() {
         return this._user.asObservable();
