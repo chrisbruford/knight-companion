@@ -1,6 +1,6 @@
 import { NgModule } from '@angular/core';
 import { AppSettingsService } from './app-settings.service';
-import { LoggerService, UserService, RE, FactionService  } from './services';
+import { LoggerService, UserService, RE, FactionService, ContinentService, PlatformService  } from './services';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { AppErrorService } from './services/app-error.service';
 import { BrowserModule } from '@angular/platform-browser';
@@ -26,7 +26,9 @@ import { SharedModule } from '../shared/shared.module';
         UserService,
         RE,
         FactionService,
-        AppErrorService
+        AppErrorService,
+        ContinentService,
+        PlatformService
     ]
 })
 export class CoreModule {}

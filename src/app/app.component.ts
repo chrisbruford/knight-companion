@@ -3,8 +3,10 @@ import { Router } from '@angular/router';
 import { AppErrorService } from './core/services/app-error.service';
 import { UserService } from './core/services/user.service';
 import { LoggerService } from './core/services/logger.service';
-import { ipcRenderer } from 'electron';
+import { ipcRenderer, IpcMessageEvent, Event } from 'electron';
 import { NgZone } from '@angular/core';
+
+declare function buildKokMenu(arg: {login: boolean}): void;
 
 @Component({
   selector: 'my-app',
@@ -17,10 +19,24 @@ export class AppComponent {
         private userService: UserService,
         private router: Router,
         private logger: LoggerService,
-        private zone: NgZone
+        private zone: NgZone,
     ) {
         ipcRenderer.on('logout',()=>{
-            zone.run(this.logout.bind(this))
+            zone.run(this.logout.bind(this));
+            ipcRenderer.send("rebuild-menu",{login: true});
+        });
+
+        ipcRenderer.on('login',()=>{
+            ipcRenderer.send("rebuild-menu",{login: true});
+            zone.run(()=>{
+                this.router.navigate(["/"]);
+            })
+        });
+
+        ipcRenderer.on('navigate',(evt: Event, url:string)=>{
+            zone.run(()=>{
+                this.router.navigate(url.split("/"));
+            })
         });
      }
 

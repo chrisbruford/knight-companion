@@ -1,4 +1,4 @@
-const {app, Menu, BrowserWindow} = require('electron')
+const {app, Menu, BrowserWindow, ipcMain} = require('electron')
 // Module to create native browser window.
 const path = require('path')
 const url = require('url')
@@ -7,26 +7,33 @@ const url = require('url')
 // be closed automatically when the JavaScript object is garbage collected.
 let mainWindow;
 
-function createWindow() {
-    // Create the browser window.
-    
-    mainWindow = new BrowserWindow({
-        width: 400,
-        height: 550,
-        backgroundColor: '#000',
-        icon: './icons/icon.png'
-    });
+//need this function until Electron manage to implement dynamic menu items
+//https://github.com/electron/electron/issues/528
+function buildKokMenu({login=true}) {
+    const logInOut = {
+        label: login ? "Login":"Logout",
+        click() {
+            mainWindow.webContents.send(login ? 'login':'logout');
+        }
+    }
 
-    //Application menus
     const menuTemplate = [
+        {
+            label: "Dashboard",
+            click() {
+                mainWindow.webContents.send('navigate','/')
+            }
+        },
         {
             label: "Account",
             submenu: [
+                logInOut,
                 {
-                    label: "Logout",
+                    label: "Profile",
                     click() {
-                        mainWindow.webContents.send('logout');
-                    }
+                        mainWindow.webContents.send('navigate','account/profile');
+                    },
+                    enabled: login ? false:true                    
                 }
             ]
         }
@@ -42,6 +49,22 @@ function createWindow() {
 
     const menu = Menu.buildFromTemplate(menuTemplate);
     Menu.setApplicationMenu(menu);
+}
+
+ipcMain.on('rebuild-menu',(evt,arg)=>buildKokMenu(arg));
+
+function createWindow() {
+    // Create the browser window.
+    
+    mainWindow = new BrowserWindow({
+        width: 400,
+        height: 550,
+        backgroundColor: '#000',
+        icon: './icons/icon.png'
+    });
+
+    //Application menus
+    buildKokMenu({login: true});
 
 
     mainWindow.once('ready-to-show',()=>mainWindow.show());
