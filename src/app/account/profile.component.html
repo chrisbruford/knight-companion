@@ -1,0 +1,27 @@
+<ng-container *ngIf="user;else nodisplay">
+    <form [formGroup]="profileForm" class="profile-form">
+        <mat-form-field>
+            <input type="text" matInput placeholder="Username" formControlName="username" name="username">
+        </mat-form-field>
+
+        <mat-form-field>
+            <mat-select placeholder="Continent" formControlName="continentSelect" name="continentSelect">
+                <mat-option *ngFor="let continent of continents | async" [value]="continent">{{continent}}</mat-option>
+            </mat-select>
+        </mat-form-field>
+
+        <mat-form-field>
+            <mat-select placeholder="Platform" formControlName="platformSelect" name="platformSelect">
+                <mat-option *ngFor="let platform of platforms | async" [value]="platform">{{platform}}</mat-option>
+            </mat-select>
+        </mat-form-field>
+
+        <mat-form-field>
+            <textarea matInput id="" cols="30" rows="10" placeholder="Biography" formControlName="bio" name="bio"></textarea>
+        </mat-form-field>
+    </form>
+</ng-container>
+
+<ng-template #nodisplay>
+    Please login to view and ammend your profile
+</ng-template>

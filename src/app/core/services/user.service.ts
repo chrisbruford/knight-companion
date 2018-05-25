@@ -9,7 +9,7 @@ import { map, catchError, tap } from 'rxjs/operators';
 export class UserService {
 
     private _user = new BehaviorSubject<User | null>(null);
-    
+
     get user() {
         return this._user.asObservable();
     }
@@ -28,27 +28,27 @@ export class UserService {
                 }
             })
             .pipe(
-            catchError(err => Observable.throw(err))
+                catchError(err => Observable.throw(err))
             )
     };
 
     authCheck(): Observable<User | null> {
         return this.http.get<User | null>(`${process.env.API_ENDPOINT}/authcheck`)
             .pipe(
-            tap(user => {
-                if (user) {
-                    this._user.next(user);
-                }
-            }),
-            catchError(err => Observable.throw(err))
+                tap(user => {
+                    if (user) {
+                        this._user.next(user);
+                    }
+                }),
+                catchError(err => Observable.throw(err))
             )
     }
 
     logout(): Observable<boolean> {
         return this.http.get<boolean>(`${process.env.API_ENDPOINT}/logout`)
             .pipe(
-            tap(() => this._user.next(null)),
-            catchError(err => Observable.throw(err))
+                tap(() => this._user.next(null)),
+                catchError(err => Observable.throw(err))
             );
     }
 

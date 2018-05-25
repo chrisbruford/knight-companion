@@ -6,6 +6,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { Observable } from 'rxjs/Observable';
 import { map } from 'rxjs/operators';
 import { FormGroup, FormControl, FormBuilder } from '@angular/forms';
+import { ipcRenderer } from 'electron'
 
 @Component({
     selector: 'kok-login',
@@ -37,8 +38,11 @@ export class LoginComponent implements OnInit {
         })
 
         this.userService.authCheck().subscribe(
-            (res: any) => {
-                this.router.navigate(['/dashboard'])
+            (user: User) => {
+                this.authenticated = true;
+                this.user = user;
+                ipcRenderer.send("rebuild-menu",{login: false});
+                this.router.navigate(['/dashboard']);
             },
             (err: any) => this.logger.error({ originalError: err, message: 'AuthCheck Error' })
         )
@@ -53,6 +57,7 @@ export class LoginComponent implements OnInit {
             .subscribe(user => {
                 this.authenticated = true;
                 this.user = user;
+                ipcRenderer.send("rebuild-menu",{login: false});
                 this.router.navigate(['/dashboard']);
             },
             err => {
