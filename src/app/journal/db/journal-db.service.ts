@@ -12,7 +12,7 @@ export class JournalDBService {
         private errorService: AppErrorService
     ) {
         let indexedDB = window.indexedDB;
-        let dbVersion = 3;
+        let dbVersion = 4;
 
         let openRequest = indexedDB.open("journal", dbVersion);
 
@@ -45,6 +45,11 @@ export class JournalDBService {
                 if (!upgradeDB.objectStoreNames.contains("currentState")) {
                     let currentStateStore = upgradeDB.createObjectStore("currentState", {keyPath: "key"});
                     currentStateStore.createIndex("key","key",{unique: true});
+                }
+
+                if (!upgradeDB.objectStoreNames.contains("ships")) {
+                    let shipsStore = upgradeDB.createObjectStore("ships",{keyPath: "ShipID"});
+                    shipsStore.createIndex("ShipID","ShipID",{unique: true});
                 }
             }
         }
@@ -173,6 +178,110 @@ export class JournalDBService {
                         data: {
                             store,
                             entry
+                        }
+                    });
+                })
+        })
+    }
+
+    putEntry(store: string, entry: any): Promise<boolean> {
+        return new Promise<boolean>((resolve, reject) => {
+            this.dbPromise.then(db => {
+                let transaction = db.transaction(store, "readwrite");
+
+                transaction.oncomplete = (evt: any) => {
+                    resolve(true);
+                }
+
+                transaction.onerror = (err: any) => {
+                    reject({
+                        originalError: err,
+                        message: 'transaction error',
+                        data: {
+                            store,
+                            entry
+                        }
+                    });
+                }
+
+                transaction.onabort = (evt: any) => {
+                    reject({
+                        originalError: evt,
+                        message: 'transaction aborted',
+                        data: {
+                            store,
+                            entry
+                        }
+                    })
+                }
+
+                let objectStore = transaction.objectStore(store);
+
+                let request = objectStore.put(entry);
+
+                request.onerror = (err) => {
+                    reject({ originalError: err, message: "putEntry request error" });
+                }
+            })
+                .catch(err => {
+                    this.logger.error({
+                        originalError: err,
+                        message: 'journalDBService.addEntry error',
+                        data: {
+                            store,
+                            entry
+                        }
+                    });
+                })
+        })
+    }
+
+    deleteEntry(store: string, key: any): Promise<boolean> {
+        return new Promise<boolean>((resolve, reject) => {
+            this.dbPromise.then(db => {
+                let transaction = db.transaction(store, "readwrite");
+
+                transaction.oncomplete = (evt: any) => {
+                    resolve(true);
+                }
+
+                transaction.onerror = (err: any) => {
+                    reject({
+                        originalError: err,
+                        message: 'transaction error',
+                        data: {
+                            store,
+                            key
+                        }
+                    });
+                }
+
+                transaction.onabort = (evt: any) => {
+                    reject({
+                        originalError: evt,
+                        message: 'transaction aborted',
+                        data: {
+                            store,
+                            key
+                        }
+                    })
+                }
+
+                let objectStore = transaction.objectStore(store);
+
+                let request = objectStore.delete(key);
+
+                request.onerror = (err) => {
+                    reject({ originalError: err, message: "putEntry request error" });
+                }
+            })
+                .catch(err => {
+                    this.logger.error({
+                        originalError: err,
+                        message: 'journalDBService.addEntry error',
+                        data: {
+                            store,
+                            key
                         }
                     });
                 })

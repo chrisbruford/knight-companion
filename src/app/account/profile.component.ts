@@ -3,9 +3,9 @@ import { User } from "../shared/interfaces";
 import { Component } from "@angular/core";
 import { FormBuilder, FormGroup } from "@angular/forms";
 import { ContinentService } from "../core/services/continent-service";
-import { Observable } from "rxjs/Observable";
-import { PlatformService } from "../core/services/platform-service";
+import { Observable } from "rxjs";
 import { takeWhile } from "rxjs/operators";
+import { PlatformService } from "../core/services/platform-service";
 
 @Component({
     selector: 'kok-profile',

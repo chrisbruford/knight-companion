@@ -14,7 +14,7 @@ export class ToArrayPipe implements PipeTransform {
                 value: inputValue
             })
         });
-        
+
         return returnArray;
     }
 }

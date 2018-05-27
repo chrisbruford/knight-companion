@@ -1,5 +1,5 @@
 import { Injectable } from "@angular/core";
-import { Observable } from "rxjs/Observable";
+import { Observable, of } from "rxjs";
 
 @Injectable() 
 export class ContinentService {
@@ -14,6 +14,6 @@ export class ContinentService {
         "Asia"
     ];
 
-    continents: Observable<string[]> = Observable.of([...this._continents.sort()]);
+    continents: Observable<string[]> = of([...this._continents.sort()]);
 
 }

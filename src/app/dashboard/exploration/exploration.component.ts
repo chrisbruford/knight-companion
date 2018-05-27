@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { ExplorationService } from './exploration.service';
-import { BehaviorSubject } from 'rxjs/BehaviorSubject';
+import { BehaviorSubject } from 'rxjs';
 
 @Component({
     selector: 'app-exploration',

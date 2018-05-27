@@ -1,5 +1,5 @@
 import { Injectable } from "@angular/core";
-import { Observable } from "rxjs/Observable";
+import { Observable, of } from "rxjs";
 
 @Injectable() 
 export class PlatformService {
@@ -10,6 +10,6 @@ export class PlatformService {
         "Playstation"
     ];
 
-    platforms: Observable<string[]> = Observable.of([...this._platforms]);
+    platforms: Observable<string[]> = of([...this._platforms]);
 
 }
