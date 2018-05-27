@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { AppError } from '../error-bar/app-error.model';
-import { BehaviorSubject } from 'rxjs/BehaviorSubject';
+import { BehaviorSubject } from 'rxjs';
 
 @Injectable()
 export class AppErrorService {

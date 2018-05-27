@@ -4,8 +4,7 @@ import * as fs from "fs";
 import * as stream from "stream";
 import * as os from "os";
 import * as util from "util";
-import { Observable, Subject, BehaviorSubject, Subscription, Observer } from 'rxjs';
-import { combineLatest } from 'rxjs/observable/combineLatest';
+import { Observable, Subject, BehaviorSubject, Subscription, Observer, combineLatest } from 'rxjs';
 import { first, take } from 'rxjs/operators';
 let ndjson = require('ndjson');
 import * as journal from 'cmdr-journal';
@@ -32,6 +31,7 @@ export class JournalService extends EventEmitter {
     private _currentSystemAddress = new BehaviorSubject(NaN);
     private _currentSystemStarPos = new BehaviorSubject<[number, number, number]>([NaN, NaN, NaN]);
     private _cmdrName = new BehaviorSubject("Unknown CMDR");
+    private _currentShipID = new BehaviorSubject(NaN);
 
     constructor(
         private re: RE,
@@ -114,6 +114,10 @@ export class JournalService extends EventEmitter {
 
     get cmdrName(): Observable<string> {
         return this._cmdrName.asObservable();
+    }
+
+    get shipID(): Observable<number> {
+        return this._currentShipID.asObservable();
     }
 
     get beta(): boolean {
@@ -479,6 +483,51 @@ export class JournalService extends EventEmitter {
 
                     this.journalDB.putCurrentState({ key: "currentSystem", value: supercruiseExit.StarSystem })
                         .catch(originalError => this.logger.error({ originalError, message: "handleEvent failure" }));
+
+                    resolve(data);
+                    break;
+                }
+
+                //loadout
+                case journal.JournalEvents.loadout: {
+                    let loadout: journal.Loadout = Object.assign(new journal.Loadout(), data);
+
+                    this.ngZone.run(() => this._currentShipID.next(loadout.ShipID));
+
+                    this.journalDB.putEntry('ships',loadout)
+                        .catch(originalError => this.logger.error({originalError, message: "handleEvent failure"}));
+
+                    this.journalDB.putCurrentState({key:'shipID',value: loadout.ShipID})
+                        .catch(originalError => this.logger.error({originalError, message: "handleEvent failure"}));
+                    
+                    resolve(data);
+                    break;
+                }
+
+                //resurrected
+                case journal.JournalEvents.resurrect: {
+
+                    let resurrected: journal.Resurrect = Object.assign(new journal.Resurrect(), data);
+
+                    if (resurrected.Option !== "rebuy") {
+                        this._currentShipID.pipe(
+                            take(1)
+                        ).subscribe(shipID => {
+                            this.journalDB.deleteEntry('ships',shipID);
+                            this.emit("notRebought",shipID);
+                        });
+                    }
+
+                    resolve(data);
+                    break;
+                }
+
+                //shipyardsell
+                case journal.JournalEvents.shipyardSell: {
+                    let shipyardSell: journal.ShipyardSell = Object.assign(new journal.ShipyardSell(), data);
+
+                    this.journalDB.deleteEntry('ships',shipyardSell.SellShipID)
+                        .catch(originalError => this.logger.error({originalError, message: "handleEvent failure"}));
 
                     resolve(data);
                     break;

@@ -12,6 +12,8 @@ import { MissionService } from './missions/mission.service';
 import { ExplorationComponent } from './exploration/exploration.component';
 import { ExplorationService } from './exploration/exploration.service';
 import { KokMaterialModule } from '../kok-material/kok-material.module';
+import { ShipsComponent } from './ships/ships.component';
+import { ShipsService } from './ships/ships.service';
 
 @NgModule({
     imports: [
@@ -26,13 +28,15 @@ import { KokMaterialModule } from '../kok-material/kok-material.module';
         DashboardComponent, 
         MissionsComponent, 
         CombatComponent,
-        ExplorationComponent
+        ExplorationComponent,
+        ShipsComponent
     ],
     exports: [DashboardComponent],
     providers: [
         CombatService, 
         MissionService,
-        ExplorationService
+        ExplorationService,
+        ShipsService
     ]
 }) 
 export class DashboardModule {}

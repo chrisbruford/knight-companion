@@ -1,8 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { User, SimpleUser } from '../../shared/interfaces/user';
-import { Observable } from 'rxjs/Observable';
-import { BehaviorSubject } from 'rxjs/BehaviorSubject';
+import { Observable, BehaviorSubject } from 'rxjs';
 import { map, catchError, tap } from 'rxjs/operators';
 
 @Injectable()
@@ -19,15 +18,15 @@ export class UserService {
     authenticate(user: SimpleUser): Observable<User> {
         let data = Object.assign({ remember: true }, user);
         return this.http.post<User>(`${process.env.API_ENDPOINT}/login`, data)
-            .map(user => {
-                if (user) {
-                    this._user.next(user);
-                    return user;
-                } else {
-                    return Observable.throw(new Error("No such user found"));
-                }
-            })
             .pipe(
+                map(user => {
+                    if (user) {
+                        this._user.next(user);
+                        return user;
+                    } else {
+                        throw new Error("No such user found");
+                    }
+                }),
                 catchError(err => Observable.throw(err))
             )
     };

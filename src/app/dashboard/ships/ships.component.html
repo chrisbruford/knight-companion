@@ -1,0 +1,33 @@
+<section class="ships">
+    <mat-accordion>
+        <mat-expansion-panel *ngFor="let ship of ships;trackBy: trackShipsBy" [expanded]="false">
+            <mat-expansion-panel-header>
+                <mat-panel-title>
+                    {{ship.ShipName}}
+                </mat-panel-title>
+                <mat-panel-description>
+                    {{ship.ShipIdent}}
+                </mat-panel-description>
+            </mat-expansion-panel-header>
+
+            <button mat-button (click)="openCoriolis(ship)">View in Coriolis</button>
+            <button mat-button (click)="copyCoriolisURL(ship)">Copy Coriolis Link</button>
+
+            <table mat-table [dataSource]="ship.Modules">
+                <ng-container matColumnDef="slot">
+                    <th mat-header-cell *matHeaderCellDef>Slot</th>
+                    <td mat-cell *matCellDef="let row">{{row.Slot}}</td>
+                </ng-container>
+
+                <ng-container matColumnDef="item">
+                    <th mat-header-cell *matHeaderCellDef>Item</th>
+                    <td mat-cell *matCellDef="let row">{{row.Item_KokLocalised || row.Item || "weird"}}</td>
+                </ng-container>
+
+                <tr mat-header-row *matHeaderRowDef="columnsToDisplay"></tr>
+                <tr mat-row *matRowDef="let myRowData; columns: columnsToDisplay"></tr>
+            </table>
+
+        </mat-expansion-panel>
+    </mat-accordion>
+</section>

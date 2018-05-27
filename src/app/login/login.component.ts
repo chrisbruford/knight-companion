@@ -3,7 +3,7 @@ import { UserService } from '../core/services/user.service';
 import { LoggerService } from '../core/services/logger.service';
 import { User, SimpleUser } from '../shared/interfaces/user';
 import { ActivatedRoute, Router } from '@angular/router';
-import { Observable } from 'rxjs/Observable';
+import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { FormGroup, FormControl, FormBuilder } from '@angular/forms';
 import { ipcRenderer } from 'electron'
@@ -70,7 +70,9 @@ export class LoginComponent implements OnInit {
 
     authenticate(user: SimpleUser): Observable<User> {
         return this.userService.authenticate(user)
-            .map(result => result);
+        .pipe(
+            map(result => result)
+        )
     }
 
 }
