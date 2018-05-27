@@ -5,6 +5,7 @@ import { JournalEvents, JournalEvent, MissionCompleted, MissionAccepted, Mission
 import { Subscription } from 'rxjs';
 import { OriginatedMission } from './originatedMission';
 import { MissionService } from './mission.service';
+import { takeWhile } from 'rxjs/operators';
 
 @Component({
     templateUrl: 'missions.component.html',
@@ -19,6 +20,7 @@ export class MissionsComponent {
     @Input() trackingFaction: string;
     oldTrackingFaction: string;
     cmdrName: string;
+    private alive = true;
 
     constructor(
         private journalService: JournalService,
@@ -28,7 +30,11 @@ export class MissionsComponent {
 
     ngOnInit() {
         this.watchMissions();
-        this.journalService.cmdrName.subscribe(name=>this.cmdrName = name);
+        this.journalService.cmdrName
+            .pipe(
+                takeWhile(() => this.alive)
+            )
+            .subscribe(name => this.cmdrName = name);
     }
 
     ngDoCheck() {
@@ -45,6 +51,10 @@ export class MissionsComponent {
         }
     }
 
+    ngOnDestroy() {
+        this.alive = false;
+    }
+
     async watchMissions() {
         this.journalService.on(JournalEvents.missionCompleted, async (data: JournalEvent) => {
 
@@ -54,7 +64,11 @@ export class MissionsComponent {
             if (!originalMission) { return }
             let originatedMission: OriginatedMission = Object.assign({ originator: originalMission.Faction, LocalisedName: originalMission.LocalisedName }, completedMission)
             this.missionsCompleted.push(originatedMission);
-            this.missionService.completedMission(originatedMission, this.cmdrName).subscribe();
+            this.missionService.completedMission(originatedMission, this.cmdrName)
+                .pipe(
+                    takeWhile(() => this.alive)
+                )
+                .subscribe();
         })
     }
 

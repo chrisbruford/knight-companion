@@ -3,6 +3,7 @@ import { JournalService } from '../../journal/journal.service';
 import { JournalEvents, JournalEvent, Interdicted, RedeemVoucher, FileHeader } from 'cmdr-journal';
 import { Subscription } from 'rxjs';
 import { CombatService } from './combat.service';
+import { takeWhile } from 'rxjs/operators';
 
 @Component({
     styleUrls: ['combat.component.scss'],
@@ -11,6 +12,7 @@ import { CombatService } from './combat.service';
 })
 export class CombatComponent implements OnInit {
 
+    private alive = true;
     private cmdrName: string;
     private currentSystem: string;
     private combatBondsRedeemed = 0;
@@ -54,20 +56,40 @@ export class CombatComponent implements OnInit {
                         }
                     }
             }
-            this.combatService.bondsAlert(redeemVoucher, this.cmdrName).subscribe();
+            this.combatService.bondsAlert(redeemVoucher, this.cmdrName)
+            .pipe(
+                takeWhile(()=>this.alive)
+            )
+            .subscribe();
         })
 
-        this.journalService.currentSystem.subscribe(system => {
+        this.journalService.currentSystem
+        .pipe(
+            takeWhile(()=>this.alive)
+        )
+        .subscribe(system => {
             this.currentSystem = system;
         })
 
-        this.journalService.cmdrName.subscribe(name => {
+        this.journalService.cmdrName
+        .pipe(
+            takeWhile(()=>this.alive)
+        )
+        .subscribe(name => {
             this.cmdrName = name;
         })
     }
 
     interdictedAlert(evt: Interdicted): void {
-        this.combatService.interdictedAlert(evt, this.cmdrName, this.currentSystem).subscribe();
+        this.combatService.interdictedAlert(evt, this.cmdrName, this.currentSystem)
+        .pipe(
+            takeWhile(()=>this.alive)
+        )
+        .subscribe();
+    }
+
+    ngOnDestroy() {
+        this.alive = false;
     }
 
 }
