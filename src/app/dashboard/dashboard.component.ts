@@ -3,7 +3,7 @@ const fs = require('fs');
 import { JournalService } from '../journal/journal.service';
 import { JournalEvents, JournalEvent, MissionCompleted, LoadGame, NewCommander } from 'cmdr-journal';
 import { Observable } from 'rxjs/observable';
-import { map, merge, tap } from 'rxjs/operators';
+import { map, merge, tap, takeWhile } from 'rxjs/operators';
 import { of } from 'rxjs/observable/of';
 import { FactionService } from '../core/services/faction.service';
 import { Faction } from 'cmdr-journal';
@@ -28,6 +28,7 @@ export class DashboardComponent {
     knownFactions: Faction[];
     filteredKnownFactions: Observable<Faction[]>;
     selectedDashboardTab: number;
+    private alive = true;
 
 
     constructor(
@@ -35,7 +36,7 @@ export class DashboardComponent {
         private factionService: FactionService,
         private logger: LoggerService,
         private userService: UserService,
-        private appErrorService: AppErrorService
+        private appErrorService: AppErrorService,
     ) {
         this.currentSystem = journalService.currentSystem;
     }
@@ -49,29 +50,37 @@ export class DashboardComponent {
         }
 
         //username/cmdrname check
-        this.journalService.cmdrName.subscribe(cmdrName => {
-            if (cmdrName) {
-                this.cmdrName = cmdrName;
-                this.checkNameMismatch();
-            } else {
-                this.appErrorService.removeError("cmdrNameMismatch");
-            }
-        });
-
-        this.userService.user.subscribe(user => {
-            if (user) {
-                this.username = user.username;
-                this.checkNameMismatch();
-                if (!user.discordID || !user.discordID.length) {
-                    this.appErrorService.addError("no-discord",{message: `️️️️️️️⚠️️️️Your account has not been linked with Discord`});
+        this.journalService.cmdrName
+            .pipe(
+                takeWhile(() => this.alive)
+            )
+            .subscribe(cmdrName => {
+                if (cmdrName) {
+                    this.cmdrName = cmdrName;
+                    this.checkNameMismatch();
                 } else {
+                    this.appErrorService.removeError("cmdrNameMismatch");
+                }
+            });
+
+        this.userService.user
+            .pipe(
+                takeWhile(() => this.alive)
+            )
+            .subscribe(user => {
+                if (user) {
+                    this.username = user.username;
+                    this.checkNameMismatch();
+                    if (!user.discordID || !user.discordID.length) {
+                        this.appErrorService.addError("no-discord", { message: `️️️️️️️⚠️️️️Your account has not been linked with Discord` });
+                    } else {
+                        this.appErrorService.removeError("no-discord");
+                    }
+                } else {
+                    this.appErrorService.removeError("cmdrNameMismatch");
                     this.appErrorService.removeError("no-discord");
                 }
-            } else {
-                this.appErrorService.removeError("cmdrNameMismatch");
-                this.appErrorService.removeError("no-discord");
-            }
-        })
+            })
 
         //tracking faction
         let storedTrackingFaction = localStorage.getItem("trackingFaction");
@@ -87,8 +96,8 @@ export class DashboardComponent {
             }));
 
         this.trackingFaction.valueChanges.pipe(
-            tap(inputValue=>{
-                localStorage.setItem("trackingFaction",inputValue);
+            tap(inputValue => {
+                localStorage.setItem("trackingFaction", inputValue);
             }),
             map(inputValue => {
                 let outputArray = this.knownFactions.filter(faction => {
@@ -98,10 +107,14 @@ export class DashboardComponent {
                 });
                 return of(outputArray);
             })
-        ).subscribe(filteredKnownFactions => {
-            this.filteredKnownFactions = filteredKnownFactions;
-            
-        });
+        )
+            .pipe(
+                takeWhile(() => this.alive)
+            )
+            .subscribe(filteredKnownFactions => {
+                this.filteredKnownFactions = filteredKnownFactions;
+
+            });
     }
 
     checkNameMismatch() {
@@ -113,6 +126,10 @@ export class DashboardComponent {
     }
 
     doTabChange(e: MatTabChangeEvent) {
-        localStorage.setItem("selectedDashboardTab",e.index.toString());
+        localStorage.setItem("selectedDashboardTab", e.index.toString());
+    }
+
+    ngOnDestroy() {
+        this.alive = false;
     }
 }
