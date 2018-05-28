@@ -3,6 +3,7 @@ const fs = require('fs');
 import { JournalService } from '../journal/journal.service';
 import { JournalEvents, JournalEvent, MissionCompleted, LoadGame, NewCommander } from 'cmdr-journal';
 import { Observable } from 'rxjs/observable';
+import { combineLatest } from 'rxjs/observable/combineLatest';
 import { map, merge, tap, takeWhile } from 'rxjs/operators';
 import { of } from 'rxjs/observable/of';
 import { FactionService } from '../core/services/faction.service';
@@ -57,7 +58,6 @@ export class DashboardComponent {
             .subscribe(cmdrName => {
                 if (cmdrName) {
                     this.cmdrName = cmdrName;
-                    this.checkNameMismatch();
                 } else {
                     this.appErrorService.removeError("cmdrNameMismatch");
                 }
@@ -70,7 +70,6 @@ export class DashboardComponent {
             .subscribe(user => {
                 if (user) {
                     this.username = user.username;
-                    this.checkNameMismatch();
                     if (!user.discordID || !user.discordID.length) {
                         this.appErrorService.addError("no-discord", { message: `️️️️️️️⚠️️️️Your account has not been linked with Discord` });
                     } else {
@@ -80,7 +79,21 @@ export class DashboardComponent {
                     this.appErrorService.removeError("cmdrNameMismatch");
                     this.appErrorService.removeError("no-discord");
                 }
-            })
+            });
+
+        combineLatest(
+            this.userService.user,
+            this.journalService.cmdrName,
+            (user, cmdrName) => {
+                return { user, cmdrName }
+            }
+        ).pipe(
+            takeWhile(() => this.alive)
+        )
+            .subscribe(() => {
+                this.checkNameMismatch
+            }
+            )
 
         //tracking faction
         let storedTrackingFaction = localStorage.getItem("trackingFaction");
@@ -118,7 +131,8 @@ export class DashboardComponent {
     }
 
     checkNameMismatch() {
-        if (this.cmdrName !== this.username) {
+
+        if (this.cmdrName.toLowerCase() !== this.username.toLowerCase()) {
             this.appErrorService.addError("cmdrNameMismatch", { message: `⚠️️️️You are logged in as ${this.username} but appear to be playing as ${this.cmdrName}` });
         } else {
             this.appErrorService.removeError("cmdrNameMismatch");
