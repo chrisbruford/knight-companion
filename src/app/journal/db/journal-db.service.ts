@@ -1,13 +1,15 @@
 import { Injectable } from '@angular/core';
 import { LoggerService } from '../../core/services/logger.service';
 import { JournalEvents, FSDJump } from 'cmdr-journal';
+import { AppErrorService } from '../../core/services/app-error.service';
 
 @Injectable()
 export class JournalDBService {
     dbPromise: Promise<IDBDatabase>;
 
     constructor(
-        private logger: LoggerService
+        private logger: LoggerService,
+        private errorService: AppErrorService
     ) {
         let indexedDB = window.indexedDB;
         let dbVersion = 3;
@@ -50,6 +52,7 @@ export class JournalDBService {
         this.dbPromise = new Promise<IDBDatabase>((resolve, reject) => {
             openRequest.onsuccess = (evt) => {
                 let db = (<IDBOpenDBRequest>evt.target).result;
+                this.errorService.removeError('dbFail');
 
                 db.onerror = (err: any) => {
                     reject(err);
@@ -62,8 +65,10 @@ export class JournalDBService {
                 reject(block);
             }
 
-            openRequest.onerror = (err: any) => {
-                reject(err);
+            openRequest.onerror = (originalError: any) => {
+                this.logger.error({originalError, message: "Unrecoverable error opening initial DB"});
+                this.errorService.addError('dbFail', {message: 'An internal database error has occured. This app may not function as intended.'});
+                reject(originalError);
             }
         });
     }
