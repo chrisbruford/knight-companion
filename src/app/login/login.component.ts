@@ -19,7 +19,7 @@ export class LoginComponent implements OnInit {
     submitted: boolean;
     user: User;
     loginForm: FormGroup;
-    
+
     constructor(
         private userService: UserService,
         private activatedRoute: ActivatedRoute,
@@ -37,33 +37,35 @@ export class LoginComponent implements OnInit {
             password: ''
         })
 
-        this.userService.authCheck().subscribe(
-            (user: User) => {
-                this.authenticated = true;
-                this.user = user;
-                ipcRenderer.send("rebuild-menu",{login: false});
-                this.router.navigate(['/dashboard']);
-            },
-            (err: any) => this.logger.error({ originalError: err, message: 'AuthCheck Error' })
-        )
+        this.userService.authCheck()
+            .subscribe(
+                (user: User) => {
+                    this.authenticated = true;
+                    this.user = user;
+                    ipcRenderer.send("rebuild-menu", { login: false });
+                    this.router.navigate(['/dashboard']);
+                },
+                (err: any) => this.logger.error({ originalError: err, message: 'AuthCheck Error' })
+            );
     }
 
     onSubmit(): void {
         this.submitted = true;
         this.authenticate({
-            username: this.loginForm.get('username').value, 
+            username: this.loginForm.get('username').value.toLowerCase(),
             password: this.loginForm.get('password').value
         })
-            .subscribe(user => {
-                this.authenticated = true;
-                this.user = user;
-                ipcRenderer.send("rebuild-menu",{login: false});
-                this.router.navigate(['/dashboard']);
-            },
-            err => {
-                this.authenticated = false;
-                this.user = null;
-            })
+            .subscribe(
+                user => {
+                    this.authenticated = true;
+                    this.user = user;
+                    ipcRenderer.send("rebuild-menu", { login: false });
+                    this.router.navigate(['/dashboard']);
+                },
+                err => {
+                    this.authenticated = false;
+                    this.user = null;
+                });
     }
 
     authenticate(user: SimpleUser): Observable<User> {
