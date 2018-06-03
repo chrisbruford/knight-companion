@@ -19,7 +19,6 @@ export class CombatComponent implements OnInit {
     private factionCombatBondsRedeemed = 0;
     private bountyVouchersRedeemed = 0;
     private factionBountyVouchersRedeemed = 0;
-    @Input() trackingFaction: string;
 
     constructor(
         private journalService: JournalService,
@@ -27,65 +26,21 @@ export class CombatComponent implements OnInit {
     ) { }
 
     ngOnInit() {
-        this.journalService.on(JournalEvents.interdicted, (interdicted: Interdicted) => {
-            if (interdicted.IsPlayer) {
-                this.interdictedAlert(interdicted);
-            }
-        });
+        this.combatService.bountyVouchersRedeemed
+            .pipe(takeWhile(() => this.alive))
+            .subscribe(value => this.bountyVouchersRedeemed = value);
 
-        this.journalService.on(JournalEvents.fileHeader, (fileHeader: FileHeader)=>{
-            if (fileHeader.part === 1) {
-                this.combatBondsRedeemed = 0;
-            }
-        })
+        this.combatService.bountyVouchersRedeemed
+            .pipe(takeWhile(() => this.alive))
+            .subscribe(value => this.combatBondsRedeemed = value);
 
-        this.journalService.on(JournalEvents.redeemVoucher, (redeemVoucher: RedeemVoucher)=>{
-            switch (redeemVoucher.Type) {
-                case "CombatBond":
-                    this.combatBondsRedeemed += redeemVoucher.Amount;
-                    if (redeemVoucher.Faction && redeemVoucher.Faction === this.trackingFaction) {
-                        this.factionCombatBondsRedeemed += redeemVoucher.Amount;
-                    }
-                    break;
-                case "bounty":
-                    this.bountyVouchersRedeemed += redeemVoucher.Amount;
-                    if (redeemVoucher.Factions) {
-                        let trackingFactionBounty = redeemVoucher.Factions.find(bounty=>bounty.Faction === this.trackingFaction);
-                        if (trackingFactionBounty) {
-                            this.factionBountyVouchersRedeemed += trackingFactionBounty.Amount;
-                        }
-                    }
-            }
-            this.combatService.bondsAlert(redeemVoucher, this.cmdrName)
-            .pipe(
-                takeWhile(()=>this.alive)
-            )
-            .subscribe();
-        })
+        this.combatService.factionBountyVouchersRedeemed
+            .pipe(takeWhile(() => this.alive))
+            .subscribe(value => this.factionCombatBondsRedeemed = value);
 
-        this.journalService.currentSystem
-        .pipe(
-            takeWhile(()=>this.alive)
-        )
-        .subscribe(system => {
-            this.currentSystem = system;
-        })
-
-        this.journalService.cmdrName
-        .pipe(
-            takeWhile(()=>this.alive)
-        )
-        .subscribe(name => {
-            this.cmdrName = name;
-        })
-    }
-
-    interdictedAlert(evt: Interdicted): void {
-        this.combatService.interdictedAlert(evt, this.cmdrName, this.currentSystem)
-        .pipe(
-            takeWhile(()=>this.alive)
-        )
-        .subscribe();
+        this.combatService.factionBountyVouchersRedeemed
+            .pipe(takeWhile(() => this.alive))
+            .subscribe(value => this.factionBountyVouchersRedeemed = value);
     }
 
     ngOnDestroy() {

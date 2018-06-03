@@ -2,10 +2,11 @@ import { Component, Input, OnDestroy, OnInit } from '@angular/core';
 import { JournalService } from '../../journal/journal.service';
 import { JournalDBService } from '../../journal/db/journal-db.service';
 import { JournalEvents, JournalEvent, MissionCompleted, MissionAccepted, MissionAbandoned, MissionFailed, LoadGame, NewCommander } from 'cmdr-journal';
-import { Subscription } from 'rxjs';
+import { Subscription, Observable } from 'rxjs';
 import { OriginatedMission } from './originatedMission';
 import { MissionService } from './mission.service';
 import { takeWhile } from 'rxjs/operators';
+import { TrackingFaction } from '../tracking-faction.service';
 
 @Component({
     templateUrl: 'missions.component.html',
@@ -14,49 +15,35 @@ import { takeWhile } from 'rxjs/operators';
 })
 export class MissionsComponent implements OnInit, OnDestroy {
 
-    missionsCompleted: OriginatedMission[] = [];
-    oldMissionsCompleted: OriginatedMission[] = [];
-    factionMissionsCompleted: OriginatedMission[] = [];
-    @Input() trackingFaction: string;
-    oldTrackingFaction: string;
-    
+    missionsCompleted: OriginatedMission[];
+    factionMissionsCompleted: OriginatedMission[];
+    trackedFaction: string;
+
     private alive = true;
 
     constructor(
         private journalService: JournalService,
         private journalDB: JournalDBService,
-        private missionService: MissionService
+        private missionService: MissionService,
+        private trackingFaction: TrackingFaction
     ) { }
 
     ngOnInit() {
-        this.missionService.missionsCompleted.pipe(
-            takeWhile(()=>this.alive)
-        ).subscribe((completedMissions: OriginatedMission[])=>{
-            this.missionsCompleted = completedMissions;
-        });
-    }
+        this.missionService.factionMissionsCompleted
+            .pipe(takeWhile(() => this.alive))
+            .subscribe(factionMissionsCompleted => this.factionMissionsCompleted = factionMissionsCompleted);
 
-    ngDoCheck() {
-        if (this.missionsCompleted.length !== this.oldMissionsCompleted.length) {
-            this.factionMissionsCompleted = this.filterMissions(this.missionsCompleted);
-            this.oldMissionsCompleted = Array.from(this.missionsCompleted);
-        }
-    }
+        this.missionService.missionsCompleted
+            .pipe(takeWhile(() => this.alive))
+            .subscribe(missionsCompleted => this.missionsCompleted = missionsCompleted);
 
-    ngOnChanges(changes: any) {
-        if (this.trackingFaction !== this.oldTrackingFaction) {
-            this.factionMissionsCompleted = this.filterMissions(this.missionsCompleted);
-            this.oldTrackingFaction = this.trackingFaction;
-        }
+        this.trackingFaction.faction
+            .pipe(takeWhile(() => this.alive))
+            .subscribe(trackedFaction => this.trackedFaction = trackedFaction);
+
     }
 
     ngOnDestroy() {
         this.alive = false;
-    }
-
-    filterMissions(allMissions: OriginatedMission[]): OriginatedMission[] {
-        return allMissions.filter((mission: OriginatedMission) => {
-            return mission.originator.toLowerCase() === this.trackingFaction.toLowerCase();
-        })
     }
 }

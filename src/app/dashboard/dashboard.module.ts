@@ -14,6 +14,7 @@ import { ExplorationService } from './exploration/exploration.service';
 import { KokMaterialModule } from '../kok-material/kok-material.module';
 import { ShipsComponent } from './ships/ships.component';
 import { ShipsService } from './ships/ships.service';
+import { TrackingFaction } from './tracking-faction.service';
 
 @NgModule({
     imports: [
@@ -36,7 +37,8 @@ import { ShipsService } from './ships/ships.service';
         CombatService, 
         MissionService,
         ExplorationService,
-        ShipsService
+        ShipsService,
+        TrackingFaction
     ]
 }) 
 export class DashboardModule {}

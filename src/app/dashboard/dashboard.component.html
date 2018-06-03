@@ -9,10 +9,10 @@
 
 <mat-tab-group dynamicHeight [(selectedIndex)]="selectedDashboardTab" (selectedTabChange)="doTabChange($event)">
     <mat-tab label="Missions">
-        <app-missions [trackingFaction]="trackingFaction.value"></app-missions>
+        <app-missions></app-missions>
     </mat-tab>
     <mat-tab label="Combat">
-        <app-combat [trackingFaction]="trackingFaction.value"></app-combat>
+        <app-combat></app-combat>
     </mat-tab>
     <mat-tab label="Exploration">
         <app-exploration></app-exploration>
