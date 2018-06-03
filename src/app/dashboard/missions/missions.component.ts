@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, OnDestroy, OnInit } from '@angular/core';
 import { JournalService } from '../../journal/journal.service';
 import { JournalDBService } from '../../journal/db/journal-db.service';
 import { JournalEvents, JournalEvent, MissionCompleted, MissionAccepted, MissionAbandoned, MissionFailed, LoadGame, NewCommander } from 'cmdr-journal';
@@ -12,14 +12,14 @@ import { takeWhile } from 'rxjs/operators';
     styleUrls: ['missions.component.scss'],
     selector: 'app-missions'
 })
-export class MissionsComponent {
+export class MissionsComponent implements OnInit, OnDestroy {
 
     missionsCompleted: OriginatedMission[] = [];
     oldMissionsCompleted: OriginatedMission[] = [];
     factionMissionsCompleted: OriginatedMission[] = [];
     @Input() trackingFaction: string;
     oldTrackingFaction: string;
-    cmdrName: string;
+    
     private alive = true;
 
     constructor(
@@ -29,12 +29,11 @@ export class MissionsComponent {
     ) { }
 
     ngOnInit() {
-        this.watchMissions();
-        this.journalService.cmdrName
-            .pipe(
-                takeWhile(() => this.alive)
-            )
-            .subscribe(name => this.cmdrName = name);
+        this.missionService.missionsCompleted.pipe(
+            takeWhile(()=>this.alive)
+        ).subscribe((completedMissions: OriginatedMission[])=>{
+            this.missionsCompleted = completedMissions;
+        });
     }
 
     ngDoCheck() {
@@ -53,23 +52,6 @@ export class MissionsComponent {
 
     ngOnDestroy() {
         this.alive = false;
-    }
-
-    async watchMissions() {
-        this.journalService.on(JournalEvents.missionCompleted, async (data: JournalEvent) => {
-
-            let completedMission = Object.assign(new MissionCompleted(), data);
-            let originalMission: MissionAccepted = await this.journalDB.getEntry<MissionAccepted>(JournalEvents.missionAccepted, completedMission.MissionID);
-
-            if (!originalMission) { return }
-            let originatedMission: OriginatedMission = Object.assign({ originator: originalMission.Faction, LocalisedName: originalMission.LocalisedName }, completedMission)
-            this.missionsCompleted.push(originatedMission);
-            this.missionService.completedMission(originatedMission, this.cmdrName)
-                .pipe(
-                    takeWhile(() => this.alive)
-                )
-                .subscribe();
-        })
     }
 
     filterMissions(allMissions: OriginatedMission[]): OriginatedMission[] {
