@@ -18,6 +18,8 @@
         <app-exploration></app-exploration>
     </mat-tab>
     <mat-tab label="My Ships">
-        <app-ships></app-ships>
+        <ng-template matTabContent>
+            <app-ships></app-ships>
+        </ng-template>
     </mat-tab>
 </mat-tab-group>
