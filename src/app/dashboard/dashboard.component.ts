@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 const fs = require('fs');
 import { JournalService } from '../journal/journal.service';
 import { JournalEvents, JournalEvent, MissionCompleted, LoadGame, NewCommander } from 'cmdr-journal';
@@ -11,13 +11,14 @@ import { FormControl } from '@angular/forms';
 import { UserService } from '../core/services/user.service';
 import { AppErrorService } from '../core/services/app-error.service';
 import { MatTabChangeEvent } from '@angular/material';
+import { MissionService } from './missions/mission.service';
 
 @Component({
     templateUrl: 'dashboard.component.html',
     styleUrls: ['dashboard.component.scss'],
     selector: 'app-dashboard'
 })
-export class DashboardComponent {
+export class DashboardComponent implements OnDestroy, OnInit {
 
     missionsCompleted: MissionCompleted[] = [];
     trackingFaction = new FormControl;
@@ -36,6 +37,7 @@ export class DashboardComponent {
         private logger: LoggerService,
         private userService: UserService,
         private appErrorService: AppErrorService,
+        private missionService: MissionService
     ) {
         this.currentSystem = journalService.currentSystem;
     }
