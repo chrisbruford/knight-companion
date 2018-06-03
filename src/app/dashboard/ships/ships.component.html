@@ -1,5 +1,5 @@
 <section class="ships">
-    <mat-accordion>
+    <mat-accordion *ngIf="ships.length > 0">
         <mat-expansion-panel *ngFor="let ship of ships;trackBy: trackShipsBy" [expanded]="false">
             <mat-expansion-panel-header>
                 <mat-panel-title>
