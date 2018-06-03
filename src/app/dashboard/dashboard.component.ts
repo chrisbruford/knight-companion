@@ -3,7 +3,7 @@ const fs = require('fs');
 import { JournalService } from '../journal/journal.service';
 import { JournalEvents, JournalEvent, MissionCompleted, LoadGame, NewCommander } from 'cmdr-journal';
 import { Observable, combineLatest, of } from 'rxjs';
-import { map, merge, tap, takeWhile } from 'rxjs/operators';
+import { map, merge, tap, takeWhile, debounceTime, take } from 'rxjs/operators';
 import { FactionService } from '../core/services/faction.service';
 import { Faction } from 'cmdr-journal';
 import { LoggerService } from '../core/services/logger.service';
@@ -12,6 +12,7 @@ import { UserService } from '../core/services/user.service';
 import { AppErrorService } from '../core/services/app-error.service';
 import { MatTabChangeEvent } from '@angular/material';
 import { MissionService } from './missions/mission.service';
+import { TrackingFaction } from './tracking-faction.service';
 
 @Component({
     templateUrl: 'dashboard.component.html',
@@ -37,7 +38,8 @@ export class DashboardComponent implements OnDestroy, OnInit {
         private logger: LoggerService,
         private userService: UserService,
         private appErrorService: AppErrorService,
-        private missionService: MissionService
+        private missionService: MissionService,
+        private trackedFaction: TrackingFaction
     ) {
         this.currentSystem = journalService.currentSystem;
     }
@@ -64,9 +66,7 @@ export class DashboardComponent implements OnDestroy, OnInit {
             });
 
         this.userService.user
-            .pipe(
-                takeWhile(() => this.alive)
-            )
+            .pipe(takeWhile(() => this.alive))
             .subscribe(user => {
                 if (user) {
                     this.username = user.username;
@@ -86,18 +86,35 @@ export class DashboardComponent implements OnDestroy, OnInit {
             this.journalService.cmdrName,
             (user, cmdrName) => {
                 return { user, cmdrName }
-            }
-        ).pipe(
-            takeWhile(() => this.alive)
-        )
-            .subscribe(() => {
-                this.checkNameMismatch
-            }
-            )
+            })
+            .pipe(takeWhile(() => this.alive))
+            .subscribe(() => this.checkNameMismatch);
 
-        //tracking faction
-        let storedTrackingFaction = localStorage.getItem("trackingFaction");
-        this.trackingFaction.setValue(storedTrackingFaction || "");
+        this.trackedFaction.faction
+            .pipe(take(1))
+            .subscribe(faction => {
+                this.trackingFaction.setValue(faction);
+                this.trackingFaction.valueChanges
+                    .pipe(
+                        debounceTime(500),
+                        tap(inputValue => {
+                            this.trackedFaction.setFaction(inputValue);
+                        }),
+                        map(inputValue => {
+                            let outputArray = this.knownFactions.filter(faction => {
+                                let escapedInputValue = inputValue.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+                                let re = new RegExp(`${escapedInputValue}`, "i");
+                                return re.test(faction.Name);
+                            });
+                            return of(outputArray);
+                        }),
+                        takeWhile(() => this.alive)
+                    )
+                    .subscribe(filteredKnownFactions => {
+                        this.filteredKnownFactions = filteredKnownFactions;
+
+                    });
+            });
 
         this.factionService.getAllFactions()
             .then(factions => {
@@ -107,27 +124,6 @@ export class DashboardComponent implements OnDestroy, OnInit {
                 originalError: err,
                 message: "Error fetching all known factions in dashboard component"
             }));
-
-        this.trackingFaction.valueChanges.pipe(
-            tap(inputValue => {
-                localStorage.setItem("trackingFaction", inputValue);
-            }),
-            map(inputValue => {
-                let outputArray = this.knownFactions.filter(faction => {
-                    let escapedInputValue = inputValue.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
-                    let re = new RegExp(`${escapedInputValue}`, "i");
-                    return re.test(faction.Name);
-                });
-                return of(outputArray);
-            })
-        )
-            .pipe(
-                takeWhile(() => this.alive)
-            )
-            .subscribe(filteredKnownFactions => {
-                this.filteredKnownFactions = filteredKnownFactions;
-
-            });
     }
 
     checkNameMismatch() {

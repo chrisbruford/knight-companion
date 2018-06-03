@@ -6,40 +6,56 @@ import { OriginatedMission } from "./originatedMission";
 import { JournalDBService } from "../../journal/db/journal-db.service";
 import { Observable, of, BehaviorSubject } from "rxjs";
 import { takeWhile } from "rxjs/operators";
+import { TrackingFaction } from "../tracking-faction.service";
 
 @Injectable()
 export class MissionService {
 
     private _missionsCompleted: OriginatedMission[];
     private missionsCompletedSubject: BehaviorSubject<OriginatedMission[]>;
+
+    private _factionMissionsCompleted: OriginatedMission[] = [];
+    private factionMissionsCompletedSubject: BehaviorSubject<OriginatedMission[]>;
+
     private cmdrName: string;
-    
-    public missionsCompleted: Observable<OriginatedMission[]>;
+    private trackedFaction: string;
+
+    get missionsCompleted() {
+        return this.missionsCompletedSubject.asObservable();
+    }
+
+    get factionMissionsCompleted() {
+        return this.factionMissionsCompletedSubject.asObservable();
+    }
 
     private alive: boolean;
 
     constructor(
         private http: HttpClient,
         private journalService: JournalService,
-        private journalDB: JournalDBService
+        private journalDB: JournalDBService,
+        private trackingFaction: TrackingFaction
     ) {
         this._missionsCompleted = [];
+        this._factionMissionsCompleted = [];
         this.missionsCompletedSubject = new BehaviorSubject(this._missionsCompleted);
-        this.missionsCompleted = this.missionsCompletedSubject.asObservable();
+        this.factionMissionsCompletedSubject = new BehaviorSubject(this._factionMissionsCompleted);
+
         this.cmdrName = "Unknown CMDR";
         this.alive = true;
-        
-        this.journalService.cmdrName
-        .pipe(
-            takeWhile(()=>this.alive)
-        )
-        .subscribe(cmdrName=>this.cmdrName = cmdrName);
-        this.watchMissions();
-    }
 
-    private completedMission(missionCompleted: MissionCompleted, cmdrName: string) {
-        cmdrName = encodeURIComponent(cmdrName);
-        return this.http.post(`${process.env.API_ENDPOINT}/missions/completed/${cmdrName}`,{missionCompleted})
+        this.journalService.cmdrName
+            .pipe(takeWhile(() => this.alive))
+            .subscribe(cmdrName => this.cmdrName = cmdrName);
+
+        this.watchMissions();
+
+        this.trackingFaction.faction.subscribe(faction => {
+            this.trackedFaction = faction;
+            this.filterMissions();
+            this.factionMissionsCompletedSubject.next(this._factionMissionsCompleted.slice(0));
+        });
+
     }
 
     private async watchMissions() {
@@ -50,14 +66,31 @@ export class MissionService {
 
             if (!originalMission) { return }
             let originatedMission: OriginatedMission = Object.assign({ originator: originalMission.Faction, LocalisedName: originalMission.LocalisedName }, completedMission)
-            
+
             this._missionsCompleted.push(originatedMission);
-            
-            //fastest way to emit clone - not a deep clone
+
+            if (originatedMission.originator.toLowerCase === this.trackedFaction.toLowerCase) {
+                this._factionMissionsCompleted.push(originatedMission);
+                this.factionMissionsCompletedSubject.next(this._factionMissionsCompleted.slice(0));
+            }
+
             this.missionsCompletedSubject.next(this._missionsCompleted.slice(0));
-            
-            this.completedMission(originatedMission, this.cmdrName).subscribe();
+
+            this.completedMissionAlert(originatedMission, this.cmdrName).subscribe();
         })
+    }
+
+
+    private completedMissionAlert(missionCompleted: MissionCompleted, cmdrName: string) {
+        cmdrName = encodeURIComponent(cmdrName);
+        return this.http.post(`${process.env.API_ENDPOINT}/missions/completed/${cmdrName}`, { missionCompleted })
+    }
+
+    filterMissions() {
+        this._factionMissionsCompleted = this._missionsCompleted
+            .filter((mission: OriginatedMission) => {
+                return mission.originator.toLowerCase() === this.trackedFaction.toLowerCase();
+            })
     }
 
     ngOnDestroy() {
