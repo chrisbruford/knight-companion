@@ -11,7 +11,6 @@ import { FormControl } from '@angular/forms';
 import { UserService } from '../core/services/user.service';
 import { AppErrorService } from '../core/services/app-error.service';
 import { MatTabChangeEvent } from '@angular/material';
-import { MissionService } from './missions/mission.service';
 import { TrackingFaction } from './tracking-faction.service';
 
 @Component({
@@ -38,7 +37,6 @@ export class DashboardComponent implements OnDestroy, OnInit {
         private logger: LoggerService,
         private userService: UserService,
         private appErrorService: AppErrorService,
-        private missionService: MissionService,
         private trackedFaction: TrackingFaction
     ) {
         this.currentSystem = journalService.currentSystem;
