@@ -30,11 +30,11 @@ export class CombatComponent implements OnInit {
             .pipe(takeWhile(() => this.alive))
             .subscribe(value => this.bountyVouchersRedeemed = value);
 
-        this.combatService.bountyVouchersRedeemed
+        this.combatService.combatBondsRedeemed
             .pipe(takeWhile(() => this.alive))
             .subscribe(value => this.combatBondsRedeemed = value);
 
-        this.combatService.factionBountyVouchersRedeemed
+        this.combatService.factionCombatBondsRedeemed
             .pipe(takeWhile(() => this.alive))
             .subscribe(value => this.factionCombatBondsRedeemed = value);
 
