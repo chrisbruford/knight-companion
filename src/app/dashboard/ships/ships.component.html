@@ -3,7 +3,7 @@
         <mat-expansion-panel *ngFor="let ship of ships;trackBy: trackShipsBy" [expanded]="false">
             <mat-expansion-panel-header>
                 <mat-panel-title>
-                    {{ship.ShipName}}
+                    {{ship.ShipName || ship.Ship}}
                 </mat-panel-title>
                 <mat-panel-description>
                     {{ship.ShipIdent}}
