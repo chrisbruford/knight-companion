@@ -95,7 +95,7 @@ export class CombatService implements OnDestroy {
                     }
                     this.bountyVouchersRedeemedSubject.next(this._bountyVouchersRedeemed);
             }
-            this.bondsAlert(redeemVoucher, this.cmdrName)
+            this.bondsAlert(redeemVoucher)
                 .pipe(
                     takeWhile(() => this.alive)
                 )
@@ -127,11 +127,11 @@ export class CombatService implements OnDestroy {
     }
 
     interdictedAlert(interdicted: Interdicted): Observable<boolean> {
-        return this.http.post<boolean>(`${process.env.API_ENDPOINT}/combat/interdicted/${this.cmdrName}`, { interdicted, system: this.currentSystem })
+        return this.http.post<boolean>(`${process.env.API_ENDPOINT}/combat/interdicted/${this.cmdrName.toLowerCase()}`, { interdicted, system: this.currentSystem })
     }
 
-    bondsAlert(redeemVoucher: RedeemVoucher, cmdrName: string): Observable<boolean> {
-        return this.http.post<boolean>(`${process.env.API_ENDPOINT}/combat/redeemVoucher`, { redeemVoucher, cmdrName })
+    bondsAlert(redeemVoucher: RedeemVoucher): Observable<boolean> {
+        return this.http.post<boolean>(`${process.env.API_ENDPOINT}/combat/redeemVoucher`, { redeemVoucher, cmdrName: this.cmdrName.toLowerCase() })
     }
 
     ngOnDestroy() {
