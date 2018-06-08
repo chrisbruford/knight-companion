@@ -53,7 +53,7 @@ import cmdrJournal from 'cmdr-journal';
                     let moduleDetails = cmdrJournal.OUTFITTING_MAP.get(module.Item.toLocaleLowerCase());
                     module["Item_KokLocalised"] = moduleDetails ? moduleDetails.name : undefined;
                 })
-            })
+            });
             this.ships = knownShips;
         });
     }
