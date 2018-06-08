@@ -17,14 +17,14 @@ export class JournalQueueService {
         })
     }
 
-    addPath(path: string) {
+    addPath(path: string): fs.ReadStream {
         let stream = fs.createReadStream(path, { encoding: 'utf8' }).pause().pipe(ndjson.parse({ strict: false }));
         this.logFileQueue.push(stream);
         this.digestQueue();
         return stream;
     }
 
-    addStream(stream: fs.ReadStream) {
+    addStream(stream: fs.ReadStream): fs.ReadStream {
         stream = stream.pause().pipe(ndjson.parse({ strict: false }));
         this.logFileQueue.push(stream);
         this.digestQueue();
