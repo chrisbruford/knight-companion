@@ -128,11 +128,11 @@ export class JournalService extends EventEmitter {
         return this._streamLive;
     }
 
-    private streamAll(dir: string) {
+    private async streamAll(dir: string) {
         if (!dir) { return }
         //reads all journal files and persists the data to IDB, keeps record
         //of files it's seen already so doesn't re-stream them
-        fs.readdir(dir, (err, files) => {
+        fs.readdir(dir, async (err, files) => {
             if (!files) { return }
             let journalFilePaths = files.filter((path: string): boolean => {
                 return this.re.logfile.test(path)
@@ -141,29 +141,33 @@ export class JournalService extends EventEmitter {
 
             //stream all but the last file as last file will be tailstreamed
             this._streamLive = true;
-            //TODO: Don't think this needs to be assigned or async - can make whole StreamAll
-            //function async instead
-            let historicLogs = (async () => {
-                for (let i = 0; i < journalFilePaths.length - 1; i++) {
-                    let path = journalFilePaths[i];
-                    await this.journalDB.getEntry('completedJournalFiles', path)
-                        .then(data => {
-                            if (!data) {
-                                this.journalQueue.addPath(`${dir}/${path}`)
-                                    .on('data', (data: journal.JournalEvent) => this.handleEvent(data))
-                                    .on('end', () => this.journalDB.addEntry('completedJournalFiles', { filename: path }))
-                            }
-                        })
-                        .catch(err => {
-                            this.logger.error(err);
-                        })
-                }
-            })()
-                .then(() => {
-                    //tailstream last file
-                    this.currentLogFile = journalFilePaths.slice(-1)[0];
-                    this.tailStream(`${dir}/${this.currentLogFile}`, { start: this.offset, encoding: 'utf8' });
-                })
+
+            for (let i = 0; i < journalFilePaths.length - 1; i++) {
+                let path = journalFilePaths[i];
+                await this.journalDB.getEntry('completedJournalFiles', path)
+                    .then(data => {
+                        if (!data) {
+                            let stream = this.journalQueue.addPath(`${dir}/${path}`);
+                            stream.on('data', (data: journal.JournalEvent) => {
+                                //events need to be processed in order otherwise things like ships being sold
+                                //might be processed before the ship was purchased
+                                stream.pause();
+                                this.handleEvent(data)
+                                    .then(() => stream.resume());
+                            })
+                                .on('end', () => this.journalDB.addEntry('completedJournalFiles', { filename: path }))
+                        }
+                    })
+                    .catch(err => {
+                        this.logger.error(err);
+                    })
+            }
+
+
+            //tailstream last file
+            this.currentLogFile = journalFilePaths.slice(-1)[0];
+            this.tailStream(`${dir}/${this.currentLogFile}`, { start: this.offset, encoding: 'utf8' });
+
         });
     }
 
@@ -196,7 +200,7 @@ export class JournalService extends EventEmitter {
                 })
         })
 
-            .on('error', (originalError: any) => this.logger.error({originalError, message: "tailstream error"}))
+            .on('error', (originalError: any) => this.logger.error({ originalError, message: "tailstream error" }))
 
             .on('end', () => this.watchLogDir())
 
@@ -494,12 +498,12 @@ export class JournalService extends EventEmitter {
 
                     this.ngZone.run(() => this._currentShipID.next(loadout.ShipID));
 
-                    this.journalDB.putEntry('ships',loadout)
-                        .catch(originalError => this.logger.error({originalError, message: "handleEvent failure"}));
+                    this.journalDB.putEntry('ships', loadout)
+                        .catch(originalError => this.logger.error({ originalError, message: "handleEvent failure" }));
 
-                    this.journalDB.putCurrentState({key:'shipID',value: loadout.ShipID})
-                        .catch(originalError => this.logger.error({originalError, message: "handleEvent failure"}));
-                    
+                    this.journalDB.putCurrentState({ key: 'shipID', value: loadout.ShipID })
+                        .catch(originalError => this.logger.error({ originalError, message: "handleEvent failure" }));
+
                     resolve(data);
                     break;
                 }
@@ -513,8 +517,8 @@ export class JournalService extends EventEmitter {
                         this._currentShipID.pipe(
                             take(1)
                         ).subscribe(shipID => {
-                            this.journalDB.deleteEntry('ships',shipID);
-                            this.emit("notRebought",shipID);
+                            this.journalDB.deleteEntry('ships', shipID);
+                            this.emit("notRebought", shipID);
                         });
                     }
 
@@ -526,8 +530,8 @@ export class JournalService extends EventEmitter {
                 case journal.JournalEvents.shipyardSell: {
                     let shipyardSell: journal.ShipyardSell = Object.assign(new journal.ShipyardSell(), data);
 
-                    this.journalDB.deleteEntry('ships',shipyardSell.SellShipID)
-                        .catch(originalError => this.logger.error({originalError, message: "handleEvent failure"}));
+                    this.journalDB.deleteEntry('ships', shipyardSell.SellShipID)
+                        .catch(originalError => this.logger.error({ originalError, message: "handleEvent failure" }));
 
                     resolve(data);
                     break;
