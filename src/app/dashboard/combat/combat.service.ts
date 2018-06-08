@@ -77,15 +77,19 @@ export class CombatService implements OnDestroy {
             switch (redeemVoucher.Type) {
                 case "CombatBond":
                     this._combatBondsRedeemed += redeemVoucher.Amount;
+                    this.combatBondsRedeemedSubject.next(this._combatBondsRedeemed);
+
                     if (redeemVoucher.Faction === this.trackedFaction) {
                         this._factionCombatBondsRedeemed += redeemVoucher.Amount;
                         this.factionCombatBondsRedeemedSubject.next(this._factionCombatBondsRedeemed);
                     }
-                    this.factionCombatBondsRedeemedSubject.next(this._factionBountyVouchersRedeemed);
+                    
                     break;
                 
                     case "bounty":
                     this._bountyVouchersRedeemed += redeemVoucher.Amount;
+                    this.bountyVouchersRedeemedSubject.next(this._bountyVouchersRedeemed);
+                    
                     if (redeemVoucher.Factions) {
                         let trackingFactionBounty = redeemVoucher.Factions.find(bounty => bounty.Faction === this.trackedFaction);
                         if (trackingFactionBounty) {
@@ -93,7 +97,6 @@ export class CombatService implements OnDestroy {
                             this.factionBountyVouchersRedeemedSubject.next(this._factionBountyVouchersRedeemed);
                         }
                     }
-                    this.bountyVouchersRedeemedSubject.next(this._bountyVouchersRedeemed);
             }
             this.bondsAlert(redeemVoucher)
                 .pipe(
