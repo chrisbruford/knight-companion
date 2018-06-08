@@ -27,25 +27,16 @@ export class ShipsService {
             .catch(console.log);
         
         journalService.on(JournalEvents.loadout,(loadout: Loadout)=>{
-            console.log("new ship adding");
-            let knownShip = this.ships.get(loadout.ShipID);
-
-            if (!knownShip) {
-                this.ships.set(loadout.ShipID, loadout);
-            } else {
-                knownShip = loadout;
-            }
-            zone.run(()=>this.shipsObservable.next(this.ships))
+           this.ships.set(loadout.ShipID, loadout);
+            zone.run(()=>this.shipsObservable.next(this.ships));
         });
 
         journalService.on("notRebought",(shipID: number)=>{
-            console.log("removing ship");
             this.ships.delete(shipID);
             zone.run(()=>this.shipsObservable.next(this.ships));
         });
 
         journalService.on(JournalEvents.shipyardSell,(shipyardSell: ShipyardSell)=>{
-            console.log("removing ship");
             this.ships.delete(shipyardSell.SellShipID);
             zone.run(()=>this.shipsObservable.next(this.ships));
         });
