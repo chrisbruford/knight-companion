@@ -4,6 +4,7 @@ import { JournalEvents, JournalEvent, Interdicted, RedeemVoucher, FileHeader } f
 import { Subscription } from 'rxjs';
 import { CombatService } from './combat.service';
 import { takeWhile } from 'rxjs/operators';
+import { TrackingFaction } from '../tracking-faction.service';
 
 @Component({
     styleUrls: ['combat.component.scss'],
@@ -13,16 +14,16 @@ import { takeWhile } from 'rxjs/operators';
 export class CombatComponent implements OnInit {
 
     private alive = true;
-    private cmdrName: string;
-    private currentSystem: string;
     private combatBondsRedeemed = 0;
     private factionCombatBondsRedeemed = 0;
     private bountyVouchersRedeemed = 0;
     private factionBountyVouchersRedeemed = 0;
+    private trackedFaction: string;
 
     constructor(
         private journalService: JournalService,
-        private combatService: CombatService
+        private combatService: CombatService,
+        private trackingFaction: TrackingFaction
     ) { }
 
     ngOnInit() {
@@ -41,6 +42,10 @@ export class CombatComponent implements OnInit {
         this.combatService.factionBountyVouchersRedeemed
             .pipe(takeWhile(() => this.alive))
             .subscribe(value => this.factionBountyVouchersRedeemed = value);
+
+        this.trackingFaction.faction
+            .pipe(takeWhile(() => this.alive))
+            .subscribe(faction => this.trackedFaction = faction);
     }
 
     ngOnDestroy() {
