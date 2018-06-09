@@ -167,8 +167,8 @@ export class JournalDBService {
 
                 let request = objectStore.add(entry);
 
-                request.onerror = (err) => {
-                    reject({ originalError: err, message: "addEntry request error" });
+                request.onerror = originalError => {
+                    reject({ originalError, message: "addEntry request error", data: entry});
                 }
             })
                 .catch(err => {
