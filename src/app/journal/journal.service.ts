@@ -92,6 +92,18 @@ export class JournalService extends EventEmitter {
                 })
             });
 
+            this.journalDB.getEntry<{ key: string, value: string }>("currentState", "shipID")
+            .then(shipID => {
+                if (shipID && shipID.value && typeof shipID.value === "number") {
+                    this._currentShipID.next(shipID.value);
+                }
+            }).catch(err => {
+                this.logger.error({
+                    originalError: err,
+                    message: "currentState.shipID initial setup failure"
+                })
+            });
+
         localStorage.logDir = this._logDir = localStorage.logDir || this.detectDir() || this.selectDirDialog();
         this.streamAll(this._logDir);
     }
@@ -142,20 +154,34 @@ export class JournalService extends EventEmitter {
             //stream all but the last file as last file will be tailstreamed
             this._streamLive = true;
 
+            let journalPromises: Promise<any>[] = [];
+
             for (let i = 0; i < journalFilePaths.length - 1; i++) {
                 let path = journalFilePaths[i];
+
                 await this.journalDB.getEntry('completedJournalFiles', path)
                     .then(data => {
                         if (!data) {
-                            let stream = this.journalQueue.addPath(`${dir}/${path}`);
-                            stream.on('data', (data: journal.JournalEvent) => {
-                                //events need to be processed in order otherwise things like ships being sold
-                                //might be processed before the ship was purchased
-                                stream.pause();
-                                this.handleEvent(data)
-                                    .then(() => stream.resume());
-                            })
-                                .on('end', () => this.journalDB.addEntry('completedJournalFiles', { filename: path }))
+                            let thePromise = new Promise((resolve, reject) => {
+                                let stream = this.journalQueue.addPath(`${dir}/${path}`);
+                                stream
+                                    .on('data', (data: journal.JournalEvent) => {
+                                        //events need to be processed in order otherwise things like ships being sold
+                                        //might be processed before the ship was purchased
+                                        stream.pause();
+                                        this.handleEvent(data)
+                                            .then(() => stream.resume())
+                                            .catch(originalError => {
+                                                this.logger.error({ originalError, message: "Error in initial stream" });
+                                                stream.resume();
+                                            })
+                                    })
+                                    .on('end', () => {
+                                        this.journalDB.addEntry('completedJournalFiles', { filename: path });
+                                        resolve();
+                                    });
+                            });
+                            journalPromises.push(thePromise);
                         }
                     })
                     .catch(err => {
@@ -163,10 +189,13 @@ export class JournalService extends EventEmitter {
                     })
             }
 
-
             //tailstream last file
             this.currentLogFile = journalFilePaths.slice(-1)[0];
-            this.tailStream(`${dir}/${this.currentLogFile}`, { start: this.offset, encoding: 'utf8' });
+            Promise.all(journalPromises)
+                .then(() => {
+                    this.tailStream(`${dir}/${this.currentLogFile}`, { start: this.offset, encoding: 'utf8' });
+                })
+                .catch(originalError => this.logger.error({ originalError, message: "Initial journal stream error" }));
 
         });
     }
@@ -185,24 +214,28 @@ export class JournalService extends EventEmitter {
                 this.offset += data.length;
             })
         let newStream = this.journalQueue.addStream(stream);
-        newStream.on('data', (data: journal.JournalEvent) => {
-            newStream.pause();
-            this.handleEvent(data).then(() => {
-                //emit events as they're occuring in-session here
-                if (!this.firstStream) {
-                    this.ngZone.run(() => this.emit(data.event, data));
-                }
-                newStream.resume();
+        newStream
+            .on('data', (data: journal.JournalEvent) => {
+                newStream.pause();
+                this.handleEvent(data)
+                    .then(() => {
+                        //emit events as they're occuring in-session here
+                        if (!this.firstStream) {
+                            this.ngZone.run(() => this.emit(data.event, data));
+                        }
+                        newStream.resume();
+                    })
+                    .catch((reason: string) => {
+                        this.logger.error({ originalError: reason, message: "handleEvent rejected in tailStream" })
+                        newStream.resume();
+                    })
             })
-                .catch((reason: string) => {
-                    this.logger.error({ originalError: reason, message: "handleEvent rejected in tailStream" })
-                    newStream.resume();
-                })
-        })
 
             .on('error', (originalError: any) => this.logger.error({ originalError, message: "tailstream error" }))
 
-            .on('end', () => this.watchLogDir())
+            .on('end', () => {
+                this.watchLogDir();
+            })
 
         return stream;
     }
@@ -292,6 +325,9 @@ export class JournalService extends EventEmitter {
         //all journal events come here to be checked for interest
         //at service level and whether should be persisted to IDB
         return new Promise((resolve, reject) => {
+
+            if (this._beta && data.event !== journal.JournalEvents.fileHeader) { reject("Ignoring BETA event"); }
+
             switch (data.event) {
 
                 case journal.JournalEvents.fileHeader: {
@@ -302,23 +338,28 @@ export class JournalService extends EventEmitter {
 
                 //mission accepted events
                 case journal.JournalEvents.missionAccepted: {
-                    this.journalDB.getEntry(journal.JournalEvents.missionAccepted, (<journal.MissionAccepted>data).MissionID).then(result => {
-                        if (!result) {
-                            this.journalDB.addEntry(journal.JournalEvents.missionAccepted, data)
-                                .then(() => { resolve(data) })
-                                .catch(err => {
-                                    let report = {
-                                        originalError: err,
-                                        message: 'journalService.handleEvent error',
-                                        data
-                                    }
-                                    this.logger.error(report);
-                                    reject(report);
-                                })
-                        } else {
-                            reject("Mission already exists");
-                        }
-                    })
+
+                    this.journalDB.getEntry(journal.JournalEvents.missionAccepted, (<journal.MissionAccepted>data).MissionID)
+                        .then(result => {
+                            if (!result) {
+                                this.journalDB.addEntry(journal.JournalEvents.missionAccepted, data)
+                                    .then(() => { resolve(data) })
+                                    .catch(err => {
+                                        let report = {
+                                            originalError: err,
+                                            message: 'journalService.handleEvent error',
+                                            data
+                                        }
+                                        this.logger.error(report);
+                                        reject(report);
+                                    })
+                            } else {
+                                reject({message: "Mission already exists", data});
+                            }
+                        })
+                        .catch(originalError=>{
+                            reject(originalError);
+                        })
                     break;
                 }
 
@@ -327,8 +368,11 @@ export class JournalService extends EventEmitter {
                     let loadGame: journal.LoadGame = Object.assign(new journal.LoadGame(), data);
                     this.ngZone.run(() => this._cmdrName.next(loadGame.Commander));
                     this.journalDB.putCurrentState({ key: "cmdrName", value: loadGame.Commander })
-                        .catch(originalError => this.logger.error({ originalError, message: "handleEvent failure" }));
-                    resolve(data);
+                        .then(() => resolve(data))
+                        .catch(originalError => {
+                            this.logger.error({ originalError, message: "handleEvent failure" });
+                            resolve(data);
+                        });
                     break;
                 }
 
@@ -337,20 +381,26 @@ export class JournalService extends EventEmitter {
                     let newCommander: journal.NewCommander = Object.assign(new journal.NewCommander(), data);
                     this.ngZone.run(() => this._cmdrName.next(newCommander.Name));
                     this.journalDB.putCurrentState({ key: "cmdrName", value: newCommander.Name })
-                        .catch(originalError => this.logger.error({ originalError, message: "handleEvent failure" }));
-                    resolve(data);
+                        .then(() => resolve(data))
+                        .catch(originalError => {
+                            this.logger.error({ originalError, message: "handleEvent failure" });
+                            resolve(data);
+                        });
                     break;
                 }
 
                 //docked
                 case journal.JournalEvents.docked: {
+                    let promises: Promise<any>[] = [];
                     let docked: journal.Docked = Object.assign(new journal.Docked(), data);
 
-                    this.journalDB.putCurrentState({ key: "currentSystem", value: docked.StarSystem })
-                        .catch(originalError => this.logger.error({ originalError, message: "handleEvent failure" }));
+                    promises.push(this.journalDB.putCurrentState({ key: "currentSystem", value: docked.StarSystem })
+                        .catch(originalError => this.logger.error({ originalError, message: "handleEvent failure" }))
+                    );
 
-                    this.journalDB.putCurrentState({ key: "currentSystemAddress", value: docked.SystemAddress })
-                        .catch(originalError => this.logger.error({ originalError, message: "handleEvent failure" }));
+                    promises.push(this.journalDB.putCurrentState({ key: "currentSystemAddress", value: docked.SystemAddress })
+                        .catch(originalError => this.logger.error({ originalError, message: "handleEvent failure" }))
+                    );
 
                     this.ngZone.run(() => this._currentSystem.next(docked.StarSystem));
                     this.ngZone.run(() => this._currentSystemAddress.next(docked.SystemAddress));
@@ -370,20 +420,35 @@ export class JournalService extends EventEmitter {
                             })
                     }
 
-                    resolve(data);
+                    Promise.all(promises)
+                        .then(() => resolve(data))
+                        .catch(originalError => {
+                            this.logger.error({ originalError, data, message: "Docked event failure" });
+                            resolve(data);
+                        });
+
                     break;
                 }
 
                 //location
                 case journal.JournalEvents.location: {
+                    let promises: Promise<any>[] = [];
                     let location: journal.Location = Object.assign(new journal.Location(), data);
 
-                    this.journalDB.putCurrentState({ key: "currentSystem", value: location.StarSystem })
-                        .catch(originalError => this.logger.error({ originalError, message: "handleEvent failure" }));
-                    this.journalDB.putCurrentState({ key: "currentSystemStarPos", value: location.StarPos })
-                        .catch(originalError => this.logger.error({ originalError, message: "handleEvent failure" }));
-                    this.journalDB.putCurrentState({ key: "currentSystemAddress", value: location.SystemAddress })
-                        .catch(originalError => this.logger.error({ originalError, message: "handleEvent failure" }));
+                    promises.push(
+                        this.journalDB.putCurrentState({ key: "currentSystem", value: location.StarSystem })
+                            .catch(originalError => this.logger.error({ originalError, message: "handleEvent failure" }))
+                    );
+
+                    promises.push(
+                        this.journalDB.putCurrentState({ key: "currentSystemStarPos", value: location.StarPos })
+                            .catch(originalError => this.logger.error({ originalError, message: "handleEvent failure" }))
+                    );
+
+                    promises.push(
+                        this.journalDB.putCurrentState({ key: "currentSystemAddress", value: location.SystemAddress })
+                            .catch(originalError => this.logger.error({ originalError, message: "handleEvent failure" }))
+                    );
 
                     this.ngZone.run(() => this._currentSystem.next(location.StarSystem));
                     this.ngZone.run(() => this._currentSystemStarPos.next(location.StarPos));
@@ -398,21 +463,35 @@ export class JournalService extends EventEmitter {
                         });
                     }
 
-                    resolve(data);
+                    Promise.all(promises)
+                        .then(() => resolve(data))
+                        .catch(originalError => {
+                            this.logger.error({ originalError, data, message: "Location event Failure" });
+                            resolve(data);
+                        });
+
                     break;
                 }
 
                 //fsd jump
                 case journal.JournalEvents.fsdJump: {
-
+                    let promises: Promise<any>[] = [];
                     let fsdJump: journal.FSDJump = Object.assign(new journal.FSDJump(), data);
 
-                    this.journalDB.putCurrentState({ key: "currentSystem", value: fsdJump.StarSystem })
-                        .catch(originalError => this.logger.error({ originalError, message: "handleEvent failure" }));
-                    this.journalDB.putCurrentState({ key: "currentSystemAddress", value: fsdJump.SystemAddress })
-                        .catch(originalError => this.logger.error({ originalError, message: "handleEvent failure" }));
-                    this.journalDB.putCurrentState({ key: "currentSystemStarPos", value: fsdJump.StarPos })
-                        .catch(originalError => this.logger.error({ originalError, message: "handleEvent failure" }));
+                    promises.push(
+                        this.journalDB.putCurrentState({ key: "currentSystem", value: fsdJump.StarSystem })
+                            .catch(originalError => this.logger.error({ originalError, message: "handleEvent failure" }))
+                    );
+
+                    promises.push(
+                        this.journalDB.putCurrentState({ key: "currentSystemAddress", value: fsdJump.SystemAddress })
+                            .catch(originalError => this.logger.error({ originalError, message: "handleEvent failure" }))
+                    );
+
+                    promises.push(
+                        this.journalDB.putCurrentState({ key: "currentSystemStarPos", value: fsdJump.StarPos })
+                            .catch(originalError => this.logger.error({ originalError, message: "handleEvent failure" }))
+                    );
 
                     this.ngZone.run(() => this._currentSystem.next(fsdJump.StarSystem));
                     this.ngZone.run(() => this._currentSystemAddress.next(fsdJump.SystemAddress));
@@ -431,15 +510,22 @@ export class JournalService extends EventEmitter {
                     if (fsdJump.Factions) {
                         for (let faction of fsdJump.Factions) {
                             this.journalDB.addEntry("factions", faction)
-                                .catch(err => this.logger.error({
-                                    originalError: err,
+                                .catch(originalError => {
+                                    this.logger.error({
+                                    originalError,
                                     message: "Faction failed to write to DB",
                                     data: faction
-                                }));
+                                })
+                            });
                         }
                     }
 
-                    resolve(data);
+                    Promise.all(promises)
+                        .then(() => resolve(data))
+                        .catch(originalError => {
+                            this.logger.error({ originalError, data, message: "FSDJump Event Failure" });
+                            resolve(data);
+                        })
                     break;
                 }
 
@@ -474,9 +560,12 @@ export class JournalService extends EventEmitter {
                     let supercruiseEntry: journal.SupercruiseEntry = Object.assign(new journal.SupercruiseEntry(), data);
                     this.ngZone.run(() => this._currentSystem.next(supercruiseEntry.StarSystem));
                     this.journalDB.putCurrentState({ key: "currentSystem", value: supercruiseEntry.StarSystem })
-                        .catch(originalError => this.logger.error({ originalError, message: "handleEvent failure" }));
+                        .then(() => resolve(data))
+                        .catch(originalError => {
+                            this.logger.error({ originalError, message: "handleEvent failure" });
+                            resolve(data);
+                        });
 
-                    resolve(data);
                     break;
                 }
 
@@ -486,43 +575,61 @@ export class JournalService extends EventEmitter {
                     this.ngZone.run(() => this._currentSystem.next(supercruiseExit.StarSystem));
 
                     this.journalDB.putCurrentState({ key: "currentSystem", value: supercruiseExit.StarSystem })
-                        .catch(originalError => this.logger.error({ originalError, message: "handleEvent failure" }));
+                        .then(() => resolve(data))
+                        .catch(originalError => {
+                            this.logger.error({ originalError, message: "handleEvent failure" });
+                            resolve(data);
+                        });
 
-                    resolve(data);
                     break;
                 }
 
                 //loadout
                 case journal.JournalEvents.loadout: {
+                    let promises: Promise<any>[] = [];
                     let loadout: journal.Loadout = Object.assign(new journal.Loadout(), data);
 
                     this.ngZone.run(() => this._currentShipID.next(loadout.ShipID));
 
-                    this.journalDB.putEntry('ships', loadout)
-                        .catch(originalError => this.logger.error({ originalError, message: "handleEvent failure" }));
+                    promises.push(
+                        this.journalDB.putEntry('ships', loadout)
+                            .catch(originalError => this.logger.error({ originalError, message: "handleEvent failure" }))
+                    );
 
-                    this.journalDB.putCurrentState({ key: 'shipID', value: loadout.ShipID })
-                        .catch(originalError => this.logger.error({ originalError, message: "handleEvent failure" }));
+                    promises.push(
+                        this.journalDB.putCurrentState({ key: 'shipID', value: loadout.ShipID })
+                            .catch(originalError => this.logger.error({ originalError, message: "handleEvent failure" }))
+                    );
 
-                    resolve(data);
+                    Promise.all(promises)
+                        .then(() => resolve(data))
+                        .catch(originalError => {
+                            this.logger.error({ originalError, data, message: "Loadout event failure" });
+                            resolve(data);
+                        })
                     break;
                 }
 
                 //resurrected
                 case journal.JournalEvents.resurrect: {
-
                     let resurrected: journal.Resurrect = Object.assign(new journal.Resurrect(), data);
 
                     if (resurrected.Option !== "rebuy") {
                         this._currentShipID.pipe(
                             take(1)
                         ).subscribe(shipID => {
-                            this.journalDB.deleteEntry('ships', shipID);
+                            this.journalDB.deleteEntry('ships', shipID)
+                                .then(() => resolve(data))
+                                .catch(originalError => {
+                                    this.logger.error({ originalError, data, message: "Resurrected event failed to delete ship" });
+                                    resolve(data);
+                                });
                             this.emit("notRebought", shipID);
                         });
+                    } else {
+                        resolve(data);
                     }
 
-                    resolve(data);
                     break;
                 }
 
@@ -531,9 +638,12 @@ export class JournalService extends EventEmitter {
                     let shipyardSell: journal.ShipyardSell = Object.assign(new journal.ShipyardSell(), data);
 
                     this.journalDB.deleteEntry('ships', shipyardSell.SellShipID)
-                        .catch(originalError => this.logger.error({ originalError, message: "handleEvent failure" }));
+                        .then(() => resolve(data))
+                        .catch(originalError => {
+                            this.logger.error({ originalError, message: "handleEvent failure" });
+                            resolve(data);
+                        });
 
-                    resolve(data);
                     break;
                 }
 
