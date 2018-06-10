@@ -14,8 +14,9 @@ import { LoggerService } from '../core/services/logger.service';
 import { JournalQueueService } from './journalQueue.service';
 import { EventEmitter } from 'events';
 import { setInterval, clearInterval } from 'timers';
-import { FileHeader, FSDJump } from 'cmdr-journal';
+import { FileHeader, FSDJump, MissionCompleted, MaterialCollected, MaterialDiscarded, MaterialTrade, EngineerCraft, EngineerContribution, Synthesis, TechnologyBroker } from 'cmdr-journal';
 import { EDDNService } from './eddn.service';
+import { Material } from '../dashboard/materials/material.model';
 
 @Injectable()
 export class JournalService extends EventEmitter {
@@ -92,7 +93,7 @@ export class JournalService extends EventEmitter {
                 })
             });
 
-            this.journalDB.getEntry<{ key: string, value: string }>("currentState", "shipID")
+        this.journalDB.getEntry<{ key: string, value: string }>("currentState", "shipID")
             .then(shipID => {
                 if (shipID && shipID.value && typeof shipID.value === "number") {
                     this._currentShipID.next(shipID.value);
@@ -205,19 +206,21 @@ export class JournalService extends EventEmitter {
     //offset and re-watching.
     private tailStream(path: string, options: { start: number, encoding: string }) {
         //avoid situation where logfile changes before async operations complete
-        this.journalDB.getEntry('completedJournalFiles', this.currentLogFile).then(data => {
-            if (!data) { this.journalDB.addEntry('completedJournalFiles', { filename: this.currentLogFile }) }
-        });
+        this.journalDB.getEntry('completedJournalFiles', this.currentLogFile)
+            .then(data => {
+                if (!data) { this.journalDB.addEntry('completedJournalFiles', { filename: this.currentLogFile }) }
+            });
 
         let stream = fs.createReadStream(path, options).pause()
             .on('data', (data: string) => {
                 this.offset += data.length;
             })
         let newStream = this.journalQueue.addStream(stream);
+        let eventHandlers: Promise<any>[] = [];
         newStream
             .on('data', (data: journal.JournalEvent) => {
                 newStream.pause();
-                this.handleEvent(data)
+                let eventHandler = this.handleEvent(data)
                     .then(() => {
                         //emit events as they're occuring in-session here
                         if (!this.firstStream) {
@@ -228,24 +231,30 @@ export class JournalService extends EventEmitter {
                     .catch((reason: string) => {
                         this.logger.error({ originalError: reason, message: "handleEvent rejected in tailStream" })
                         newStream.resume();
-                    })
+                    });
+
+                eventHandlers.push(eventHandler);
             })
 
             .on('error', (originalError: any) => this.logger.error({ originalError, message: "tailstream error" }))
 
             .on('end', () => {
-                this.watchLogDir();
+                Promise.all(eventHandlers)
+                    .catch(() => { }) //cheap Promise.finally
+                    .then(() => {
+                        //once here first stream must be done so
+                        //we can be sure all future events are 'live'
+                        //so can be emitted out
+                        console.log("Going live!");
+                        this.firstStream = false;
+                        this.watchLogDir();
+                    })
             })
 
         return stream;
     }
 
     public watchLogDir(): void {
-        //once here first stream must be done so
-        //we can be sure all future events are 'live'
-        //so can be emitted out
-        this.firstStream = false;
-
         //test if this file is Beta
         this._beta = /beta/i.test(this.currentLogFile);
 
@@ -267,7 +276,6 @@ export class JournalService extends EventEmitter {
                 //poll current logfile for changes
                 let poll = setInterval(() => {
                     let stats = fs.fstatSync(fd);
-                    let size = stats.size;
 
                     if (stats.size > this.offset) {
                         watcher.close();
@@ -336,7 +344,27 @@ export class JournalService extends EventEmitter {
                     break;
                 }
 
-                //mission accepted events
+                case journal.JournalEvents.missionCompleted: {
+                    if (!this.firstStream) {
+                        let missionCompleted: MissionCompleted = Object.assign(new MissionCompleted(), data);
+                        if (missionCompleted.MaterialsReward) {
+                            for (let material of missionCompleted.MaterialsReward) {
+                                this.journalDB.getEntry('materials', material.Name.toLowerCase())
+                                    .then((existingMaterial: Material) => {
+                                        let updatedMaterial = Object.assign(existingMaterial, material, { Count: existingMaterial.Count + material.Count });
+                                        updatedMaterial.Name = updatedMaterial.Name.toLowerCase();
+                                        return this.journalDB.putEntry('materials', updatedMaterial).then(() => {
+                                            this.emit('materialUpdated', updatedMaterial);
+                                        });
+                                    })
+                            }
+                        }
+                    }
+                    resolve(data);
+                    break;
+                }
+
+                //mission accepted
                 case journal.JournalEvents.missionAccepted: {
 
                     this.journalDB.getEntry(journal.JournalEvents.missionAccepted, (<journal.MissionAccepted>data).MissionID)
@@ -354,10 +382,10 @@ export class JournalService extends EventEmitter {
                                         reject(report);
                                     })
                             } else {
-                                reject({message: "Mission already exists", data});
+                                reject({ message: "Mission already exists", data });
                             }
                         })
-                        .catch(originalError=>{
+                        .catch(originalError => {
                             reject(originalError);
                         })
                     break;
@@ -512,11 +540,11 @@ export class JournalService extends EventEmitter {
                             this.journalDB.addEntry("factions", faction)
                                 .catch(originalError => {
                                     this.logger.error({
-                                    originalError,
-                                    message: "Faction failed to write to DB",
-                                    data: faction
-                                })
-                            });
+                                        originalError,
+                                        message: "Faction failed to write to DB",
+                                        data: faction
+                                    })
+                                });
                         }
                     }
 
@@ -643,6 +671,259 @@ export class JournalService extends EventEmitter {
                             this.logger.error({ originalError, message: "handleEvent failure" });
                             resolve(data);
                         });
+
+                    break;
+                }
+
+                //Materials
+                case journal.JournalEvents.materials: {
+                    let materials: journal.Materials = Object.assign(new journal.Materials(), data);
+
+                    //get existing materials entries from the DB and merge before re-inserting
+
+                    //it would be too time consuming to process every historical materials event
+                    //and update the DB and offer little benefit to the user
+                    let promises: Promise<any>[] = [];
+
+                    if (!this.firstStream) {
+
+                        materials.Encoded.forEach(material => {
+                            promises.push(
+                                this.journalDB.getEntry('materials', material.Name.toLowerCase())
+                                    .then(existingMaterial => {
+                                        let updatedMaterial = Object.assign({ Category: "$MICRORESOURCE_CATEGORY_Encoded;" }, existingMaterial, material);
+                                        updatedMaterial.Name = updatedMaterial.Name.toLowerCase();
+                                        return this.journalDB.putEntry('materials', updatedMaterial)
+                                    })
+                                    .catch(originalError => this.logger.error({ originalError, message: "Failed to write material", data: material }))
+                            )
+                        });
+
+                        materials.Raw.forEach(material => {
+                            promises.push(
+                                this.journalDB.getEntry('materials', material.Name.toLowerCase())
+                                    .then(existingMaterial => {
+                                        let updatedMaterial = Object.assign({ Category: "$MICRORESOURCE_CATEGORY_Elements;" }, existingMaterial, material);
+                                        updatedMaterial.Name = updatedMaterial.Name.toLowerCase();
+                                        return this.journalDB.putEntry('materials', updatedMaterial)
+                                    })
+                                    .catch(originalError => this.logger.error({ originalError, message: "Failed to write material", data: material }))
+                            )
+                        });
+
+                        materials.Manufactured.forEach(material => {
+                            promises.push(
+                                this.journalDB.getEntry('materials', material.Name.toLowerCase())
+                                    .then(existingMaterial => {
+                                        let updatedMaterial = Object.assign({ Category: "$MICRORESOURCE_CATEGORY_Manufactured;" }, existingMaterial, material);
+                                        updatedMaterial.Name = updatedMaterial.Name.toLowerCase();
+                                        return this.journalDB.putEntry('materials', updatedMaterial)
+                                    })
+                                    .catch(originalError => this.logger.error({ originalError, message: "Failed to write material", data: material }))
+                            )
+                        });
+                    }
+
+                    Promise.all(promises)
+                        .catch(() => { }) //cheap Promise.finally
+                        .then(() => {
+                            resolve(data);
+                        });
+                    break;
+                }
+
+                case journal.JournalEvents.materialCollected: {
+                    if (!this.firstStream) {
+                        let material: MaterialCollected = Object.assign(new MaterialCollected(), data);
+                        this.journalDB.getEntry<Material>('materials', material.Name.toLowerCase())
+                            .then(existingMaterial => {
+                                let updatedMaterial = Object.assign(existingMaterial, material, { Count: existingMaterial.Count + material.Count });
+                                updatedMaterial.Name = updatedMaterial.Name.toLowerCase();
+                                return this.journalDB.putEntry('materials', updatedMaterial)
+                                    .then(() => this.emit('materialUpdated', updatedMaterial));
+                            })
+                            .catch(originalError => this.logger.error({ originalError, message: "Failed to write material", data: material }))
+                            .then(() => {
+                                resolve(data);
+                            });
+                    }
+                    else {
+                        resolve(data);
+                    }
+
+                    break;
+                }
+
+                case journal.JournalEvents.materialDiscarded: {
+                    if (!this.firstStream) {
+                        let materialDiscarded: MaterialDiscarded = Object.assign(new MaterialDiscarded(), data);
+                        this.journalDB.getEntry<Material>('materials', materialDiscarded.Name.toLocaleLowerCase())
+                            .then(existingMaterial => {
+                                let updatedMaterial = Object.assign(existingMaterial, materialDiscarded, { Count: existingMaterial.Count - materialDiscarded.Count });
+                                updatedMaterial.Name = updatedMaterial.Name.toLowerCase();
+                                return this.journalDB.putEntry('materials', updatedMaterial)
+                                    .then(() => this.emit('materialUpdated', updatedMaterial));
+                            })
+                            .catch(originalError => this.logger.error({ originalError, message: "Failed to write material", data: materialDiscarded }))
+                            .then(() => {
+                                resolve(data);
+                            });
+                    } else {
+                        resolve(data);
+                    }
+                    break;
+                }
+
+                case journal.JournalEvents.materialTrade: {
+                    if (!this.firstStream) {
+                        let promises: Promise<any>[] = [];
+                        let materialTrade: MaterialTrade = Object.assign(new MaterialTrade(), data);
+                        //Increase materials received
+                        promises.push(
+                            this.journalDB.getEntry<Material>('materials', materialTrade.Received.Material.toLocaleLowerCase())
+                                .then(existingMaterial => {
+                                    let updatedMaterial = Object.assign(existingMaterial, materialTrade, { Count: existingMaterial.Count + materialTrade.Received.Quantity });
+                                    updatedMaterial.Name = updatedMaterial.Name.toLowerCase();
+                                    return this.journalDB.putEntry('materials', updatedMaterial)
+                                        .then(() => this.emit('materialUpdated', updatedMaterial));
+                                })
+                                .catch(originalError => this.logger.error({ originalError, message: "Failed to write material", data: materialTrade }))
+                        );
+
+                        //Decrease materials paid
+                        promises.push(
+                            this.journalDB.getEntry<Material>('materials', materialTrade.Paid.Material.toLocaleLowerCase())
+                                .then(existingMaterial => {
+                                    let updatedMaterial = Object.assign(existingMaterial, materialTrade, { Count: existingMaterial.Count - materialTrade.Paid.Quantity });
+                                    updatedMaterial.Name = updatedMaterial.Name.toLowerCase();
+                                    return this.journalDB.putEntry('materials', updatedMaterial)
+                                        .then(() => this.emit('materialUpdated', updatedMaterial));
+                                })
+                                .catch(originalError => this.logger.error({ originalError, message: "Failed to write material", data: materialTrade }))
+                        );
+                        Promise.all(promises)
+                            .catch(() => { }) //cheap Promise.finally
+                            .then(() => {
+                                resolve(data);
+                            });
+
+                    }
+                    else {
+                        resolve(data);
+                    }
+
+                    break;
+                }
+
+                case journal.JournalEvents.engineerCraft: {
+                    if (!this.firstStream) {
+                        let engineerCraft: EngineerCraft = Object.assign(new EngineerCraft(), data);
+                        let promises: Promise<any>[] = [];
+
+                        for (let material of engineerCraft.Ingredients) {
+                            promises.push(
+                                this.journalDB.getEntry<Material>('materials', material.Name.toLocaleLowerCase())
+                                    .then(existingMaterial => {
+                                        let updatedMaterial = Object.assign(existingMaterial, material, { Count: existingMaterial.Count - material.Count });
+                                        updatedMaterial.Name = updatedMaterial.Name.toLowerCase();
+                                        return this.journalDB.putEntry('materials', updatedMaterial)
+                                            .then(() => this.emit('materialUpdated', updatedMaterial));
+                                    })
+                                    .catch(originalError => this.logger.error({ originalError, message: "Failed to write material", data: engineerCraft }))
+                            );
+                        }
+
+                        Promise.all(promises)
+                            .catch(() => { }) //cheap Promise.finally
+                            .then(() => {
+                                resolve(data);
+                            });
+                    } else {
+                        resolve(data);
+                    }
+                    break;
+                }
+
+                case journal.JournalEvents.engineerContribution: {
+                    if (!this.firstStream) {
+                        let engineerContribution: EngineerContribution = Object.assign(new EngineerContribution(), data);
+                        if (engineerContribution.Material) {
+                            this.journalDB.getEntry<Material>('materials', engineerContribution.Material.toLocaleLowerCase())
+                                .then(existingMaterial => {
+                                    let updatedMaterial = Object.assign(existingMaterial, { Count: existingMaterial.Count - engineerContribution.Quantity });
+                                    updatedMaterial.Name = updatedMaterial.Name.toLowerCase();
+                                    return this.journalDB.putEntry('materials', updatedMaterial)
+                                        .then(() => this.emit('materialUpdated', updatedMaterial));
+                                })
+                                .catch(originalError => this.logger.error({ originalError, message: "Failed to write material", data: engineerContribution }))
+                                .then(() => {
+                                    resolve(data);
+                                });
+                        } else {
+                            resolve(data);
+                        }
+                    } else {
+                        resolve(data);
+                    }
+
+
+                    break;
+                }
+
+                case journal.JournalEvents.synthesis: {
+                    if (!this.firstStream) {
+                        let synthesis: Synthesis = Object.assign(new Synthesis(), data);
+                        let promises: Promise<any>[] = [];
+
+                        for (let material of synthesis.Materials) {
+                            promises.push(
+                                this.journalDB.getEntry<Material>('materials', material.Name.toLocaleLowerCase())
+                                    .then(existingMaterial => {
+                                        let updatedMaterial = Object.assign(existingMaterial, material, { Count: existingMaterial.Count - material.Count });
+                                        updatedMaterial.Name = updatedMaterial.Name.toLowerCase();
+                                        return this.journalDB.putEntry('materials', updatedMaterial)
+                                            .then(() => this.emit('materialUpdated', updatedMaterial));
+                                    })
+                                    .catch(originalError => this.logger.error({ originalError, message: "Failed to write material", data: synthesis }))
+                            );
+                        }
+
+                        Promise.all(promises)
+                            .catch(() => { }) //cheap Promise.finally
+                            .then(() => resolve(data));
+                    } else {
+                        resolve(data);
+                    }
+
+                    break;
+                }
+
+                case journal.JournalEvents.technologyBroker: {
+                    if (!this.firstStream) {
+                        let technologyBroker: TechnologyBroker = Object.assign(new TechnologyBroker(), data);
+                        let promises: Promise<any>[] = [];
+
+                        for (let material of technologyBroker.Materials) {
+                            promises.push(
+                                this.journalDB.getEntry<Material>('materials', material.Name.toLocaleLowerCase())
+                                    .then(existingMaterial => {
+                                        let updatedMaterial = Object.assign(existingMaterial, material, { Count: existingMaterial.Count - material.Count });
+                                        updatedMaterial.Name = updatedMaterial.Name.toLowerCase();
+                                        return this.journalDB.putEntry('materials', updatedMaterial)
+                                            .then(() => this.emit('materialUpdated', updatedMaterial));
+                                    })
+                                    .catch(originalError => this.logger.error({ originalError, message: "Failed to write material", data: technologyBroker }))
+                            );
+                        }
+
+                        Promise.all(promises)
+                            .catch(() => { })
+                            .then(() => {
+                                resolve(data);
+                            });
+                    } else {
+                        resolve(data);
+                    }
 
                     break;
                 }

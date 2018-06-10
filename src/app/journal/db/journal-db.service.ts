@@ -12,7 +12,7 @@ export class JournalDBService {
         private errorService: AppErrorService
     ) {
         let indexedDB = window.indexedDB;
-        let dbVersion = 4;
+        let dbVersion = 5;
 
         let openRequest = indexedDB.open("journal", dbVersion);
 
@@ -50,6 +50,11 @@ export class JournalDBService {
                 if (!upgradeDB.objectStoreNames.contains("ships")) {
                     let shipsStore = upgradeDB.createObjectStore("ships",{keyPath: "ShipID"});
                     shipsStore.createIndex("ShipID","ShipID",{unique: true});
+                }
+
+                if (!upgradeDB.objectStoreNames.contains("materials")) {
+                    let materialsStore = upgradeDB.createObjectStore("materials",{keyPath: "Name"});
+                    materialsStore.createIndex("Name","Name",{unique: true});
                 }
             }
         }
