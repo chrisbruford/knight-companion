@@ -1,0 +1,90 @@
+<mat-tab-group>
+
+        <mat-tab label="All">
+                <mat-form-field>
+                    <input matInput (keyup)="applyMaterialFilter('all',$event.target.value)" placeholder="Filter">
+                </mat-form-field>
+        
+                <mat-table [dataSource]="allDataSource">
+                    <ng-container matColumnDef="name">
+                        <mat-header-cell *matHeaderCellDef>Name</mat-header-cell>
+                        <mat-cell *matCellDef="let material">{{material.Name_Localised || material.Name}}</mat-cell>
+                    </ng-container>
+        
+                    <ng-container matColumnDef="count">
+                        <mat-header-cell *matHeaderCellDef>Quantity</mat-header-cell>
+                        <mat-cell *matCellDef="let material">{{material.Count}}</mat-cell>
+                    </ng-container>
+        
+                    <mat-header-row *matHeaderRowDef="columnsToDisplay"></mat-header-row>
+                    <mat-row *matRowDef="let row; columns: columnsToDisplay"></mat-row>
+        
+                </mat-table>
+            </mat-tab>
+
+    <mat-tab label="Raw">
+        <mat-form-field>
+            <input matInput (keyup)="applyMaterialFilter('raw',$event.target.value)" placeholder="Filter">
+        </mat-form-field>
+
+        <mat-table [dataSource]="rawDataSource">
+            <ng-container matColumnDef="name">
+                <mat-header-cell *matHeaderCellDef>Name</mat-header-cell>
+                <mat-cell *matCellDef="let material">{{material.Name_Localised || material.Name}}</mat-cell>
+            </ng-container>
+
+            <ng-container matColumnDef="count">
+                <mat-header-cell *matHeaderCellDef>Quantity</mat-header-cell>
+                <mat-cell *matCellDef="let material">{{material.Count}}</mat-cell>
+            </ng-container>
+
+            <mat-header-row *matHeaderRowDef="columnsToDisplay"></mat-header-row>
+            <mat-row *matRowDef="let row; columns: columnsToDisplay"></mat-row>
+
+        </mat-table>
+    </mat-tab>
+
+    <mat-tab label="Manufactured">
+        <mat-form-field>
+            <input matInput (keyup)="applyMaterialFilter('manufactured',$event.target.value)" placeholder="Filter">
+        </mat-form-field>
+
+        <mat-table [dataSource]="manufacturedDataSource">
+            <ng-container matColumnDef="name">
+                <mat-header-cell *matHeaderCellDef>Name</mat-header-cell>
+                <mat-cell *matCellDef="let material">{{material.Name_Localised || material.Name}}</mat-cell>
+            </ng-container>
+
+            <ng-container matColumnDef="count">
+                <mat-header-cell *matHeaderCellDef>Quantity</mat-header-cell>
+                <mat-cell *matCellDef="let material">{{material.Count}}</mat-cell>
+            </ng-container>
+
+            <mat-header-row *matHeaderRowDef="columnsToDisplay"></mat-header-row>
+            <mat-row *matRowDef="let row; columns: columnsToDisplay"></mat-row>
+
+        </mat-table>
+    </mat-tab>
+
+    <mat-tab label="Encoded">
+        <mat-form-field>
+            <input matInput (keyup)="applyMaterialFilter('encoded',$event.target.value)" placeholder="Filter">
+        </mat-form-field>
+
+        <mat-table [dataSource]="encodedDataSource">
+            <ng-container matColumnDef="name">
+                <mat-header-cell *matHeaderCellDef>Name</mat-header-cell>
+                <mat-cell *matCellDef="let material">{{material.Name_Localised || material.Name}}</mat-cell>
+            </ng-container>
+
+            <ng-container matColumnDef="count">
+                <mat-header-cell *matHeaderCellDef>Quantity</mat-header-cell>
+                <mat-cell *matCellDef="let material">{{material.Count}}</mat-cell>
+            </ng-container>
+
+            <mat-header-row *matHeaderRowDef="columnsToDisplay"></mat-header-row>
+            <mat-row *matRowDef="let row; columns: columnsToDisplay"></mat-row>
+
+        </mat-table>
+    </mat-tab>
+</mat-tab-group>

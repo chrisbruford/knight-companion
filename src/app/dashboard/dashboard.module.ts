@@ -15,6 +15,8 @@ import { KokMaterialModule } from '../kok-material/kok-material.module';
 import { ShipsComponent } from './ships/ships.component';
 import { ShipsService } from './ships/ships.service';
 import { TrackingFaction } from './tracking-faction.service';
+import { MaterialsComponenet } from './materials/materials.component';
+import { MaterialsService } from './materials/materials.service';
 
 @NgModule({
     imports: [
@@ -30,7 +32,8 @@ import { TrackingFaction } from './tracking-faction.service';
         MissionsComponent, 
         CombatComponent,
         ExplorationComponent,
-        ShipsComponent
+        ShipsComponent,
+        MaterialsComponenet,
     ],
     exports: [DashboardComponent],
     providers: [
@@ -38,7 +41,8 @@ import { TrackingFaction } from './tracking-faction.service';
         MissionService,
         ExplorationService,
         ShipsService,
-        TrackingFaction
+        TrackingFaction,
+        MaterialsService
     ]
 }) 
 export class DashboardModule {}
