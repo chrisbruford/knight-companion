@@ -245,7 +245,6 @@ export class JournalService extends EventEmitter {
                         //once here first stream must be done so
                         //we can be sure all future events are 'live'
                         //so can be emitted out
-                        console.log("Going live!");
                         this.firstStream = false;
                         this.watchLogDir();
                     })

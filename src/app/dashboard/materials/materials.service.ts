@@ -59,7 +59,6 @@ import { Material } from "./material.model";
             .catch()
 
         journal.on(JournalEvents.materials, (materials: Materials) => {
-            console.log('material event');
             materials.Encoded.forEach(material => {
                 let updatedMaterial = Object.assign({},this._materials.encoded.get(material.Name),material);
                 this._materials.encoded.set(material.Name, updatedMaterial);
@@ -79,7 +78,6 @@ import { Material } from "./material.model";
         });
 
         journal.on('materialUpdated', (material: Material) => {
-            console.log('material update event');
             switch (material.Category) {
                 case "Manufactured":
                 case "$MICRORESOURCE_CATEGORY_Manufactured;": {
