@@ -1,4 +1,6 @@
-const {app, Menu, BrowserWindow, ipcMain} = require('electron')
+const { app, Menu, BrowserWindow, ipcMain } = require('electron');
+const autoUpdater = require("electron-updater").autoUpdater;
+
 // Module to create native browser window.
 const path = require('path')
 const url = require('url')
@@ -7,13 +9,46 @@ const url = require('url')
 // be closed automatically when the JavaScript object is garbage collected.
 let mainWindow;
 
+const log = require('electron-log');
+autoUpdater.logger = log;
+autoUpdater.logger.transports.file.level = 'info';
+log.info('App starting...');
+
+function sendStatusToWindow(text) {
+    mainWindow.webContents.send('message', text);
+    log.info(text);
+}
+
+autoUpdater.on('checking-for-update', () => {
+    sendStatusToWindow('Checking for update...');
+});
+autoUpdater.on('update-available', (info) => {
+    sendStatusToWindow('Update available.');
+});
+autoUpdater.on('update-not-available', (info) => {
+    sendStatusToWindow('Update not available.');
+});
+autoUpdater.on('error', (err) => {
+    sendStatusToWindow('Error in auto-updater. ' + err);
+});
+autoUpdater.on('download-progress', (progressObj) => {
+    let log_message = "Download speed: " + progressObj.bytesPerSecond;
+    log_message = log_message + ' - Downloaded ' + progressObj.percent + '%';
+    log_message = log_message + ' (' + progressObj.transferred + "/" + progressObj.total + ')';
+    sendStatusToWindow(log_message);
+});
+
+autoUpdater.on('update-downloaded', (info) => {
+    sendStatusToWindow('Update downloaded');
+});
+
 //need this function until Electron manage to implement dynamic menu items
 //https://github.com/electron/electron/issues/528
-function buildKokMenu({login=true}) {
+function buildKokMenu({ login = true }) {
     const logInOut = {
-        label: login ? "Login":"Logout",
+        label: login ? "Login" : "Logout",
         click() {
-            mainWindow.webContents.send(login ? 'login':'logout');
+            mainWindow.webContents.send(login ? 'login' : 'logout');
         }
     }
 
@@ -21,7 +56,7 @@ function buildKokMenu({login=true}) {
         {
             label: "Dashboard",
             click() {
-                mainWindow.webContents.send('navigate','/')
+                mainWindow.webContents.send('navigate', '/')
             }
         },
         {
@@ -31,9 +66,22 @@ function buildKokMenu({login=true}) {
                 {
                     label: "Profile",
                     click() {
-                        mainWindow.webContents.send('navigate','account/profile');
+                        mainWindow.webContents.send('navigate', 'account/profile');
                     },
-                    enabled: login ? false:true                    
+                    enabled: login ? false : true
+                }
+            ]
+        },
+        {
+            label: "Help",
+            submenu: [
+                {
+                    label: 'Check for updates...',
+                    click() {
+                        autoUpdater.checkForUpdates()
+                            .then(res=>mainWindow.webContents.send('update-ready',res))
+                            .catch(err=>console.log('Update checker error'));
+                    }
                 }
             ]
         }
@@ -42,7 +90,7 @@ function buildKokMenu({login=true}) {
     if (process.env.ENV === "development") {
         menuTemplate.push({
             label: "Dev",
-            submenu: [{label: "Dev tools", role: "toggledevtools"}]
+            submenu: [{ label: "Dev tools", role: "toggledevtools" }]
         });
         mainWindow.webContents.openDevTools();
     }
@@ -51,11 +99,13 @@ function buildKokMenu({login=true}) {
     Menu.setApplicationMenu(menu);
 }
 
-ipcMain.on('rebuild-menu',(evt,arg)=>buildKokMenu(arg));
+//event listeners
+ipcMain.on('rebuild-menu', (evt, arg) => buildKokMenu(arg));
+ipcMain.on('do-update', () => updateApp());
 
 function createWindow() {
     // Create the browser window.
-    
+
     mainWindow = new BrowserWindow({
         width: 630,
         height: 640,
@@ -64,10 +114,10 @@ function createWindow() {
     });
 
     //Application menus
-    buildKokMenu({login: true});
+    buildKokMenu({ login: true });
 
 
-    mainWindow.once('ready-to-show',()=>mainWindow.show());
+    mainWindow.once('ready-to-show', () => mainWindow.show());
 
     // and load the index.html of the app.
     mainWindow.loadURL(url.format({
@@ -88,7 +138,9 @@ function createWindow() {
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
-app.on('ready', createWindow);
+app.on('ready', () => {
+    createWindow();
+});
 
 // Quit when all windows are closed.
 app.on('window-all-closed', function () {
@@ -106,3 +158,7 @@ app.on('activate', function () {
         createWindow()
     }
 });
+
+function updateApp() {
+    autoUpdater.quitAndInstall(true,true);
+}

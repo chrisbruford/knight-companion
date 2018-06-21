@@ -1,4 +1,5 @@
 {
+    "appId": "com.knightsofkarma.app",
     "directories": {
         "output": "./dist/installers",
         "app": "./dist"
@@ -16,5 +17,11 @@
     },
     "dmg": {
         "icon": "./src/assets/icons/icon.icns"
-    }
+    },
+    "publish": [
+        {
+            "provider": "github",
+            "owner": "chrisbruford"
+        }
+    ]
 }
