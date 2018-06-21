@@ -4,9 +4,10 @@ import { AppErrorService } from './core/services/app-error.service';
 import { UserService } from './core/services/user.service';
 import { LoggerService } from './core/services/logger.service';
 import { ipcRenderer, IpcMessageEvent, Event } from 'electron';
-import { AppUpdater, UpdateCheckResult } from 'electron-updater';
+import { UpdateCheckResult } from 'electron-updater';
 import { NgZone } from '@angular/core';
 import { takeWhile } from 'rxjs/operators';
+import { MatSnackBar, MatSnackBarRef, SimpleSnackBar } from '@angular/material';
 
 
 @Component({
@@ -24,6 +25,7 @@ export class AppComponent {
         private router: Router,
         private logger: LoggerService,
         private zone: NgZone,
+        private snackBar: MatSnackBar
     ) {
         ipcRenderer.on('logout', () => {
             zone.run(this.logout.bind(this));
@@ -49,7 +51,15 @@ export class AppComponent {
 
         ipcRenderer.on('update-ready', (evt: Event, res: UpdateCheckResult) => {
             console.log(res);
+            let snackBar = this.openSnackBar('Update ready...',"Install");
+            snackBar.onAction().subscribe(()=>{
+                ipcRenderer.send('do-update');
+            })
         });
+
+        ipcRenderer.on('update-download-progress',(evt: Event, progress: any)=>{
+            //TODO: Show progress to user
+        }) 
     }
 
     logout() {
@@ -69,6 +79,14 @@ export class AppComponent {
                     this.logger.error({ originalError: err, message: 'Error thrown while logging out' });
                 }
             )
+    }
+
+    openSnackBar(message: string, action: string): MatSnackBarRef<SimpleSnackBar> {
+        let snackBar: MatSnackBarRef<SimpleSnackBar>;
+        this.zone.run(()=>{
+            snackBar = this.snackBar.open(message,action);
+        });
+        return snackBar;
     }
 
     ngOnDestroy() {

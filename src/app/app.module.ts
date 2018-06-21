@@ -13,6 +13,7 @@ import { DashboardModule } from './dashboard/dashboard.module';
 import { SharedModule } from './shared/shared.module';
 import {APP_BASE_HREF} from '@angular/common';
 import { AccountModule } from './account/account.module';
+import { KokMaterialModule } from './kok-material/kok-material.module';
 
 @NgModule({
   imports: [
@@ -24,7 +25,8 @@ import { AccountModule } from './account/account.module';
     DashboardModule,
     AccountModule,
     AppRoutingModule,
-    SharedModule
+    SharedModule,
+    KokMaterialModule
   ],
   declarations: [
     AppComponent

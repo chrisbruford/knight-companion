@@ -1,4 +1,4 @@
-const { app, Menu, BrowserWindow, ipcMain } = require('electron');
+const { app, Menu, BrowserWindow, ipcMain, dialog } = require('electron');
 const autoUpdater = require("electron-updater").autoUpdater;
 
 // Module to create native browser window.
@@ -19,27 +19,29 @@ function sendStatusToWindow(text) {
     log.info(text);
 }
 
-autoUpdater.on('checking-for-update', () => {
-    sendStatusToWindow('Checking for update...');
-});
-autoUpdater.on('update-available', (info) => {
-    sendStatusToWindow('Update available.');
-});
-autoUpdater.on('update-not-available', (info) => {
-    sendStatusToWindow('Update not available.');
-});
+//autoUpdater setup
+autoUpdater.autoDownload = true;
+autoUpdater.autoInstallOnAppQuit = true;
+
+//check for update in background silently first
+autoUpdater.checkForUpdates()
+    .catch(err => console.log('Update checker error'))
+    .then(() => {
+        autoUpdater.on('update-not-available', (info) => {
+            dialog.showMessageBox({ message: "There are no updates available" });
+        })
+    });
+
 autoUpdater.on('error', (err) => {
     sendStatusToWindow('Error in auto-updater. ' + err);
 });
+
 autoUpdater.on('download-progress', (progressObj) => {
-    let log_message = "Download speed: " + progressObj.bytesPerSecond;
-    log_message = log_message + ' - Downloaded ' + progressObj.percent + '%';
-    log_message = log_message + ' (' + progressObj.transferred + "/" + progressObj.total + ')';
-    sendStatusToWindow(log_message);
+    mainWindow.webContents.send('update-download-progress', progressObj);
 });
 
 autoUpdater.on('update-downloaded', (info) => {
-    sendStatusToWindow('Update downloaded');
+    mainWindow.webContents.send('update-ready', info);
 });
 
 //need this function until Electron manage to implement dynamic menu items
@@ -79,8 +81,7 @@ function buildKokMenu({ login = true }) {
                     label: 'Check for updates...',
                     click() {
                         autoUpdater.checkForUpdates()
-                            .then(res=>mainWindow.webContents.send('update-ready',res))
-                            .catch(err=>console.log('Update checker error'));
+                            .catch(err => console.log('Update checker error'));
                     }
                 }
             ]
@@ -160,5 +161,5 @@ app.on('activate', function () {
 });
 
 function updateApp() {
-    autoUpdater.quitAndInstall(true,true);
+    autoUpdater.quitAndInstall(true, true);
 }
