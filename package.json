@@ -1,14 +1,19 @@
 {
   "name": "kok-companion",
   "productName": "kok-companion",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "author": "Chris Bruford",
   "description": "A companion app for members of the Knights of Karma",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/chrisbruford/knight-companion.git"
+  },
   "scripts": {
     "start": "cross-env ENV=development webpack --config config/webpack.dev.js --watch",
     "staging": "cross-env ENV=development webpack --config config/webpack.staging.js --watch",
     "live": "cross-env ENV=development webpack --config config/webpack.live.js --watch",
-    "package": "rimraf dist && webpack --config config/webpack.prod.js --progress --profile --bail && electron-packager ./dist kokpanion --overwrite --out=packages --icon=./src/assets/icons/icon.icns && electron-builder --config builder.config.json"
+    "package": "rimraf dist && webpack --config config/webpack.prod.js --progress --profile --bail && electron-builder --config builder.dev.config.json",
+    "release": "rimraf dist && webpack --config config/webpack.prod.js --progress --profile --bail && electron-builder --config builder.prod.config.json"
   },
   "license": "MIT",
   "dependencies": {
@@ -24,6 +29,8 @@
     "@angular/platform-browser-dynamic": "6.0.0",
     "@angular/router": "6.0.0",
     "core-js": "^2.5.5",
+    "electron-log": "^2.2.15",
+    "electron-updater": "^2.21.10",
     "ndjson": "^1.5.0",
     "rxjs": "^6.2.0",
     "zone.js": "^0.8.26"
@@ -38,6 +45,7 @@
     "cross-env": "^5.1.4",
     "css-loader": "^0.26.1",
     "css-to-string-loader": "^0.1.2",
+    "dotenv": "^6.0.0",
     "electron": "^1.8.6",
     "electron-builder": "^19.56.2",
     "electron-connect": "^0.6.2",

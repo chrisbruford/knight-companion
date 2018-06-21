@@ -4,6 +4,7 @@ const ExtractTextPlugin = require('extract-text-webpack-plugin');
 const helpers = require('./helpers');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 const path = require('path');
+require('dotenv').config();
 
 module.exports = {
     entry: {
@@ -94,7 +95,8 @@ module.exports = {
 
         new CopyWebpackPlugin([
             {from: helpers.root('./src/index.js'),to: helpers.root('./dist/index.js')},
-            {from: helpers.root('./package.json'),to: helpers.root('./dist/package.json')}
+            {from: helpers.root('./package.json'),to: helpers.root('./dist/package.json')},
+            {from: helpers.root('./dev-app-update.yml'),to: helpers.root('./dist/dev-app-update.yml')}
         ])
     ]
 };

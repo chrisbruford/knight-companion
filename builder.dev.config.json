@@ -1,0 +1,21 @@
+{
+    "appId": "com.knightsofkarma.app",
+    "directories": {
+        "output": "./dist/installers",
+        "app": "./dist"
+    },
+    "win": {
+        "icon": "./src/assets/icons/icon.ico"
+    },
+    "nsis": {
+        "oneClick": false,
+        "allowToChangeInstallationDirectory": true,
+        "installerIcon": "./src/assets/icons/icon.ico"
+    },
+    "mac": {
+        "icon": "./src/assets/icons/icon.icns"
+    },
+    "dmg": {
+        "icon": "./src/assets/icons/icon.icns"
+    }
+}

@@ -4,15 +4,15 @@ import { AppErrorService } from './core/services/app-error.service';
 import { UserService } from './core/services/user.service';
 import { LoggerService } from './core/services/logger.service';
 import { ipcRenderer, IpcMessageEvent, Event } from 'electron';
+import { AppUpdater, UpdateCheckResult } from 'electron-updater';
 import { NgZone } from '@angular/core';
 import { takeWhile } from 'rxjs/operators';
 
-declare function buildKokMenu(arg: {login: boolean}): void;
 
 @Component({
-  selector: 'my-app',
-  templateUrl: './app.component.html',
-  styleUrls: ['./app.component.scss']
+    selector: 'my-app',
+    templateUrl: './app.component.html',
+    styleUrls: ['./app.component.scss']
 })
 export class AppComponent {
 
@@ -25,42 +25,50 @@ export class AppComponent {
         private logger: LoggerService,
         private zone: NgZone,
     ) {
-        ipcRenderer.on('logout',()=>{
+        ipcRenderer.on('logout', () => {
             zone.run(this.logout.bind(this));
-            ipcRenderer.send("rebuild-menu",{login: true});
+            ipcRenderer.send("rebuild-menu", { login: true });
         });
 
-        ipcRenderer.on('login',()=>{
-            ipcRenderer.send("rebuild-menu",{login: true});
-            zone.run(()=>{
+        ipcRenderer.on('login', () => {
+            ipcRenderer.send("rebuild-menu", { login: true });
+            zone.run(() => {
                 this.router.navigate(["/"]);
             })
         });
 
-        ipcRenderer.on('navigate',(evt: Event, url:string)=>{
-            zone.run(()=>{
+        ipcRenderer.on('navigate', (evt: Event, url: string) => {
+            zone.run(() => {
                 this.router.navigate(url.split("/"));
             })
         });
-     }
+
+        ipcRenderer.on('message', function (event: any, text: string) {
+            console.log(text);
+        });
+
+        ipcRenderer.on('update-ready', (evt: Event, res: UpdateCheckResult) => {
+            console.log(res);
+        });
+    }
 
     logout() {
         this.userService.logout()
-        .pipe(
-            takeWhile(()=>this.alive)
-        )
-        .subscribe(
-            success =>{
-                if (success) {
-                    this.router.navigate(['/'])
-                } else {
-                    this.logger.error({originalError: new Error(''), message: 'Failed to log out user'});
+            .pipe(
+                takeWhile(() => this.alive)
+            )
+            .subscribe(
+                success => {
+                    if (success) {
+                        this.router.navigate(['/'])
+                    } else {
+                        this.logger.error({ originalError: new Error(''), message: 'Failed to log out user' });
+                    }
+                },
+                err => {
+                    this.logger.error({ originalError: err, message: 'Error thrown while logging out' });
                 }
-            },
-            err => {
-                this.logger.error({originalError: err, message: 'Error thrown while logging out'});
-            }
-        )
+            )
     }
 
     ngOnDestroy() {
