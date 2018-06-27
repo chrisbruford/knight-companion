@@ -69,7 +69,7 @@ export class MissionService {
 
             this._missionsCompleted.push(originatedMission);
 
-            if (originatedMission.originator.toLowerCase === this.trackedFaction.toLowerCase) {
+            if (originatedMission.originator.toLowerCase() === this.trackedFaction.toLowerCase()) {
                 this._factionMissionsCompleted.push(originatedMission);
                 this.factionMissionsCompletedSubject.next(this._factionMissionsCompleted.slice(0));
             }
