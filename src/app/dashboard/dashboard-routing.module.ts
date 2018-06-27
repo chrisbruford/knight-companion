@@ -4,11 +4,15 @@ import { DashboardComponent } from './dashboard.component';
 import { CombatComponent } from './combat/combat.component';
 import { ExplorationComponent } from './exploration/exploration.component';
 import { MissionsComponent } from './missions/missions.component';
+import { AuthGuard } from '../core/guards/auth.guard';
+
 
 let routes: Routes = [
     {
         path: "dashboard", 
-        component: DashboardComponent, 
+        component: DashboardComponent,
+        canActivate: [AuthGuard],
+        canActivateChild: [AuthGuard],
         children: [
             {path: 'combat', component: CombatComponent},
             {path: 'exploration', component: ExplorationComponent},

@@ -42,8 +42,8 @@ export class LoginComponent implements OnInit {
                 (user: User) => {
                     this.authenticated = true;
                     this.user = user;
-                    ipcRenderer.send("rebuild-menu", { login: false });
-                    this.router.navigate(['/dashboard']);
+                    let redirect = this.userService.redirect || '/dashboard';
+                    this.router.navigate([redirect]);
                 },
                 (err: any) => this.logger.error({ originalError: err, message: 'AuthCheck Error' })
             );
@@ -59,8 +59,9 @@ export class LoginComponent implements OnInit {
                 user => {
                     this.authenticated = true;
                     this.user = user;
-                    ipcRenderer.send("rebuild-menu", { login: false });
-                    this.router.navigate(['/dashboard']);
+                    let redirect = this.userService.redirect || '/dashboard';
+                    this.router.navigate([redirect]);
+
                 },
                 err => {
                     this.authenticated = false;

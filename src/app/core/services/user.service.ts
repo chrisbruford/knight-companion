@@ -3,17 +3,24 @@ import { HttpClient } from '@angular/common/http';
 import { User, SimpleUser } from '../../shared/interfaces/user';
 import { Observable, BehaviorSubject } from 'rxjs';
 import { map, catchError, tap } from 'rxjs/operators';
+import { Router } from '@angular/router';
+import { ipcRenderer } from 'electron';
 
 @Injectable()
 export class UserService {
 
     private _user = new BehaviorSubject<User | null>(null);
+    public redirect: string;
+
+    constructor(
+        private http: HttpClient,
+        private router: Router
+    ) { }
 
     get user() {
         return this._user.asObservable();
     }
 
-    constructor(private http: HttpClient) { }
 
     authenticate(user: SimpleUser): Observable<User> {
         let data = Object.assign({ remember: true }, user);
@@ -22,6 +29,7 @@ export class UserService {
                 map(user => {
                     if (user) {
                         this._user.next(user);
+                        ipcRenderer.send("rebuild-menu", { login: false });
                         return user;
                     } else {
                         throw new Error("No such user found");
@@ -37,6 +45,7 @@ export class UserService {
                 tap(user => {
                     if (user) {
                         this._user.next(user);
+                        ipcRenderer.send("rebuild-menu", { login: false });
                     }
                 }),
                 catchError(err => Observable.throw(err))
@@ -46,7 +55,10 @@ export class UserService {
     logout(): Observable<boolean> {
         return this.http.get<boolean>(`${process.env.API_ENDPOINT}/logout`)
             .pipe(
-                tap(() => this._user.next(null)),
+                tap(() => {
+                    this.redirect = ''; 
+                    this._user.next(null)
+                }),
                 catchError(err => Observable.throw(err))
             );
     }

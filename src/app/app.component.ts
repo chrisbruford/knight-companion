@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { Router } from '@angular/router';
+import { Router, RouterStateSnapshot } from '@angular/router';
 import { AppErrorService } from './core/services/app-error.service';
 import { UserService } from './core/services/user.service';
 import { LoggerService } from './core/services/logger.service';
@@ -35,6 +35,7 @@ export class AppComponent {
         ipcRenderer.on('login', () => {
             ipcRenderer.send("rebuild-menu", { login: true });
             zone.run(() => {
+                this.userService.redirect = this.router.url;
                 this.router.navigate(["/"]);
             })
         });
@@ -70,6 +71,7 @@ export class AppComponent {
             .subscribe(
                 success => {
                     if (success) {
+                        this.userService.redirect = '';
                         this.router.navigate(['/'])
                     } else {
                         this.logger.error({ originalError: new Error(''), message: 'Failed to log out user' });
