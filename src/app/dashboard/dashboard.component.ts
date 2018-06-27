@@ -52,30 +52,23 @@ export class DashboardComponent implements OnDestroy, OnInit {
 
         //username/cmdrname check
         this.journalService.cmdrName
-            .pipe(
-                takeWhile(() => this.alive)
-            )
-            .subscribe(cmdrName => {
-                if (cmdrName) {
-                    this.cmdrName = cmdrName;
-                } else {
-                    this.appErrorService.removeError("cmdrNameMismatch");
-                }
-            });
+            .pipe(takeWhile(() => this.alive))
+            .subscribe(cmdrName => this.cmdrName = cmdrName);
 
         this.userService.user
             .pipe(takeWhile(() => this.alive))
             .subscribe(user => {
                 if (user) {
                     this.username = user.username;
+
                     if (!user.discordID || !user.discordID.length) {
                         this.appErrorService.addError("no-discord", { message: `️️️️️️️⚠️️️️Your account has not been linked with Discord` });
                     } else {
                         this.appErrorService.removeError("no-discord");
                     }
                 } else {
-                    this.appErrorService.removeError("cmdrNameMismatch");
                     this.appErrorService.removeError("no-discord");
+                    this.appErrorService.removeError("cmdrNameMismatch");
                 }
             });
 
@@ -86,7 +79,11 @@ export class DashboardComponent implements OnDestroy, OnInit {
                 return { user, cmdrName }
             })
             .pipe(takeWhile(() => this.alive))
-            .subscribe(() => this.checkNameMismatch);
+            .subscribe(({ user, cmdrName }) => {
+                if (user) {
+                    this.checkNameMismatch(user.username, cmdrName);
+                }
+            });
 
         this.trackedFaction.faction
             .pipe(take(1))
@@ -124,10 +121,10 @@ export class DashboardComponent implements OnDestroy, OnInit {
             }));
     }
 
-    checkNameMismatch() {
+    checkNameMismatch(username: string, cmdrName: string) {
 
-        if (this.cmdrName.toLowerCase() !== this.username.toLowerCase()) {
-            this.appErrorService.addError("cmdrNameMismatch", { message: `⚠️️️️You are logged in as ${this.username} but appear to be playing as ${this.cmdrName}` });
+        if (cmdrName.toLowerCase() !== username.toLowerCase()) {
+            this.appErrorService.addError("cmdrNameMismatch", { message: `⚠️️️️You are logged in as ${username} but appear to be playing as ${cmdrName}` });
         } else {
             this.appErrorService.removeError("cmdrNameMismatch");
         }
