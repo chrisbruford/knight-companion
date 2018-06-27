@@ -58,7 +58,7 @@ function buildKokMenu({ login = true }) {
         {
             label: "Dashboard",
             click() {
-                mainWindow.webContents.send('navigate', '/')
+                mainWindow.webContents.send('navigate', 'dashboard');
             }
         },
         {

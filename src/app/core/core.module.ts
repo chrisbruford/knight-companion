@@ -6,6 +6,7 @@ import { AppErrorService } from './services/app-error.service';
 import { BrowserModule } from '@angular/platform-browser';
 import { ErrorBarComponent } from './error-bar/error-bar.component';
 import { SharedModule } from '../shared/shared.module';
+import { AuthGuard } from './guards/auth.guard';
 
 @NgModule({
     imports: [
@@ -28,7 +29,8 @@ import { SharedModule } from '../shared/shared.module';
         FactionService,
         AppErrorService,
         ContinentService,
-        PlatformService
+        PlatformService,
+        AuthGuard
     ]
 })
 export class CoreModule {}

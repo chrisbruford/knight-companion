@@ -24,9 +24,9 @@ import { KokMaterialModule } from './kok-material/kok-material.module';
     HttpClientModule,
     DashboardModule,
     AccountModule,
-    AppRoutingModule,
     SharedModule,
-    KokMaterialModule
+    KokMaterialModule,
+    AppRoutingModule
   ],
   declarations: [
     AppComponent
