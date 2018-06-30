@@ -33,18 +33,21 @@ import { Material } from "./material.model";
             .then(materials=>{
                 for (let material of materials) {
                     switch (material.Category) {
+                        case "Manufactured":
                         case "$MICRORESOURCE_CATEGORY_Manufactured;": {
                             let existingMat = this._materials.manufactured.get(material.Name);
                             let updatedMat = Object.assign({},existingMat,material);
                             this._materials.manufactured.set(updatedMat.Name,updatedMat);
                             break;
                         }
+                        case "Encoded":
                         case "$MICRORESOURCE_CATEGORY_Encoded;": {
                             let existingMat = this._materials.encoded.get(material.Name);
                             let updatedMat = Object.assign({},existingMat,material);
                             this._materials.encoded.set(updatedMat.Name,updatedMat);
                             break;
                         }
+                        case "Raw":
                         case "$MICRORESOURCE_CATEGORY_Elements;": {
                             let existingMat = this._materials.raw.get(material.Name);
                             let updatedMat = Object.assign({},existingMat,material);
