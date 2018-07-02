@@ -1,6 +1,6 @@
 {
-  "name": "kok-companion",
-  "productName": "kok-companion",
+  "name": "knight-companion",
+  "productName": "knight-companion",
   "version": "0.0.4",
   "author": "Chris Bruford",
   "description": "A companion app for members of the Knights of Karma",
@@ -30,6 +30,7 @@
     "@angular/router": "6.0.0",
     "core-js": "^2.5.5",
     "electron-log": "^2.2.15",
+    "electron-updater": "^2.23.3",
     "ndjson": "^1.5.0",
     "rxjs": "^6.2.0",
     "zone.js": "^0.8.26"
@@ -49,7 +50,6 @@
     "electron-builder": "^20.18.0",
     "electron-connect": "^0.6.2",
     "electron-connect-webpack-plugin": "^0.1.1",
-    "electron-updater": "^2.23.3",
     "extract-text-webpack-plugin": "2.0.0-beta.5",
     "file-loader": "^1.1.11",
     "html-loader": "^0.5.1",
