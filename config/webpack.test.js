@@ -3,13 +3,14 @@ var helpers = require('./helpers');
 const ExtractTextPlugin = require('extract-text-webpack-plugin');
 
 module.exports = {
-  devtool: 'inline-source-map',
+    devtool: 'inline-source-map',
+    target: 'electron-renderer',
 
-  resolve: {
-    extensions: ['.ts', '.js']
-  },
+    resolve: {
+        extensions: ['.ts', '.js']
+    },
 
-  module: {
+    module: {
         rules: [
             {
                 test: /\.ts$/,
@@ -30,7 +31,7 @@ module.exports = {
             },
             {
                 test: /\.scss$/,
-                exclude: helpers.root('src','app'),
+                exclude: helpers.root('src', 'app'),
                 use: [{
                     loader: ExtractTextPlugin.extract({ fallbackLoader: 'style-loader', loader: 'css-loader?sourceMap' })
                 },
@@ -39,12 +40,12 @@ module.exports = {
                     options: {
                         sourceMaps: true
                     }
-                }, 
+                },
                 {
                     loader: "resolve-url-loader"
                 },
                 {
-                    loader: "sass-loader", 
+                    loader: "sass-loader",
                     options: {
                         sourceMaps: true
                     }
@@ -52,7 +53,7 @@ module.exports = {
             },
             {
                 test: /\.scss$/,
-                include: helpers.root('src','app'),
+                include: helpers.root('src', 'app'),
                 use: [
                     {
                         loader: 'raw-loader'
@@ -65,12 +66,12 @@ module.exports = {
         ]
     },
 
-  plugins: [
-    new webpack.ContextReplacementPlugin(
-      // The (\\|\/) piece accounts for path separators in *nix and Windows
-      /angular(\\|\/)core(\\|\/)(esm(\\|\/)src|src)(\\|\/)linker/,
-      helpers.root('./src'), // location of your src
-      {} // a map of your routes
-    )
-  ]
+    plugins: [
+        new webpack.ContextReplacementPlugin(
+            // The (\\|\/) piece accounts for path separators in *nix and Windows
+            /angular(\\|\/)core(\\|\/)(esm(\\|\/)src|src)(\\|\/)linker/,
+            helpers.root('./src'), // location of your src
+            {} // a map of your routes
+        )
+    ]
 }

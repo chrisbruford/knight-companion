@@ -11,7 +11,7 @@ module.exports = function (config) {
     ],
 
     preprocessors: {
-      './config/karma-test-shim.js': ['webpack', 'sourcemap']
+      './config/karma-test-shim.js': ['webpack','electron', 'sourcemap']
     },
 
     webpack: webpackConfig,
@@ -24,14 +24,18 @@ module.exports = function (config) {
       noInfo: true
     },
 
-    reporters: ['kjhtml'],
+    reporters: ['progress'],
     port: 9876,
     colors: true,
     logLevel: config.LOG_INFO,
-    autoWatch: false,
-    browsers: ['Chrome'],
-    singleRun: true
+    autoWatch: true,
+    browsers: ['Electron'],
+    singleRun: false,
+    client: {
+        useIframe: false
+    }
   };
+  
 
   config.set(_config);
 };
