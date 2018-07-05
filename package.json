@@ -13,7 +13,8 @@
     "staging": "cross-env ENV=development webpack --config config/webpack.staging.js --watch",
     "live": "cross-env ENV=development webpack --config config/webpack.live.js --watch",
     "package": "rimraf dist && webpack --config config/webpack.prod.js --progress --profile --bail && electron-builder --config builder.dev.config.json",
-    "release": "rimraf dist && webpack --config config/webpack.prod.js --progress --profile --bail && electron-builder --config builder.prod.config.json"
+    "release": "rimraf dist && webpack --config config/webpack.prod.js --progress --profile --bail && electron-builder --config builder.prod.config.json",
+    "test": "karma start"
   },
   "license": "MIT",
   "dependencies": {
@@ -57,6 +58,7 @@
     "jasmine-core": "^2.99.1",
     "karma": "^1.2.0",
     "karma-chrome-launcher": "^2.0.0",
+    "karma-electron": "^6.0.0",
     "karma-jasmine": "^1.1.2",
     "karma-jasmine-html-reporter": "^0.2.2",
     "karma-sourcemap-loader": "^0.3.7",
