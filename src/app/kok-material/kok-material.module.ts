@@ -1,5 +1,5 @@
 import { NgModule } from '@angular/core';
-import { MatAutocompleteModule, MatFormFieldModule, MatInputModule, MatButtonModule, MatTabsModule, MatSelectModule, MatOptionModule, MatExpansionModule, MatTableModule, MatSnackBarModule } from '@angular/material';
+import { MatAutocompleteModule, MatFormFieldModule, MatInputModule, MatButtonModule, MatTabsModule, MatSelectModule, MatOptionModule, MatExpansionModule, MatTableModule, MatSnackBarModule, MatIconModule } from '@angular/material';
 
 @NgModule({
     imports: [
@@ -13,6 +13,7 @@ import { MatAutocompleteModule, MatFormFieldModule, MatInputModule, MatButtonMod
         MatExpansionModule,
         MatTableModule,
         MatSnackBarModule,
+        MatIconModule
     ],
     exports: [
         MatAutocompleteModule,
@@ -24,7 +25,8 @@ import { MatAutocompleteModule, MatFormFieldModule, MatInputModule, MatButtonMod
         MatOptionModule,
         MatExpansionModule,
         MatTableModule,
-        MatSnackBarModule
+        MatSnackBarModule,
+        MatIconModule
     ]
 })
 export class KokMaterialModule {}

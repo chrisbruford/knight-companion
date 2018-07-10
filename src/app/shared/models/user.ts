@@ -21,3 +21,15 @@ export class SimpleUser {
     username: string;
     password: string;
 }
+
+export class NewUser {
+    username: string;
+    password: string;
+    gameRole: string;
+    platform: string;
+    continent: string;
+    reasonToJoin: string;
+    shipName: string;
+    bio: string;
+    email: string;
+}
