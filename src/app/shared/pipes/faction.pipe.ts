@@ -1,5 +1,5 @@
 import { Pipe, PipeTransform } from '@angular/core';
-import { HasFaction } from '../interfaces';
+import { HasFaction } from '../models';
 
 @Pipe({
     name: 'faction',

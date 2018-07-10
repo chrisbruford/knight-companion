@@ -7,6 +7,7 @@ import { BrowserModule } from '@angular/platform-browser';
 import { ErrorBarComponent } from './error-bar/error-bar.component';
 import { SharedModule } from '../shared/shared.module';
 import { AuthGuard } from './guards/auth.guard';
+import { GameRoleService } from './services/game-role.service';
 
 @NgModule({
     imports: [
@@ -30,6 +31,7 @@ import { AuthGuard } from './guards/auth.guard';
         AppErrorService,
         ContinentService,
         PlatformService,
+        GameRoleService,
         AuthGuard
     ]
 })

@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { UserService } from '../core/services/user.service';
 import { LoggerService } from '../core/services/logger.service';
-import { User, SimpleUser } from '../shared/interfaces/user';
+import { User, SimpleUser } from '../shared/models/user';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';

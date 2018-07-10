@@ -1,5 +1,5 @@
 import { UserService } from "../core/services";
-import { User } from "../shared/interfaces";
+import { User } from "../shared/models";
 import { Component } from "@angular/core";
 import { FormBuilder, FormGroup } from "@angular/forms";
 import { ContinentService } from "../core/services/continent-service";

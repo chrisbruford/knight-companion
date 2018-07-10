@@ -1,10 +1,11 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { User, SimpleUser } from '../../shared/interfaces/user';
-import { Observable, BehaviorSubject } from 'rxjs';
+import { User, SimpleUser } from '../../shared/models/user';
+import { Observable, BehaviorSubject, throwError } from 'rxjs';
 import { map, catchError, tap } from 'rxjs/operators';
 import { Router } from '@angular/router';
 import { ipcRenderer } from 'electron';
+import { NewUser } from '../../shared/models/user';
 
 @Injectable()
 export class UserService {
@@ -35,7 +36,7 @@ export class UserService {
                         throw new Error("No such user found");
                     }
                 }),
-                catchError(err => Observable.throw(err))
+                catchError(err => throwError(err))
             )
     };
 
@@ -48,7 +49,7 @@ export class UserService {
                         ipcRenderer.send("rebuild-menu", { login: false });
                     }
                 }),
-                catchError(err => Observable.throw(err))
+                catchError(err => throwError(err))
             )
     }
 
@@ -59,8 +60,26 @@ export class UserService {
                     this.redirect = ''; 
                     this._user.next(null)
                 }),
-                catchError(err => Observable.throw(err))
+                catchError(err => throwError(err))
             );
+    }
+
+    register(user: NewUser): Observable<User> {
+        return this.http.post<User>(`${process.env.API_ENDPOINT}/register`,user).pipe(
+            catchError(err=> throwError(err))
+        );
+    }
+
+    getUsersByUsername(username: string): Observable<User[]> {
+        return this.http.get<User[]>(`${process.env.API_ENDPOINT}/members/user/${username}`).pipe(
+            catchError(err=> throwError(err))
+        );
+    }
+
+    getUsersByEmail(email: string): Observable<User[]> {
+        return this.http.get<User[]>(`${process.env.API_ENDPOINT}/members/email/${email}`).pipe(
+            catchError(err=> throwError(err))
+        );
     }
 
 }

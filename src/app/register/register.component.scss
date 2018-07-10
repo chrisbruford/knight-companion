@@ -1,0 +1,29 @@
+main {
+    text-align: center;
+    display: flex;
+    flex-flow: column nowrap;
+    justify-content: space-around;
+    align-items: center;
+    height: 100%;
+}
+
+form {
+    display: flex;
+    flex-flow: column nowrap;
+    justify-content: space-between;
+    flex: 0 1 auto;
+    width: 70%;
+    margin-bottom: 1em;
+}
+
+.back-to-login {
+    align-self: flex-start;
+}
+
+mat-form-field, button {
+    margin: 0.5em 0;
+}
+
+mat-error:not(:first-of-type) {
+    display: none;
+}

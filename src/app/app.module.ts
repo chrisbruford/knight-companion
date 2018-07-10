@@ -14,6 +14,7 @@ import { SharedModule } from './shared/shared.module';
 import {APP_BASE_HREF} from '@angular/common';
 import { AccountModule } from './account/account.module';
 import { KokMaterialModule } from './kok-material/kok-material.module';
+import { RegisterModule } from './register/register.module';
 
 @NgModule({
   imports: [
@@ -24,6 +25,7 @@ import { KokMaterialModule } from './kok-material/kok-material.module';
     HttpClientModule,
     DashboardModule,
     AccountModule,
+    RegisterModule,
     SharedModule,
     KokMaterialModule,
     AppRoutingModule
