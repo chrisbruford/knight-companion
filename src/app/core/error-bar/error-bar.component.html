@@ -1,3 +1,6 @@
 <section>
-    <p class="error" *ngFor="let error of errors | toArray">{{error.value.message}}</p>
+    <article *ngFor="let error of errors | toArray">
+        <p class="error">{{error.value.message}}</p>
+        <mat-icon (click)="removeError(error.key)">highlight_off</mat-icon>
+    </article>
 </section>

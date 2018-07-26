@@ -1,4 +1,24 @@
-p.error {
+article {
+    display: flex;
+    align-items: center;
+    width: 100%;
     text-align: center;
-    color: red;
+    // color: rgb(219, 22, 22);
+    color: #dd0020;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+}
+
+p.error {
+    
+    flex: 1 1 auto;
+    margin: 0.25rem 0;
+}
+
+mat-icon {
+    display: flex;
+    align-items: center;
+    flex: 0 0 1em;
+    cursor: pointer;
+    font-size: 0.85rem;
 }
