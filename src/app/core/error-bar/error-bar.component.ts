@@ -1,5 +1,6 @@
 import { Component, Input } from "@angular/core";
 import { AppError } from "./app-error.model";
+import { AppErrorService } from "../services/app-error.service";
 
 @Component({
     selector: "app-error-bar",
@@ -9,5 +10,9 @@ import { AppError } from "./app-error.model";
 export class ErrorBarComponent {
     @Input() errors: AppError[];
     
-    constructor() { }
+    constructor(public errorService: AppErrorService) { }
+
+    removeError(title: string) {
+        this.errorService.removeError(title);
+    }
 }
