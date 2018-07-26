@@ -12,6 +12,7 @@ import { UserService } from '../core/services/user.service';
 import { AppErrorService } from '../core/services/app-error.service';
 import { MatTabChangeEvent } from '@angular/material';
 import { TrackingFaction } from './tracking-faction.service';
+import { ProgressBarService } from '../core/progress-bar/progress-bar.service';
 
 @Component({
     templateUrl: 'dashboard.component.html',
@@ -32,17 +33,20 @@ export class DashboardComponent implements OnDestroy, OnInit {
 
 
     constructor(
-        private journalService: JournalService,
-        private factionService: FactionService,
-        private logger: LoggerService,
-        private userService: UserService,
-        private appErrorService: AppErrorService,
-        private trackedFaction: TrackingFaction
+        public journalService: JournalService,
+        public factionService: FactionService,
+        public logger: LoggerService,
+        public userService: UserService,
+        public appErrorService: AppErrorService,
+        public trackedFaction: TrackingFaction,
+        public progressBar: ProgressBarService
     ) {
         this.currentSystem = journalService.currentSystem;
     }
 
     ngOnInit() {
+        this.progressBar.addProgress(this.journalService.initialLoadProgress);
+
         try {
             this.selectedDashboardTab = Number.parseInt(localStorage.getItem("selectedDashboardTab"));
         } catch (err) {
@@ -72,6 +76,7 @@ export class DashboardComponent implements OnDestroy, OnInit {
                 }
             });
 
+        this.journalService.on('ready', () => {
         combineLatest(
             this.userService.user,
             this.journalService.cmdrName,
@@ -84,6 +89,7 @@ export class DashboardComponent implements OnDestroy, OnInit {
                     this.checkNameMismatch(user.username, cmdrName);
                 }
             });
+        });
 
         this.trackedFaction.faction
             .pipe(take(1))
@@ -124,7 +130,7 @@ export class DashboardComponent implements OnDestroy, OnInit {
     checkNameMismatch(username: string, cmdrName: string) {
 
         if (cmdrName.toLowerCase() !== username.toLowerCase()) {
-            this.appErrorService.addError("cmdrNameMismatch", { message: `⚠️️️️You are logged in as ${username} but appear to be playing as ${cmdrName}` });
+            this.appErrorService.addError("cmdrNameMismatch", { message: `⚠️️️️You are logged in as ${username.toUpperCase()} but appear to be playing as ${cmdrName.toUpperCase()}` });
         } else {
             this.appErrorService.removeError("cmdrNameMismatch");
         }
