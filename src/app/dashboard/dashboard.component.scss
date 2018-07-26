@@ -19,3 +19,14 @@ ul {
         text-align: center;
     }
 }
+
+.icon-container {
+    width: 1.8em;
+    height: 1.8em;
+    vertical-align: middle;
+    
+    &.png-icon {
+        display: flex;
+        align-items: center;   
+    }
+}

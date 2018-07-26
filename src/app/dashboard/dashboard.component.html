@@ -8,21 +8,136 @@
 </div>
 
 <mat-tab-group dynamicHeight [(selectedIndex)]="selectedDashboardTab" (selectedTabChange)="doTabChange($event)">
-    <mat-tab label="Missions">
+    <mat-tab>
+        <ng-template mat-tab-label>
+            <div class="icon-container">
+                <svg version="1.1" id="Layer_2" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+                    viewBox="0 0 654 469.476" enable-background="new 0 0 654 469.476" xml:space="preserve">
+                    <polygon fill="#FFFFFF" points="248.094,397.48 86.103,0 294.592,364.482 " />
+                    <polygon fill="#FFFFFF" points="221.096,436.478 137.1,362.982 236.095,409.479 " />
+                    <polygon fill="#FFFFFF" points="405.906,397.48 567.897,0 359.408,364.482 " />
+                    <polygon fill="#FFFFFF" points="432.904,436.478 516.9,362.982 417.905,409.479 " />
+                    <polygon fill="#FFFFFF" points="343,362.982 327,207.398 311,362.982 " />
+                    <g opacity="0.5">
+                        <path fill="#FFFFFF" d="M327,159.379c40.704,0,80.184,8.166,117.341,24.272c35.943,15.579,68.239,37.898,95.99,66.336
+                               c27.793,28.481,49.615,61.652,64.862,98.593c12.639,30.62,20.292,62.779,22.848,95.896H25.959
+                               c2.555-33.117,10.209-65.277,22.847-95.896c15.247-36.94,37.07-70.111,64.862-98.593c27.751-28.438,60.047-50.757,95.991-66.336
+                               C246.816,167.545,286.296,159.379,327,159.379 M327,134.379c-180.597,0-327,150.029-327,335.097h654
+                               C654,284.408,507.597,134.379,327,134.379L327,134.379z" />
+                    </g>
+                    <g>
+                        <path fill="#FFFFFF" d="M327,345.892c-68.253,0-123.584,55.33-123.584,123.584h247.168
+                               C450.584,401.222,395.254,345.892,327,345.892z" />
+                    </g>
+                </svg>
+            </div>
+        </ng-template>
         <app-missions></app-missions>
     </mat-tab>
-    <mat-tab label="Combat">
+    <mat-tab>
+        <ng-template mat-tab-label>
+            <div class="icon-container">
+                <svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+                    viewBox="174 168 635 631" enable-background="new 174 168 635 631" xml:space="preserve">
+                    <g id="Layer_2">
+                        <circle fill="#FFFFFF" cx="492" cy="483" r="23" />
+                        <path fill="#FFFFFF" d="M492,220.5c-144.975,0-262.5,117.525-262.5,262.5s117.526,262.5,262.499,262.5
+               C636.975,745.5,754.5,627.975,754.5,483S636.975,220.5,492,220.5z M492,724c-133.1,0-241-107.899-241-241
+               c0-133.102,107.899-241,241-241s241,107.898,241,241C733,616.101,625.101,724,492,724z" />
+                        <path fill="#FFFFFF" d="M492,351.5c-72.625,0-131.5,58.875-131.5,131.5S419.375,614.5,492,614.5
+               c72.625-0.001,131.5-58.875,131.5-131.5S564.625,351.5,492,351.5z M492,606.679c-68.306,0-123.678-55.373-123.678-123.679
+               c0-68.307,55.372-123.678,123.678-123.68c68.306,0,123.679,55.373,123.679,123.68C615.679,551.306,560.306,606.679,492,606.679z"
+                        />
+                        <rect x="174" y="474" fill="#FFFFFF" width="120" height="18" />
+                        <rect x="689" y="474" fill="#FFFFFF" width="120" height="18" />
+                        <rect x="483" y="168" fill="#FFFFFF" width="18" height="120" />
+                        <rect x="483" y="679" fill="#FFFFFF" width="18" height="120" />
+                    </g>
+                </svg>
+            </div>
+        </ng-template>
         <app-combat></app-combat>
     </mat-tab>
-    <mat-tab label="Exploration">
+    <mat-tab>
+        <ng-template mat-tab-label>
+            <div class="icon-container">
+                <svg version="1.1" id="Layer_2" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+                    viewBox="0 0 724.327 827.11" enable-background="new 0 0 724.327 827.11" xml:space="preserve">
+                    <path fill="#FFFFFF" d="M724.327,413.56c0,228.4-191.75,413.55-428.3,413.55c-28.88,0-29.521-10.031-5.706-13.93
+               c201.628-33.002,355.006-199.81,355.006-400.621c0-200.061-152.217-366.361-352.714-400.253C269.903,8.468,271.057,0,296.027,0
+               C532.577,0,724.327,185.16,724.327,413.56z" />
+                    <path fill="#FFFFFF" d="M-1.351,400.443c-5.857,177.074,138.056,325.534,321.449,331.601c22.39,0.739,23.146-7.021,4.782-10.653
+               C169.407,690.634,54.773,557.378,59.922,401.693c5.13-155.103,127.405-280.129,283.716-301.265
+               c17.704-2.395,17.028-8.989-2.332-9.629C157.914,84.733,4.505,223.368-1.351,400.443z" />
+                    <path fill="#FFFFFF" d="M445.624,533.667c-167.587,0-317.811-65.461-391.527-147.456l8.152-36.509
+               c79.989,86.73,237.497,156.214,421.282,155.108C534.957,504.5,530.688,533.667,445.624,533.667z" />
+                    <path fill="#FFFFFF" d="M382.521,29.789c0,0-25.224,115.211-10.224,115.211s50.97-96.267,50.97-96.267L382.521,29.789z" />
+                    <g>
+                    </g>
+                    <g>
+                    </g>
+                    <g>
+                    </g>
+                    <g>
+                    </g>
+                    <g>
+                    </g>
+                    <g>
+                    </g>
+                    <g>
+                    </g>
+                    <g>
+                    </g>
+                    <g>
+                    </g>
+                    <g>
+                    </g>
+                    <g>
+                    </g>
+                    <g>
+                    </g>
+                    <g>
+                    </g>
+                    <g>
+                    </g>
+                    <g>
+                    </g>
+                </svg>
+            </div>
+        </ng-template>
         <app-exploration></app-exploration>
     </mat-tab>
-    <mat-tab label="My Ships">
+    <mat-tab>
+        <ng-template mat-tab-label>
+            <div class="icon-container png-icon">
+                <img src="../../assets/images/cobra.png" alt="" style="width:100%">
+            </div>
+        </ng-template>
         <ng-template matTabContent>
             <app-ships></app-ships>
         </ng-template>
     </mat-tab>
-    <mat-tab label="My Materials">
+    <mat-tab>
+        <ng-template mat-tab-label>
+            <div class="icon-container">
+                <svg version="1.1" id="Layer_2" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+                    viewBox="0 0 784.668 913.839" enable-background="new 0 0 784.668 913.839" xml:space="preserve">
+                    <circle fill="#FFFFFF" cx="392.334" cy="460.42" r="180.086" />
+                    <circle fill="#FFFFFF" cx="392.334" cy="67.086" r="67.086" />
+                    <circle fill="#FFFFFF" cx="392.334" cy="843.417" r="70.422" />
+                    <g>
+                        <path fill="#FFFFFF" d="M392.334,852.754c-52.959,0-104.341-10.375-152.718-30.837c-46.72-19.761-88.677-48.048-124.705-84.075
+                       c-36.027-36.027-64.314-77.983-84.075-124.704C10.375,564.761,0,513.38,0,460.42c0-52.959,10.375-104.341,30.836-152.718
+                       c19.761-46.72,48.048-88.677,84.075-124.705c36.028-36.027,77.984-64.314,124.705-84.075
+                       c48.376-20.461,99.758-30.836,152.718-30.836c52.96,0,104.341,10.375,152.718,30.836c46.721,19.761,88.677,48.048,124.704,84.075
+                       c36.027,36.028,64.314,77.984,84.075,124.705c20.462,48.376,30.837,99.758,30.837,152.718c0,52.96-10.375,104.341-30.837,152.718
+                       c-19.761,46.721-48.048,88.677-84.075,124.704s-77.983,64.314-124.704,84.075C496.675,842.379,445.294,852.754,392.334,852.754z
+                        M392.334,92.086C189.234,92.086,24,257.32,24,460.42c0,203.1,165.234,368.334,368.334,368.334
+                       c203.1,0,368.334-165.234,368.334-368.334C760.668,257.32,595.434,92.086,392.334,92.086z" />
+                    </g>
+                </svg>
+            </div>
+        </ng-template>
         <ng-template matTabContent>
             <app-materials></app-materials>
         </ng-template>

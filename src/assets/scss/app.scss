@@ -155,3 +155,13 @@ my-app {
         }
     }
 }
+
+app-dashboard {
+    .mat-tab-label {
+        min-width: 80px !important;
+    }
+    
+    .mat-ink-bar {
+        width: 80px !important;
+    }
+}
