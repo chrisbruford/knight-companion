@@ -8,6 +8,8 @@ import { UpdateCheckResult } from 'electron-updater';
 import { NgZone } from '@angular/core';
 import { takeWhile } from 'rxjs/operators';
 import { MatSnackBar, MatSnackBarRef, SimpleSnackBar } from '@angular/material';
+import { Observable } from '../../node_modules/rxjs';
+import { JournalService } from './journal/journal.service';
 
 
 @Component({
@@ -18,6 +20,7 @@ import { MatSnackBar, MatSnackBarRef, SimpleSnackBar } from '@angular/material';
 export class AppComponent {
 
     private alive = true;
+    private journalProgress: Observable<number>;
 
     constructor(
         private appErrorService: AppErrorService,
@@ -25,8 +28,10 @@ export class AppComponent {
         private router: Router,
         private logger: LoggerService,
         private zone: NgZone,
-        private snackBar: MatSnackBar
+        private snackBar: MatSnackBar,
+        private journalService: JournalService
     ) {
+        this.journalProgress = journalService.initialLoadProgress;
         ipcRenderer.on('logout', () => {
             zone.run(this.logout.bind(this));
             ipcRenderer.send("rebuild-menu", { login: true });

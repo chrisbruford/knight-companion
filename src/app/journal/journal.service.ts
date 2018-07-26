@@ -25,6 +25,7 @@ export class JournalService extends EventEmitter {
     private currentLogFile: string;
     private firstStream = true;
     private _streamLive = false;
+    private _directoryReadProgress = new BehaviorSubject(0);
 
     private _logDir: string;
     private _beta: boolean;
@@ -141,6 +142,10 @@ export class JournalService extends EventEmitter {
         return this._streamLive;
     }
 
+    get initialLoadProgress() { 
+        return this._directoryReadProgress.asObservable() 
+    }
+
     private async streamAll(dir: string) {
         if (!dir) { return }
         //reads all journal files and persists the data to IDB, keeps record
@@ -179,10 +184,13 @@ export class JournalService extends EventEmitter {
                                     })
                                     .on('end', () => {
                                         this.journalDB.addEntry('completedJournalFiles', { filename: path });
+                                        this._directoryReadProgress.next((i+1) / (journalFilePaths.length-1) * 100);
+                                        console.log(`${i+1} / ${journalFilePaths.length-1} * 100 = ${(i+1) / (journalFilePaths.length - 1) * 100}`);
                                         resolve();
                                     });
                             });
                             journalPromises.push(thePromise);
+                            return thePromise;
                         }
                     })
                     .catch(err => {
@@ -246,6 +254,7 @@ export class JournalService extends EventEmitter {
                         //we can be sure all future events are 'live'
                         //so can be emitted out
                         this.firstStream = false;
+                        this.emit('ready');
                         this.watchLogDir();
                     })
             })

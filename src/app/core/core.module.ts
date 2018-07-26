@@ -8,19 +8,25 @@ import { ErrorBarComponent } from './error-bar/error-bar.component';
 import { SharedModule } from '../shared/shared.module';
 import { AuthGuard } from './guards/auth.guard';
 import { GameRoleService } from './services/game-role.service';
+import { KokMaterialModule } from '../kok-material/kok-material.module';
+import { KOKProgressBarComponent } from './progress-bar/progress-bar.component';
+import { ProgressBarService } from './progress-bar/progress-bar.service';
 
 @NgModule({
     imports: [
         BrowserModule,
         BrowserAnimationsModule,
-        SharedModule
+        SharedModule,
+        KokMaterialModule
     ],
     exports: [
         BrowserAnimationsModule,
-        ErrorBarComponent
+        ErrorBarComponent,
+        KOKProgressBarComponent
     ],
     declarations: [
-        ErrorBarComponent
+        ErrorBarComponent,
+        KOKProgressBarComponent
     ],
     providers: [
         AppSettingsService,
@@ -32,7 +38,8 @@ import { GameRoleService } from './services/game-role.service';
         ContinentService,
         PlatformService,
         GameRoleService,
-        AuthGuard
+        AuthGuard,
+        ProgressBarService
     ]
 })
 export class CoreModule {}
