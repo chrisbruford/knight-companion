@@ -3,7 +3,7 @@ import { NgModule } from '@angular/core';
 import { DashboardComponent } from './dashboard.component';
 import { DashboardRoutingModule } from './dashboard-routing.module';
 import { JournalModule } from '../journal/journal.module';
-import { ReactiveFormsModule } from '@angular/forms';
+import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { MissionsComponent } from './missions/missions.component';
 import { CombatComponent } from './combat/combat.component';
 import { CombatService } from './combat/combat.service';
@@ -17,9 +17,11 @@ import { ShipsService } from './ships/ships.service';
 import { TrackingFaction } from './tracking-faction.service';
 import { MaterialsComponenet } from './materials/materials.component';
 import { MaterialsService } from './materials/materials.service';
+import { SettingsComponent } from './settings/settings.component';
 
 @NgModule({
     imports: [
+        FormsModule,
         ReactiveFormsModule,
         CommonModule,
         DashboardRoutingModule,
@@ -34,6 +36,7 @@ import { MaterialsService } from './materials/materials.service';
         ExplorationComponent,
         ShipsComponent,
         MaterialsComponenet,
+        SettingsComponent
     ],
     exports: [DashboardComponent],
     providers: [

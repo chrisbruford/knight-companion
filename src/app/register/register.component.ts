@@ -6,7 +6,7 @@ import { Observable } from 'rxjs';
 import { MatchesValidator } from '../shared/validators/matches.directive';
 import { GameRoleService } from '../core/services/game-role.service';
 import { Router } from '@angular/router';
-import { MatSnackBar } from '../../../node_modules/@angular/material';
+import { MatSnackBar } from '@angular/material';
 import { UsernameValidator } from '../shared/validators/username.directive';
 import { KOKEmailValidator } from '../shared/validators/email.directive';
 

@@ -2,7 +2,7 @@ import { Injectable, OnDestroy } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, BehaviorSubject } from 'rxjs';
 import { catchError, takeWhile } from 'rxjs/operators';
-import { Interdicted, RedeemVoucher, JournalEvents, FileHeader } from 'cmdr-journal';
+import { Interdicted, RedeemVoucher, JournalEvents, FileHeader } from 'cmdr-journal/dist';
 import { LoggerService } from '../../core/services/logger.service';
 import { JournalService } from '../../journal/journal.service';
 import { TrackingFaction } from '../tracking-faction.service';

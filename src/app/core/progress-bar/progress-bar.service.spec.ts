@@ -1,7 +1,7 @@
 import { ProgressBarService } from "./progress-bar.service";
 import { async, fakeAsync, tick } from "@angular/core/testing";
 import { Observable, Observer, from, Subject } from "rxjs";
-import { take, delay } from "../../../../node_modules/rxjs/operators";
+import { take, delay } from "rxjs/operators";
 
 describe('ProgressBarService',()=>{
     let progressBar: ProgressBarService;

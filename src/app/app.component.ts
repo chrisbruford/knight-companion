@@ -8,7 +8,7 @@ import { UpdateCheckResult } from 'electron-updater';
 import { NgZone } from '@angular/core';
 import { takeWhile } from 'rxjs/operators';
 import { MatSnackBar, MatSnackBarRef, SimpleSnackBar } from '@angular/material';
-import { Observable } from '../../node_modules/rxjs';
+import { Observable } from 'rxjs';
 import { JournalService } from './journal/journal.service';
 
 

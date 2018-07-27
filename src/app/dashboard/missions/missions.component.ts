@@ -1,7 +1,7 @@
 import { Component, Input, OnDestroy, OnInit } from '@angular/core';
 import { JournalService } from '../../journal/journal.service';
-import { JournalDBService } from '../../journal/db/journal-db.service';
-import { JournalEvents, JournalEvent, MissionCompleted, MissionAccepted, MissionAbandoned, MissionFailed, LoadGame, NewCommander } from 'cmdr-journal';
+import { DBService } from '../../core/services/db.service';
+import { JournalEvents, JournalEvent, MissionCompleted, MissionAccepted, MissionAbandoned, MissionFailed, LoadGame, NewCommander } from 'cmdr-journal/dist';
 import { Subscription, Observable } from 'rxjs';
 import { OriginatedMission } from './originatedMission';
 import { MissionService } from './mission.service';
@@ -23,7 +23,7 @@ export class MissionsComponent implements OnInit, OnDestroy {
 
     constructor(
         private journalService: JournalService,
-        private journalDB: JournalDBService,
+        private journalDB: DBService,
         private missionService: MissionService,
         private trackingFaction: TrackingFaction
     ) { }

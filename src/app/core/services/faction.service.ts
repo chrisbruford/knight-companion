@@ -1,12 +1,12 @@
 import { Injectable } from '@angular/core';
-import { JournalDBService } from '../../journal/db/journal-db.service';
-import { Faction } from 'cmdr-journal';
+import { DBService } from './db.service';
+import { Faction } from 'cmdr-journal/dist';
 import { LoggerService } from './logger.service';
 
 @Injectable() 
 export class FactionService {
     constructor(
-        private db: JournalDBService,
+        private db: DBService,
         private logger: LoggerService
     ) {}
 

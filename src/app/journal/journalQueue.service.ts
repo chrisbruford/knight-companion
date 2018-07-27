@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import * as journal from 'cmdr-journal';
+import * as journal from 'cmdr-journal/dist';
 import * as fs from 'fs';
 import { Observable, Observer } from 'rxjs';
 let ndjson = require('ndjson');

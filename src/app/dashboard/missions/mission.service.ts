@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { MissionCompleted, JournalEvents, MissionAccepted, JournalEvent } from "cmdr-journal/dist";
 import { JournalService } from "../../journal/journal.service";
 import { OriginatedMission } from "./originatedMission";
-import { JournalDBService } from "../../journal/db/journal-db.service";
+import { DBService } from "../../core/services/db.service";
 import { Observable, of, BehaviorSubject } from "rxjs";
 import { takeWhile } from "rxjs/operators";
 import { TrackingFaction } from "../tracking-faction.service";
@@ -33,7 +33,7 @@ export class MissionService {
     constructor(
         private http: HttpClient,
         private journalService: JournalService,
-        private journalDB: JournalDBService,
+        private journalDB: DBService,
         private trackingFaction: TrackingFaction
     ) {
         this._missionsCompleted = [];

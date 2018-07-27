@@ -1,6 +1,6 @@
 import { Injectable } from "@angular/core";
-import { Docked, FSDJump, Scan, Location } from "cmdr-journal";
-import { JournalService } from "../journal/journal.service";
+import { Docked, FSDJump, Scan, Location } from "cmdr-journal/dist";
+import { JournalService } from "./journal.service";
 import { HttpClient } from "@angular/common/http";
 import { LoggerService } from '../core/services/logger.service';
 
