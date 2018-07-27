@@ -3,7 +3,7 @@ import { JournalService } from "../../journal/journal.service";
 import { JournalEvents, JournalEvent, Materials, MissionCompleted } from "cmdr-journal/dist";
 import { BehaviorSubject } from "rxjs";
 import { KOKMaterials } from "./kok-materials.model";
-import { JournalDBService } from "../../journal/db/journal-db.service";
+import { DBService } from "../../core/services/db.service";
 import { Material } from "./material.model";
 
 @Injectable() export class MaterialsService {
@@ -18,7 +18,7 @@ import { Material } from "./material.model";
 
     constructor(
         private journal: JournalService,
-        private journalDB: JournalDBService
+        private journalDB: DBService
     ) {
 
         this._materials = {

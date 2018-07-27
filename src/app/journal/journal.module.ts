@@ -1,6 +1,6 @@
 import { NgModule } from '@angular/core';
 import { JournalService } from './journal.service';
-import { JournalDBService } from './db/journal-db.service';
+import { DBService } from '../core/services/db.service';
 import { JournalQueueService } from './journalQueue.service';
 import { EDDNService } from './eddn.service';
 
@@ -10,7 +10,7 @@ import { EDDNService } from './eddn.service';
     declarations:[],
     providers: [
         JournalService,
-        JournalDBService,
+        DBService,
         JournalQueueService,
         EDDNService
     ]

@@ -1,7 +1,7 @@
 import { Component } from "@angular/core";
 import { ProgressBarService } from "./progress-bar.service";
 import { Observable } from "rxjs";
-import { tap } from "../../../../node_modules/rxjs/operators";
+import { tap } from "rxjs/operators";
 
 @Component({
     selector:'app-progress-bar',

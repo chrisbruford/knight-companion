@@ -1,10 +1,12 @@
 import { Injectable } from '@angular/core';
-import { LoggerService } from '../../core/services/logger.service';
-import { JournalEvents, FSDJump } from 'cmdr-journal';
-import { AppErrorService } from '../../core/services/app-error.service';
+import { LoggerService } from './logger.service';
+import { JournalEvents, FSDJump } from 'cmdr-journal/dist';
+import { AppErrorService } from './app-error.service';
 
-@Injectable()
-export class JournalDBService {
+@Injectable({
+    providedIn: 'root'
+})
+export class DBService {
     dbPromise: Promise<IDBDatabase>;
 
     constructor(

@@ -5,8 +5,8 @@ import { takeWhile, catchError } from "rxjs/operators";
 import { shell, clipboard } from 'electron';
 import * as zlib from 'zlib';
 import { MatSnackBar } from '@angular/material';
-import cmdrJournal from 'cmdr-journal';
-import { Subject, Observable } from "../../../../node_modules/rxjs";
+import cmdrJournal from 'cmdr-journal/dist';
+import { Subject, Observable } from "rxjs";
 
 @Component({
     selector: "app-ships",

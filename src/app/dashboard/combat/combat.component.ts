@@ -1,6 +1,6 @@
 import { Component, OnInit, Input } from '@angular/core';
 import { JournalService } from '../../journal/journal.service';
-import { JournalEvents, JournalEvent, Interdicted, RedeemVoucher, FileHeader } from 'cmdr-journal';
+import { JournalEvents, JournalEvent, Interdicted, RedeemVoucher, FileHeader } from 'cmdr-journal/dist';
 import { Subscription } from 'rxjs';
 import { CombatService } from './combat.service';
 import { takeWhile } from 'rxjs/operators';

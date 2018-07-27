@@ -3,9 +3,9 @@ import { Observable, throwError } from 'rxjs';
 import { of, BehaviorSubject } from 'rxjs';
 import { JournalService } from "../../journal/journal.service";
 import { JournalEvents, Loadout, Resurrect, ShipyardSell } from "cmdr-journal/dist";
-import { JournalDBService } from "../../journal/db/journal-db.service";
+import { DBService } from "../../core/services/db.service";
 import { HttpClient, HttpErrorResponse } from "@angular/common/http";
-import { map, retry, catchError } from "../../../../node_modules/rxjs/operators";
+import { map, retry, catchError } from "rxjs/operators";
 import { OrbisUrl } from "./orbis-url.model";
 
 @Injectable()
@@ -16,7 +16,7 @@ export class ShipsService {
 
     constructor(
         private journalService: JournalService,
-        private journalDBService: JournalDBService,
+        private journalDBService: DBService,
         private zone: NgZone,
         private http: HttpClient
     ) {

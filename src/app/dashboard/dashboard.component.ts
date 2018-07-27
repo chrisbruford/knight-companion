@@ -1,11 +1,11 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 const fs = require('fs');
 import { JournalService } from '../journal/journal.service';
-import { JournalEvents, JournalEvent, MissionCompleted, LoadGame, NewCommander } from 'cmdr-journal';
+import { JournalEvents, JournalEvent, MissionCompleted, LoadGame, NewCommander } from 'cmdr-journal/dist';
 import { Observable, combineLatest, of } from 'rxjs';
 import { map, merge, tap, takeWhile, debounceTime, take } from 'rxjs/operators';
 import { FactionService } from '../core/services/faction.service';
-import { Faction } from 'cmdr-journal';
+import { Faction } from 'cmdr-journal/dist';
 import { LoggerService } from '../core/services/logger.service';
 import { FormControl } from '@angular/forms';
 import { UserService } from '../core/services/user.service';

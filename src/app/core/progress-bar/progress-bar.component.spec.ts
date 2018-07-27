@@ -1,8 +1,8 @@
-import { async, TestBed, ComponentFixture, fakeAsync, tick, flush } from "../../../../node_modules/@angular/core/testing";
+import { async, TestBed, ComponentFixture, fakeAsync, tick, flush } from "@angular/core/testing";
 import { KOKProgressBarComponent } from "./progress-bar.component";
 import { ProgressBarService } from "./progress-bar.service";
 import { KokMaterialModule } from "../../kok-material/kok-material.module";
-import { BehaviorSubject, Subject } from "../../../../node_modules/rxjs";
+import { BehaviorSubject, Subject } from "rxjs";
 
 describe("ProgressBar", () => {
     let fixture: ComponentFixture<KOKProgressBarComponent>;
