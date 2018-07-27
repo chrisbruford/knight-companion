@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { LoggerService } from './logger.service';
 import { JournalEvents, FSDJump } from 'cmdr-journal/dist';
 import { AppErrorService } from './app-error.service';
+import { DBStore } from '../enums/db-stores.enum';
 
 @Injectable({
     providedIn: 'root'
@@ -14,7 +15,7 @@ export class DBService {
         private errorService: AppErrorService
     ) {
         let indexedDB = window.indexedDB;
-        let dbVersion = 5;
+        let dbVersion = 6;
 
         let openRequest = indexedDB.open("journal", dbVersion);
 
@@ -29,34 +30,39 @@ export class DBService {
             }
 
             if (upgradeDB) {
-                if (!upgradeDB.objectStoreNames.contains(JournalEvents.missionAccepted)) {
-                    let acceptedMissionsStore = upgradeDB.createObjectStore(JournalEvents.missionAccepted, { keyPath: "MissionID" });
+                if (!upgradeDB.objectStoreNames.contains(DBStore.missionAccepted)) {
+                    let acceptedMissionsStore = upgradeDB.createObjectStore(DBStore.missionAccepted, { keyPath: "MissionID" });
                     acceptedMissionsStore.createIndex("MissionID", "MissionID", { unique: true });
                 }
 
-                if (!upgradeDB.objectStoreNames.contains("completedJournalFiles")) {
-                    let completedJournalFilesStore = upgradeDB.createObjectStore("completedJournalFiles", { keyPath: "filename" });
+                if (!upgradeDB.objectStoreNames.contains(DBStore.completedJournalFiles)) {
+                    let completedJournalFilesStore = upgradeDB.createObjectStore(DBStore.completedJournalFiles, { keyPath: "filename" });
                     completedJournalFilesStore.createIndex("filename", "filename", { unique: true });
                 }
 
-                if (!upgradeDB.objectStoreNames.contains("factions")) {
-                    let factionsStore = upgradeDB.createObjectStore("factions", { keyPath: "Name" });
+                if (!upgradeDB.objectStoreNames.contains(DBStore.factions)) {
+                    let factionsStore = upgradeDB.createObjectStore(DBStore.factions, { keyPath: "Name" });
                     factionsStore.createIndex("Name", "Name", { unique: true });
                 }
 
-                if (!upgradeDB.objectStoreNames.contains("currentState")) {
-                    let currentStateStore = upgradeDB.createObjectStore("currentState", {keyPath: "key"});
+                if (!upgradeDB.objectStoreNames.contains(DBStore.currentState)) {
+                    let currentStateStore = upgradeDB.createObjectStore(DBStore.currentState, {keyPath: "key"});
                     currentStateStore.createIndex("key","key",{unique: true});
                 }
 
-                if (!upgradeDB.objectStoreNames.contains("ships")) {
-                    let shipsStore = upgradeDB.createObjectStore("ships",{keyPath: "ShipID"});
+                if (!upgradeDB.objectStoreNames.contains(DBStore.ships)) {
+                    let shipsStore = upgradeDB.createObjectStore(DBStore.ships,{keyPath: "ShipID"});
                     shipsStore.createIndex("ShipID","ShipID",{unique: true});
                 }
 
-                if (!upgradeDB.objectStoreNames.contains("materials")) {
-                    let materialsStore = upgradeDB.createObjectStore("materials",{keyPath: "Name"});
+                if (!upgradeDB.objectStoreNames.contains(DBStore.materials)) {
+                    let materialsStore = upgradeDB.createObjectStore(DBStore.materials,{keyPath: "Name"});
                     materialsStore.createIndex("Name","Name",{unique: true});
+                }
+
+                if (!upgradeDB.objectStoreNames.contains(DBStore.appSettings)) {
+                    let currentStateStore = upgradeDB.createObjectStore(DBStore.appSettings, {keyPath: "key"});
+                    currentStateStore.createIndex("key","key",{unique: true});
                 }
             }
         }
