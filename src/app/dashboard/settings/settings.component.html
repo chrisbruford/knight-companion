@@ -6,7 +6,7 @@
     <fieldset>
         <legend>Inara</legend>
         <mat-form-field>
-            <input matInput type="text" placeholder="API Key">
+            <input matInput formControlName="inaraAPIKey" type="text" placeholder="API Key">
         </mat-form-field>
         <mat-slide-toggle formControlName="inaraBroadcasts" (change)="slideToggleChange($event,AppSetting.inaraBroadcasts)">Enable</mat-slide-toggle>
     </fieldset>

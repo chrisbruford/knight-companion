@@ -16,10 +16,19 @@ describe("SettingsComponent", () => {
     let element: HTMLElement;
     let component: SettingsComponent;
     let settingsService: jasmine.SpyObj<SettingsService>;
+    let dummyAPIKey = '123456789abcde'
 
     beforeEach(async(() => {
         let _settingsService = jasmine.createSpyObj<SettingsService>('SettingsService', ['getSetting', 'updateSetting']);
-        _settingsService.getSetting.and.callFake((setting: string) => Promise.resolve({key: setting, value: true}));
+        _settingsService.getSetting.and.callFake((setting: string) => {
+            switch (setting) {
+                case AppSetting.broadcasts:
+                case AppSetting.inaraBroadcasts:
+                    return Promise.resolve({ key: setting, value: true });
+                case AppSetting.inaraAPIKey:
+                    return Promise.resolve({ key: setting, value: dummyAPIKey });
+            }
+        });
 
         TestBed.configureTestingModule({
             declarations: [SettingsComponent],
@@ -41,7 +50,7 @@ describe("SettingsComponent", () => {
 
         it('should init in state from db', fakeAsync(() => {
             fixture.whenStable().then(() => {
-                expect(component.settingsForm.get('broadcasts').value).toBe(true);
+                expect(component.settingsForm.get(AppSetting.broadcasts).value).toBe(true);
             });
         }));
 
@@ -58,16 +67,23 @@ describe("SettingsComponent", () => {
 
         it('should init in state from db', fakeAsync(() => {
             fixture.whenStable().then(() => {
-                expect(component.settingsForm.get('inaraBroadcasts').value).toBe(true);
+                expect(component.settingsForm.get(AppSetting.inaraBroadcasts).value).toBe(true);
+                expect(component.settingsForm.get(AppSetting.inaraAPIKey).value).toBe(dummyAPIKey);
             });
         }));
 
         it('should toggle integration on/off', () => {
             settingsService.updateSetting.and.callFake((setting: string, value: any) => Promise.resolve(true));
-            const broadcastsToggle: MatSlideToggle = de.query(By.css('[formControlName="inaraBroadcasts"] input')).componentInstance;
+            const broadcastsToggle: MatSlideToggle = de.query(By.css('[formControlName="inaraBroadcasts"]')).componentInstance;
             broadcastsToggle.change.emit(new MatSlideToggleChange(broadcastsToggle, true));
             expect(settingsService.updateSetting).toHaveBeenCalledWith(AppSetting.inaraBroadcasts, jasmine.any(Boolean));
         });
+
+        it('should update the stored inara API key when changed', () => {
+            const inaraAPIKey = component.settingsForm.get('inaraAPIKey');
+            inaraAPIKey.setValue(dummyAPIKey);
+            expect(settingsService.updateSetting).toHaveBeenCalledWith(AppSetting.inaraAPIKey,dummyAPIKey);
+        })
 
     })
 
