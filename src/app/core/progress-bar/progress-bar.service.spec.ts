@@ -40,7 +40,7 @@ describe('ProgressBarService',()=>{
         progressBar.addProgress(progress3);
     });
 
-    it('should drop any progress that doesnt progress in 5 seconds',(done)=>{
+    it('should drop any progress that doesnt progress in 5 seconds',fakeAsync(()=>{
 
         let progress1 = new Subject<number>();
         let progress2 = new Subject<number>();
@@ -65,13 +65,11 @@ describe('ProgressBarService',()=>{
         setTimeout(()=>{
             progress2.next(7);
             progress2.complete();
-        },6000)
 
-        setTimeout(()=>{
             progress3.next(30);
             progress3.next(50);
             progress3.complete();
-        },6000);
+        },6000)
         
         setTimeout(()=>{
             expect(progressSpy.calls.count()).toBe(5);
@@ -80,7 +78,9 @@ describe('ProgressBarService',()=>{
             expect(progressSpy).toHaveBeenCalledWith(3);
             expect(progressSpy).toHaveBeenCalledWith(30);
             expect(progressSpy).toHaveBeenCalledWith(50);
-            done();
+            expect(progressSpy).not.toHaveBeenCalledWith(7);
         }, 7000);
-    },8000);
+
+        tick(7000);
+    }));
 })
