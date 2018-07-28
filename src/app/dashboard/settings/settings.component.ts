@@ -14,6 +14,7 @@ import { AppSetting } from "../../core/enums/app-settings.enum";
     public readonly AppSetting = AppSetting;
     private broadcasts = false;
     private inaraBroadcasts = false;
+    private inaraAPIKey = '';
 
     constructor(
         private fb: FormBuilder,
@@ -23,12 +24,13 @@ import { AppSetting } from "../../core/enums/app-settings.enum";
     ngOnInit() {
         this.settingsForm = this.fb.group({
             broadcasts: [this.broadcasts],
-            inaraBroadcasts: [this.inaraBroadcasts]
+            inaraBroadcasts: [this.inaraBroadcasts],
+            inaraAPIKey: [this.inaraAPIKey]
         });
 
         let settingPromises = [];
 
-        settingPromises.push(this.settingsService.getSetting<{key: string, value: any}>('broadcasts')
+        settingPromises.push(this.settingsService.getSetting<{ key: string, value: any }>(AppSetting.broadcasts)
             .then(setting => {
                 this.broadcasts = setting.value;
             })
@@ -37,7 +39,7 @@ import { AppSetting } from "../../core/enums/app-settings.enum";
                 this.broadcasts = false;
             }));
 
-        settingPromises.push(this.settingsService.getSetting<{key: string, value: any}>('inaraBroadcasts')
+        settingPromises.push(this.settingsService.getSetting<{ key: string, value: any }>(AppSetting.inaraBroadcasts)
             .then(setting => {
                 this.inaraBroadcasts = setting.value;
             })
@@ -46,12 +48,29 @@ import { AppSetting } from "../../core/enums/app-settings.enum";
                 this.inaraBroadcasts = false;
             }));
 
+        settingPromises.push(this.settingsService.getSetting<{ key: string, value: any }>(AppSetting.inaraAPIKey)
+            .then(setting => {
+                this.inaraAPIKey = setting.value;
+            })
+            .catch(err => {
+                console.log(err);
+                this.inaraAPIKey = '';
+            })
+        )
+
         Promise.all(settingPromises).then(() => {
             this.settingsForm.setValue({
                 broadcasts: this.broadcasts,
-                inaraBroadcasts: this.inaraBroadcasts
+                inaraBroadcasts: this.inaraBroadcasts,
+                inaraAPIKey: this.inaraAPIKey
             });
         });
+
+        this.settingsForm.get('inaraAPIKey').valueChanges.subscribe(
+            value => {
+                this.settingsService.updateSetting(AppSetting.inaraAPIKey, value);
+            }
+        )
 
     }
 
