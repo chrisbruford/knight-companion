@@ -1,13 +1,13 @@
 <form [formGroup]="settingsForm">
     <fieldset>
         <legend>Toggles</legend>
-        <mat-slide-toggle checked="true" formControlName="broadcasts" (change)="slideToggleChange($event, 'broadcasts')">Broadcasts</mat-slide-toggle>
+        <mat-slide-toggle formControlName="broadcasts" (change)="slideToggleChange($event, AppSetting.broadcasts)">Broadcasts</mat-slide-toggle>
     </fieldset>
     <fieldset>
         <legend>Inara</legend>
         <mat-form-field>
             <input matInput type="text" placeholder="API Key">
         </mat-form-field>
-        <mat-slide-toggle color="accent" checked="true">Enable</mat-slide-toggle>
+        <mat-slide-toggle formControlName="inaraBroadcasts" (change)="slideToggleChange($event,AppSetting.inaraBroadcasts)">Enable</mat-slide-toggle>
     </fieldset>
 </form>
