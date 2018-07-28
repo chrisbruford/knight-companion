@@ -1,7 +1,7 @@
-<form>
+<form [formGroup]="settingsForm">
     <fieldset>
         <legend>Toggles</legend>
-        <mat-slide-toggle checked="true">Broadcasts</mat-slide-toggle>
+        <mat-slide-toggle checked="true" formControlName="broadcasts" (change)="slideToggleChange($event, 'broadcasts')">Broadcasts</mat-slide-toggle>
     </fieldset>
     <fieldset>
         <legend>Inara</legend>
