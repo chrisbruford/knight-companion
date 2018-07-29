@@ -7,6 +7,7 @@ import { DBService } from "../../core/services/db.service";
 import { HttpClient, HttpErrorResponse } from "@angular/common/http";
 import { map, retry, catchError } from "rxjs/operators";
 import { OrbisUrl } from "./orbis-url.model";
+import { InaraService } from "../../core/inara/inara.service";
 
 @Injectable()
 export class ShipsService {
@@ -18,7 +19,8 @@ export class ShipsService {
         private journalService: JournalService,
         private journalDBService: DBService,
         private zone: NgZone,
-        private http: HttpClient
+        private http: HttpClient,
+        private inara: InaraService
     ) {
 
         this.journalDBService.getAll<Loadout>('ships')

@@ -1,4 +1,4 @@
-import { JournalEvents } from "cmdr-journal";
+import { JournalEvents } from "cmdr-journal/dist";
 
 export enum DBStore {
     missionAccepted = "MissionAccepted",

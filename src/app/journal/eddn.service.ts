@@ -3,6 +3,7 @@ import { Docked, FSDJump, Scan, Location } from "cmdr-journal/dist";
 import { JournalService } from "./journal.service";
 import { HttpClient } from "@angular/common/http";
 import { LoggerService } from '../core/services/logger.service';
+import { remote } from 'electron';
 
 @Injectable()
 export class EDDNService {
@@ -69,7 +70,7 @@ export class EDDNService {
             header: {
                 uploaderID: cmdrName,
                 softwareName: "Knights of Karma Companion",
-                softwareVersion: ""
+                softwareVersion: remote.app.getVersion()
             },
             message: evt
         }
