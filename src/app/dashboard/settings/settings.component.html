@@ -5,9 +5,12 @@
     </fieldset>
     <fieldset>
         <legend>Inara</legend>
+        <mat-slide-toggle formControlName="inaraBroadcasts" (change)="slideToggleChange($event,AppSetting.inaraBroadcasts)">Enable</mat-slide-toggle>
         <mat-form-field>
             <input matInput formControlName="inaraAPIKey" type="text" placeholder="API Key">
+            <mat-hint>Obtain your key from
+                <a href="https://inara.cz/settings-api/" (click)="openExternal($event)">https://inara.cz/settings-api/</a>
+            </mat-hint>
         </mat-form-field>
-        <mat-slide-toggle formControlName="inaraBroadcasts" (change)="slideToggleChange($event,AppSetting.inaraBroadcasts)">Enable</mat-slide-toggle>
     </fieldset>
 </form>

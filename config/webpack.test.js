@@ -72,6 +72,15 @@ module.exports = {
             /angular(\\|\/)core(\\|\/)(esm(\\|\/)src|src)(\\|\/)linker/,
             helpers.root('./src'), // location of your src
             {} // a map of your routes
-        )
+        ),
+
+        new webpack.DefinePlugin({
+            'process.env': {
+                'ENV': JSON.stringify('development'),
+                'API_ENDPOINT': JSON.stringify('http://localhost:3876/api'),
+                'EDDN_JOURNAL_ENDPOINT': JSON.stringify('https://eddn.edcd.io/schemas/journal/1/test'),
+                'INARA_API_ENDPOINT': JSON.stringify('https://inara.cz/inapi/v1/')
+            }
+        }),
     ]
 }

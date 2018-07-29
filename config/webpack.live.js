@@ -22,7 +22,8 @@ module.exports = webpackMerge(commonConfig, {
             'process.env': {
                 'ENV': JSON.stringify('development'),
                 'API_ENDPOINT': JSON.stringify('https://www.knightsofkarma.com/api'),
-                'EDDN_JOURNAL_ENDPOINT': JSON.stringify('https://eddn.edcd.io/schemas/journal/1/test')
+                'EDDN_JOURNAL_ENDPOINT': JSON.stringify('https://eddn.edcd.io/schemas/journal/1/test'),
+                'INARA_API_ENDPOINT': JSON.stringify('https://inara.cz/inapi/v1/')
             }
         }),
 

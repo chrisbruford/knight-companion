@@ -1,4 +1,4 @@
-import { Injectable } from "../../../../node_modules/@angular/core";
+import { Injectable } from "@angular/core";
 import { DBService } from "../../core/services/db.service";
 import { DBStore } from "../../core/enums/db-stores.enum";
 

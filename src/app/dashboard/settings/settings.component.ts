@@ -1,8 +1,9 @@
 import { Component, OnInit } from "@angular/core";
-import { FormBuilder, FormGroup } from "../../../../node_modules/@angular/forms";
-import { MatSlideToggleChange } from "../../../../node_modules/@angular/material";
+import { FormBuilder, FormGroup } from "@angular/forms";
+import { MatSlideToggleChange } from "@angular/material";
 import { SettingsService } from "./settings.service";
 import { AppSetting } from "../../core/enums/app-settings.enum";
+import { shell } from "electron";
 
 @Component({
     selector: 'app-settings',
@@ -77,6 +78,11 @@ import { AppSetting } from "../../core/enums/app-settings.enum";
     slideToggleChange(evt: MatSlideToggleChange, setting: string): void {
         this[setting] = evt.checked;
         this.settingsService.updateSetting(setting, evt.checked);
+    }
+
+    openExternal(evt: MouseEvent) {
+        evt.preventDefault();
+        shell.openExternal((<HTMLAnchorElement>evt.target).href);
     }
 
 }

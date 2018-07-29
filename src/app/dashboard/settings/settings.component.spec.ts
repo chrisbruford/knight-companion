@@ -1,12 +1,12 @@
-import { TestBed, async, ComponentFixture, fakeAsync } from "../../../../node_modules/@angular/core/testing";
+import { TestBed, async, ComponentFixture, fakeAsync } from "@angular/core/testing";
 import { SettingsComponent } from "./settings.component";
-import { DebugElement } from "../../../../node_modules/@angular/core";
-import { FormsModule, ReactiveFormsModule } from "../../../../node_modules/@angular/forms";
-import { By } from "../../../../node_modules/@angular/platform-browser";
+import { DebugElement } from "@angular/core";
+import { FormsModule, ReactiveFormsModule } from "@angular/forms";
+import { By } from "@angular/platform-browser";
 import { SettingsService } from "./settings.service";
 import { KokMaterialModule } from "../../kok-material/kok-material.module";
-import { MatSlideToggleChange, MatSlideToggle } from "../../../../node_modules/@angular/material";
-import { BrowserAnimationsModule } from "../../../../node_modules/@angular/platform-browser/animations";
+import { MatSlideToggleChange, MatSlideToggle } from "@angular/material";
+import { BrowserAnimationsModule } from "@angular/platform-browser/animations";
 import { AppSetting } from '../../core/enums/app-settings.enum';
 
 describe("SettingsComponent", () => {
