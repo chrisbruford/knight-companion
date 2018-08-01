@@ -14,9 +14,10 @@ import { LoggerService } from '../core/services/logger.service';
 import { JournalQueueService } from './journalQueue.service';
 import { EventEmitter } from 'events';
 import { setInterval, clearInterval } from 'timers';
-import { FileHeader, FSDJump, MissionCompleted, MaterialCollected, MaterialDiscarded, MaterialTrade, EngineerCraft, EngineerContribution, Synthesis, TechnologyBroker } from 'cmdr-journal/dist';
+import { FileHeader, FSDJump, MissionCompleted, MaterialCollected, MaterialDiscarded, MaterialTrade, EngineerCraft, EngineerContribution, Synthesis, TechnologyBroker, Loadout } from 'cmdr-journal/dist';
 import { EDDNService } from './eddn.service';
 import { Material } from '../dashboard/materials/material.model';
+import { DBStore } from '../core/enums/db-stores.enum';
 
 @Injectable()
 export class JournalService extends EventEmitter {
@@ -142,8 +143,8 @@ export class JournalService extends EventEmitter {
         return this._streamLive;
     }
 
-    get initialLoadProgress() { 
-        return this._directoryReadProgress.asObservable() 
+    get initialLoadProgress() {
+        return this._directoryReadProgress.asObservable()
     }
 
     private async streamAll(dir: string) {
@@ -184,8 +185,8 @@ export class JournalService extends EventEmitter {
                                     })
                                     .on('end', () => {
                                         this.journalDB.addEntry('completedJournalFiles', { filename: path });
-                                        this._directoryReadProgress.next((i+1) / (journalFilePaths.length-1) * 100);
-                                        console.log(`${i+1} / ${journalFilePaths.length-1} * 100 = ${(i+1) / (journalFilePaths.length - 1) * 100}`);
+                                        this._directoryReadProgress.next((i + 1) / (journalFilePaths.length - 1) * 100);
+                                        console.log(`${i + 1} / ${journalFilePaths.length - 1} * 100 = ${(i + 1) / (journalFilePaths.length - 1) * 100}`);
                                         resolve();
                                     });
                             });
@@ -654,13 +655,18 @@ export class JournalService extends EventEmitter {
                         this._currentShipID.pipe(
                             take(1)
                         ).subscribe(shipID => {
-                            this.journalDB.deleteEntry('ships', shipID)
+                            let loadout: Loadout;
+                            this.journalDB.getEntry<Loadout>(DBStore.ships, shipID)
+                                .then((ship: Loadout) => {
+                                    loadout = ship;
+                                    this.journalDB.deleteEntry(DBStore.ships, shipID)
+                                })
                                 .then(() => resolve(data))
                                 .catch(originalError => {
                                     this.logger.error({ originalError, data, message: "Resurrected event failed to delete ship" });
                                     resolve(data);
                                 });
-                            this.emit("notRebought", shipID);
+                            this.emit("notRebought", loadout);
                         });
                     } else {
                         resolve(data);

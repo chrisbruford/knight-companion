@@ -8,6 +8,8 @@ import { HttpClient, HttpErrorResponse } from "@angular/common/http";
 import { map, retry, catchError } from "rxjs/operators";
 import { OrbisUrl } from "./orbis-url.model";
 import { InaraService } from "../../core/inara/inara.service";
+import { AddCommanderShipEvent } from "../../core/inara/models/add-commander-ship-event.model";
+import { DelCommanderShipEvent } from "../../core/inara/models/del-commander-ship-event.model";
 
 @Injectable()
 export class ShipsService {
@@ -34,15 +36,21 @@ export class ShipsService {
 
         journalService.on(JournalEvents.loadout, (loadout: Loadout) => {
             this.ships.set(loadout.ShipID, loadout);
+            let addCommanderShipEvent = new AddCommanderShipEvent(loadout.Ship, loadout.ShipID);
+            this.inara.addEvent(addCommanderShipEvent);
             zone.run(() => this.shipsObservable.next(this.ships));
         });
 
-        journalService.on("notRebought", (shipID: number) => {
-            this.ships.delete(shipID);
+        journalService.on("notRebought", (ship: Loadout) => {
+            let delCommanderShipEvent = new DelCommanderShipEvent(ship.Ship, ship.ShipID);
+            this.ships.delete(ship.ShipID);
+            this.inara.addEvent(delCommanderShipEvent);
             zone.run(() => this.shipsObservable.next(this.ships));
         });
 
         journalService.on(JournalEvents.shipyardSell, (shipyardSell: ShipyardSell) => {
+            let delCommanderShipEvent = new DelCommanderShipEvent(shipyardSell.ShipType, shipyardSell.SellShipID);
+            this.inara.addEvent(delCommanderShipEvent);
             this.ships.delete(shipyardSell.SellShipID);
             zone.run(() => this.shipsObservable.next(this.ships));
         });
