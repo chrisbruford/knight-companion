@@ -33,7 +33,7 @@ import { shell } from "electron";
 
         settingPromises.push(this.settingsService.getSetting<{ key: string, value: any }>(AppSetting.broadcasts)
             .then(setting => {
-                this.broadcasts = setting.value;
+                this.broadcasts = setting ? setting.value : false;
             })
             .catch(err => {
                 console.log(err);
@@ -42,7 +42,7 @@ import { shell } from "electron";
 
         settingPromises.push(this.settingsService.getSetting<{ key: string, value: any }>(AppSetting.inaraBroadcasts)
             .then(setting => {
-                this.inaraBroadcasts = setting.value;
+                this.inaraBroadcasts = setting ? setting.value : false;
             })
             .catch(err => {
                 console.log(err);
@@ -51,7 +51,7 @@ import { shell } from "electron";
 
         settingPromises.push(this.settingsService.getSetting<{ key: string, value: any }>(AppSetting.inaraAPIKey)
             .then(setting => {
-                this.inaraAPIKey = setting.value;
+                this.inaraAPIKey = setting ? setting.value : '';
             })
             .catch(err => {
                 console.log(err);
