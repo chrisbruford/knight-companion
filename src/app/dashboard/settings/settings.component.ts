@@ -75,7 +75,7 @@ import { shell } from "electron";
 
     }
 
-    slideToggleChange(evt: MatSlideToggleChange, setting: string): void {
+    slideToggleChange(evt: MatSlideToggleChange, setting: AppSetting): void {
         this[setting] = evt.checked;
         this.settingsService.updateSetting(setting, evt.checked);
     }

@@ -10,6 +10,7 @@ import { remote } from "electron";
 import { DBStore } from "../enums/db-stores.enum";
 import { AppSetting } from "../enums/app-settings.enum";
 import { JournalService } from "../../journal/journal.service";
+import { JournalEvents } from "../../../../node_modules/cmdr-journal/dist";
 
 
 @Injectable({
@@ -21,7 +22,11 @@ import { JournalService } from "../../journal/journal.service";
         return [...this._events];
     }
 
-    constructor(private http: HttpClient, private db: DBService, private journal: JournalService) { }
+    constructor(private http: HttpClient, private db: DBService, private journal: JournalService) { 
+        this.journal.on(JournalEvents.fsdJump, this.submitEvents);
+        this.journal.on(JournalEvents.undocked, this.submitEvents);
+        this.journal.on(JournalEvents.resurrect, this.submitEvents);
+    }
 
     addEvent(event: InaraEvent) {
         this._events.push(event);

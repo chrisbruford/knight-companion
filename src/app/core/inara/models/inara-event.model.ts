@@ -1,5 +1,5 @@
-export class InaraEvent {
-    eventName: string;
-    eventTimestamp: string;
-    eventData: object;
+export abstract class InaraEvent {
+    abstract eventName: string;
+    abstract eventData: object;
+    eventTimestamp = new Date().toISOString();
 }

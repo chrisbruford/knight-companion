@@ -4,22 +4,24 @@ import { HttpClient } from '../../../../node_modules/@angular/common/http';
 import { InaraResponse } from './models/inara-response.model';
 import { InaraEventResponse } from './models/inara-event-response.model';
 import { of } from '../../../../node_modules/rxjs';
-import { Submission } from './models/submission.model';
 import { DBService } from '../services/db.service';
 import { JournalService } from '../../journal/journal.service';
 import { DBStore } from '../enums/db-stores.enum';
 import { AppSetting } from '../enums/app-settings.enum';
 import { remote } from 'electron';
+import { AddCommanderShipEvent } from './models/add-commander-ship-event.model';
+import { EventEmitter } from 'events';
+import { async, TestBed } from '../../../../node_modules/@angular/core/testing';
 
 describe('Inara service', () => {
     let inara: InaraService;
     let dummyInaraEvent: InaraEvent;
     let fakeHttp: jasmine.SpyObj<HttpClient>;
     let fakeDB: jasmine.SpyObj<DBService>;
-    let fakeJournal: JournalService;
+    let fakeJournal: EventEmitter;
     let fakeAPIKey = '123456789abcde';
 
-    beforeEach(() => {
+    beforeEach(async(() => {
         fakeHttp = jasmine.createSpyObj('HttpClient', ['post']);
         fakeDB = jasmine.createSpyObj('DBService', ['getEntry']);
 
@@ -35,10 +37,22 @@ describe('Inara service', () => {
             }
         });
 
-        fakeJournal = {
+        fakeJournal = Object.assign(new EventEmitter(), {
             cmdrName: of('Test CMDR')
-        } as JournalService;
-        inara = new InaraService(fakeHttp, fakeDB, fakeJournal);
+        });
+
+        TestBed.configureTestingModule({
+            providers: [
+                { provide: HttpClient, useValue: fakeHttp },
+                { provide: DBService, useValue: fakeDB },
+                { provide: JournalService, useValue: fakeJournal },
+                InaraService
+            ]
+        })
+    }));
+
+    beforeEach(() => {
+        inara = TestBed.get(InaraService);
     });
 
 
@@ -47,7 +61,7 @@ describe('Inara service', () => {
     });
 
     it('store events until they are batch submitted', () => {
-        dummyInaraEvent = new InaraEvent();
+        dummyInaraEvent = new AddCommanderShipEvent('Python', 123456789);
         expect(inara.getEvents().length).toBe(0);
         inara.addEvent(dummyInaraEvent);
         expect(inara.getEvents().length).toBe(1);
