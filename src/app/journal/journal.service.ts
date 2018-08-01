@@ -18,6 +18,7 @@ import { FileHeader, FSDJump, MissionCompleted, MaterialCollected, MaterialDisca
 import { EDDNService } from './eddn.service';
 import { Material } from '../dashboard/materials/material.model';
 import { DBStore } from '../core/enums/db-stores.enum';
+import { UserService } from '../core/services';
 
 @Injectable()
 export class JournalService extends EventEmitter {
@@ -42,7 +43,8 @@ export class JournalService extends EventEmitter {
         private journalDB: DBService,
         private logger: LoggerService,
         private journalQueue: JournalQueueService,
-        private eddn: EDDNService
+        private eddn: EDDNService,
+        private userService: UserService
     ) {
         super();
 
@@ -186,7 +188,6 @@ export class JournalService extends EventEmitter {
                                     .on('end', () => {
                                         this.journalDB.addEntry('completedJournalFiles', { filename: path });
                                         this._directoryReadProgress.next((i + 1) / (journalFilePaths.length - 1) * 100);
-                                        console.log(`${i + 1} / ${journalFilePaths.length - 1} * 100 = ${(i + 1) / (journalFilePaths.length - 1) * 100}`);
                                         resolve();
                                     });
                             });
@@ -343,610 +344,616 @@ export class JournalService extends EventEmitter {
         //at service level and whether should be persisted to IDB
         return new Promise((resolve, reject) => {
 
-            if (this._beta && data.event !== journal.JournalEvents.fileHeader) { reject("Ignoring BETA event"); }
+            //check to see if this event should be ignored straight away
+            this.cmdrUsernameMatch().subscribe(
+                match => {
+                    if (!match && data.event !== journal.JournalEvents.loadGame) { return reject('CMDR/Username Mismatch') }
+                    if (this._beta && data.event !== journal.JournalEvents.fileHeader) { return reject("Ignoring BETA event"); }
 
-            switch (data.event) {
+                    switch (data.event) {
 
-                case journal.JournalEvents.fileHeader: {
-                    this._beta = /beta/i.test((<FileHeader>data).gameversion);
-                    resolve(data);
-                    break;
-                }
-
-                case journal.JournalEvents.missionCompleted: {
-                    if (!this.firstStream) {
-                        let missionCompleted: MissionCompleted = Object.assign(new MissionCompleted(), data);
-                        if (missionCompleted.MaterialsReward) {
-                            for (let material of missionCompleted.MaterialsReward) {
-                                this.journalDB.getEntry('materials', material.Name.toLowerCase())
-                                    .then((existingMaterial: Material) => {
-                                        let updatedMaterial = Object.assign(existingMaterial, material, { Count: existingMaterial.Count + material.Count });
-                                        updatedMaterial.Name = updatedMaterial.Name.toLowerCase();
-                                        return this.journalDB.putEntry('materials', updatedMaterial).then(() => {
-                                            this.emit('materialUpdated', updatedMaterial);
-                                        });
-                                    })
-                            }
+                        case journal.JournalEvents.fileHeader: {
+                            this._beta = /beta/i.test((<FileHeader>data).gameversion);
+                            resolve(data);
+                            break;
                         }
-                    }
-                    resolve(data);
-                    break;
-                }
 
-                //mission accepted
-                case journal.JournalEvents.missionAccepted: {
-
-                    this.journalDB.getEntry(journal.JournalEvents.missionAccepted, (<journal.MissionAccepted>data).MissionID)
-                        .then(result => {
-                            if (!result) {
-                                this.journalDB.addEntry(journal.JournalEvents.missionAccepted, data)
-                                    .then(() => { resolve(data) })
-                                    .catch(err => {
-                                        let report = {
-                                            originalError: err,
-                                            message: 'journalService.handleEvent error',
-                                            data
-                                        }
-                                        this.logger.error(report);
-                                        reject(report);
-                                    })
-                            } else {
-                                reject({ message: "Mission already exists", data });
+                        case journal.JournalEvents.missionCompleted: {
+                            if (!this.firstStream) {
+                                let missionCompleted: MissionCompleted = Object.assign(new MissionCompleted(), data);
+                                if (missionCompleted.MaterialsReward) {
+                                    for (let material of missionCompleted.MaterialsReward) {
+                                        this.journalDB.getEntry('materials', material.Name.toLowerCase())
+                                            .then((existingMaterial: Material) => {
+                                                let updatedMaterial = Object.assign(existingMaterial, material, { Count: existingMaterial.Count + material.Count });
+                                                updatedMaterial.Name = updatedMaterial.Name.toLowerCase();
+                                                return this.journalDB.putEntry('materials', updatedMaterial).then(() => {
+                                                    this.emit('materialUpdated', updatedMaterial);
+                                                });
+                                            })
+                                    }
+                                }
                             }
-                        })
-                        .catch(originalError => {
-                            reject(originalError);
-                        })
-                    break;
-                }
-
-                //loadgame
-                case journal.JournalEvents.loadGame: {
-                    let loadGame: journal.LoadGame = Object.assign(new journal.LoadGame(), data);
-                    this.ngZone.run(() => this._cmdrName.next(loadGame.Commander));
-                    this.journalDB.putCurrentState({ key: "cmdrName", value: loadGame.Commander })
-                        .then(() => resolve(data))
-                        .catch(originalError => {
-                            this.logger.error({ originalError, message: "handleEvent failure" });
                             resolve(data);
-                        });
-                    break;
-                }
-
-                //new commander
-                case journal.JournalEvents.newCommander: {
-                    let newCommander: journal.NewCommander = Object.assign(new journal.NewCommander(), data);
-                    this.ngZone.run(() => this._cmdrName.next(newCommander.Name));
-                    this.journalDB.putCurrentState({ key: "cmdrName", value: newCommander.Name })
-                        .then(() => resolve(data))
-                        .catch(originalError => {
-                            this.logger.error({ originalError, message: "handleEvent failure" });
-                            resolve(data);
-                        });
-                    break;
-                }
-
-                //docked
-                case journal.JournalEvents.docked: {
-                    let promises: Promise<any>[] = [];
-                    let docked: journal.Docked = Object.assign(new journal.Docked(), data);
-
-                    promises.push(this.journalDB.putCurrentState({ key: "currentSystem", value: docked.StarSystem })
-                        .catch(originalError => this.logger.error({ originalError, message: "handleEvent failure" }))
-                    );
-
-                    promises.push(this.journalDB.putCurrentState({ key: "currentSystemAddress", value: docked.SystemAddress })
-                        .catch(originalError => this.logger.error({ originalError, message: "handleEvent failure" }))
-                    );
-
-                    this.ngZone.run(() => this._currentSystem.next(docked.StarSystem));
-                    this.ngZone.run(() => this._currentSystemAddress.next(docked.SystemAddress));
-
-                    if (!this.firstStream && !this.beta) {
-                        let location = Object.assign(new journal.Location(), data);
-
-                        combineLatest(
-                            this.cmdrName,
-                            this.currentSystemStarPos,
-                            (cmdrName, starPos) => { return { cmdrName, starPos } }
-                        ).pipe(
-                            take(1)
-                        )
-                            .subscribe(combined => {
-                                this.eddn.sendJournalEvent(docked, combined.cmdrName, combined.starPos);
-                            })
-                    }
-
-                    Promise.all(promises)
-                        .then(() => resolve(data))
-                        .catch(originalError => {
-                            this.logger.error({ originalError, data, message: "Docked event failure" });
-                            resolve(data);
-                        });
-
-                    break;
-                }
-
-                //location
-                case journal.JournalEvents.location: {
-                    let promises: Promise<any>[] = [];
-                    let location: journal.Location = Object.assign(new journal.Location(), data);
-
-                    promises.push(
-                        this.journalDB.putCurrentState({ key: "currentSystem", value: location.StarSystem })
-                            .catch(originalError => this.logger.error({ originalError, message: "handleEvent failure" }))
-                    );
-
-                    promises.push(
-                        this.journalDB.putCurrentState({ key: "currentSystemStarPos", value: location.StarPos })
-                            .catch(originalError => this.logger.error({ originalError, message: "handleEvent failure" }))
-                    );
-
-                    promises.push(
-                        this.journalDB.putCurrentState({ key: "currentSystemAddress", value: location.SystemAddress })
-                            .catch(originalError => this.logger.error({ originalError, message: "handleEvent failure" }))
-                    );
-
-                    this.ngZone.run(() => this._currentSystem.next(location.StarSystem));
-                    this.ngZone.run(() => this._currentSystemStarPos.next(location.StarPos));
-                    this.ngZone.run(() => this._currentSystemAddress.next(location.SystemAddress));
-
-                    if (!this.firstStream && !this.beta) {
-                        let location = Object.assign(new journal.Location(), data);
-                        this.cmdrName.pipe(
-                            take(1)
-                        ).subscribe(cmdrName => {
-                            this.eddn.sendJournalEvent(location, cmdrName);
-                        });
-                    }
-
-                    Promise.all(promises)
-                        .then(() => resolve(data))
-                        .catch(originalError => {
-                            this.logger.error({ originalError, data, message: "Location event Failure" });
-                            resolve(data);
-                        });
-
-                    break;
-                }
-
-                //fsd jump
-                case journal.JournalEvents.fsdJump: {
-                    let promises: Promise<any>[] = [];
-                    let fsdJump: journal.FSDJump = Object.assign(new journal.FSDJump(), data);
-
-                    promises.push(
-                        this.journalDB.putCurrentState({ key: "currentSystem", value: fsdJump.StarSystem })
-                            .catch(originalError => this.logger.error({ originalError, message: "handleEvent failure" }))
-                    );
-
-                    promises.push(
-                        this.journalDB.putCurrentState({ key: "currentSystemAddress", value: fsdJump.SystemAddress })
-                            .catch(originalError => this.logger.error({ originalError, message: "handleEvent failure" }))
-                    );
-
-                    promises.push(
-                        this.journalDB.putCurrentState({ key: "currentSystemStarPos", value: fsdJump.StarPos })
-                            .catch(originalError => this.logger.error({ originalError, message: "handleEvent failure" }))
-                    );
-
-                    this.ngZone.run(() => this._currentSystem.next(fsdJump.StarSystem));
-                    this.ngZone.run(() => this._currentSystemAddress.next(fsdJump.SystemAddress));
-                    this.ngZone.run(() => this._currentSystemStarPos.next(fsdJump.StarPos));
-
-                    if (!this.firstStream && !this.beta) {
-                        this._cmdrName
-                            .pipe(
-                                take(1)
-                            )
-                            .subscribe(cmdrName => {
-                                this.eddn.sendJournalEvent(fsdJump, cmdrName);
-                            });
-                    }
-
-                    if (fsdJump.Factions) {
-                        for (let faction of fsdJump.Factions) {
-                            this.journalDB.addEntry("factions", faction)
-                                .catch(originalError => {
-                                    this.logger.error({
-                                        originalError,
-                                        message: "Faction failed to write to DB",
-                                        data: faction
-                                    })
-                                });
+                            break;
                         }
-                    }
 
-                    Promise.all(promises)
-                        .then(() => resolve(data))
-                        .catch(originalError => {
-                            this.logger.error({ originalError, data, message: "FSDJump Event Failure" });
-                            resolve(data);
-                        })
-                    break;
-                }
+                        //mission accepted
+                        case journal.JournalEvents.missionAccepted: {
 
-                //scan
-                case journal.JournalEvents.scan: {
-                    let scan: journal.Scan = Object.assign(new journal.Scan(), data);
-
-                    if (!this.firstStream && !this.beta) {
-                        combineLatest(
-                            this.cmdrName,
-                            this.currentSystem,
-                            this.currentSystemAddress,
-                            this.currentSystemStarPos,
-                            (cmdrName, currentSystem, currentSystemAddress, currentSystemStarPos) => {
-                                return { cmdrName, currentSystem, currentSystemAddress, currentSystemStarPos }
-                            }
-                        )
-                            .pipe(
-                                take(1)
-                            )
-                            .subscribe(combined => {
-                                this.eddn.sendJournalEvent(scan, combined.cmdrName, combined.currentSystemStarPos, combined.currentSystem, combined.currentSystemAddress);
-                            });
-                    }
-                    resolve(data);
-                    break;
-
-                }
-
-                //supercruise entry
-                case journal.JournalEvents.supercruiseEntry: {
-                    let supercruiseEntry: journal.SupercruiseEntry = Object.assign(new journal.SupercruiseEntry(), data);
-                    this.ngZone.run(() => this._currentSystem.next(supercruiseEntry.StarSystem));
-                    this.journalDB.putCurrentState({ key: "currentSystem", value: supercruiseEntry.StarSystem })
-                        .then(() => resolve(data))
-                        .catch(originalError => {
-                            this.logger.error({ originalError, message: "handleEvent failure" });
-                            resolve(data);
-                        });
-
-                    break;
-                }
-
-                //supercruise exit
-                case journal.JournalEvents.supercruiseExit: {
-                    let supercruiseExit: journal.SupercruiseExit = Object.assign(new journal.SupercruiseExit(), data);
-                    this.ngZone.run(() => this._currentSystem.next(supercruiseExit.StarSystem));
-
-                    this.journalDB.putCurrentState({ key: "currentSystem", value: supercruiseExit.StarSystem })
-                        .then(() => resolve(data))
-                        .catch(originalError => {
-                            this.logger.error({ originalError, message: "handleEvent failure" });
-                            resolve(data);
-                        });
-
-                    break;
-                }
-
-                //loadout
-                case journal.JournalEvents.loadout: {
-                    let promises: Promise<any>[] = [];
-                    let loadout: journal.Loadout = Object.assign(new journal.Loadout(), data);
-
-                    this.ngZone.run(() => this._currentShipID.next(loadout.ShipID));
-
-                    promises.push(
-                        this.journalDB.putEntry('ships', loadout)
-                            .catch(originalError => this.logger.error({ originalError, message: "handleEvent failure" }))
-                    );
-
-                    promises.push(
-                        this.journalDB.putCurrentState({ key: 'shipID', value: loadout.ShipID })
-                            .catch(originalError => this.logger.error({ originalError, message: "handleEvent failure" }))
-                    );
-
-                    Promise.all(promises)
-                        .then(() => resolve(data))
-                        .catch(originalError => {
-                            this.logger.error({ originalError, data, message: "Loadout event failure" });
-                            resolve(data);
-                        })
-                    break;
-                }
-
-                //resurrected
-                case journal.JournalEvents.resurrect: {
-                    let resurrected: journal.Resurrect = Object.assign(new journal.Resurrect(), data);
-
-                    if (resurrected.Option !== "rebuy") {
-                        this._currentShipID.pipe(
-                            take(1)
-                        ).subscribe(shipID => {
-                            let loadout: Loadout;
-                            this.journalDB.getEntry<Loadout>(DBStore.ships, shipID)
-                                .then((ship: Loadout) => {
-                                    loadout = ship;
-                                    this.journalDB.deleteEntry(DBStore.ships, shipID)
+                            this.journalDB.getEntry(journal.JournalEvents.missionAccepted, (<journal.MissionAccepted>data).MissionID)
+                                .then(result => {
+                                    if (!result) {
+                                        this.journalDB.addEntry(journal.JournalEvents.missionAccepted, data)
+                                            .then(() => { resolve(data) })
+                                            .catch(err => {
+                                                let report = {
+                                                    originalError: err,
+                                                    message: 'journalService.handleEvent error',
+                                                    data
+                                                }
+                                                this.logger.error(report);
+                                                reject(report);
+                                            })
+                                    } else {
+                                        reject({ message: "Mission already exists", data });
+                                    }
                                 })
+                                .catch(originalError => {
+                                    reject(originalError);
+                                })
+                            break;
+                        }
+
+                        //loadgame
+                        case journal.JournalEvents.loadGame: {
+                            let loadGame: journal.LoadGame = Object.assign(new journal.LoadGame(), data);
+                            this.ngZone.run(() => this._cmdrName.next(loadGame.Commander));
+                            this.journalDB.putCurrentState({ key: "cmdrName", value: loadGame.Commander })
                                 .then(() => resolve(data))
                                 .catch(originalError => {
-                                    this.logger.error({ originalError, data, message: "Resurrected event failed to delete ship" });
+                                    this.logger.error({ originalError, message: "handleEvent failure" });
                                     resolve(data);
                                 });
-                            this.emit("notRebought", loadout);
-                        });
-                    } else {
-                        resolve(data);
-                    }
-
-                    break;
-                }
-
-                //shipyardsell
-                case journal.JournalEvents.shipyardSell: {
-                    let shipyardSell: journal.ShipyardSell = Object.assign(new journal.ShipyardSell(), data);
-
-                    this.journalDB.deleteEntry('ships', shipyardSell.SellShipID)
-                        .then(() => resolve(data))
-                        .catch(originalError => {
-                            this.logger.error({ originalError, message: "handleEvent failure" });
-                            resolve(data);
-                        });
-
-                    break;
-                }
-
-                //Materials
-                case journal.JournalEvents.materials: {
-                    let materials: journal.Materials = Object.assign(new journal.Materials(), data);
-
-                    //get existing materials entries from the DB and merge before re-inserting
-
-                    //it would be too time consuming to process every historical materials event
-                    //and update the DB and offer little benefit to the user
-                    let promises: Promise<any>[] = [];
-
-                    if (!this.firstStream) {
-
-                        materials.Encoded.forEach(material => {
-                            promises.push(
-                                this.journalDB.getEntry('materials', material.Name.toLowerCase())
-                                    .then(existingMaterial => {
-                                        let updatedMaterial = Object.assign({ Category: "$MICRORESOURCE_CATEGORY_Encoded;" }, existingMaterial, material);
-                                        updatedMaterial.Name = updatedMaterial.Name.toLowerCase();
-                                        return this.journalDB.putEntry('materials', updatedMaterial)
-                                    })
-                                    .catch(originalError => this.logger.error({ originalError, message: "Failed to write material", data: material }))
-                            )
-                        });
-
-                        materials.Raw.forEach(material => {
-                            promises.push(
-                                this.journalDB.getEntry('materials', material.Name.toLowerCase())
-                                    .then(existingMaterial => {
-                                        let updatedMaterial = Object.assign({ Category: "$MICRORESOURCE_CATEGORY_Elements;" }, existingMaterial, material);
-                                        updatedMaterial.Name = updatedMaterial.Name.toLowerCase();
-                                        return this.journalDB.putEntry('materials', updatedMaterial)
-                                    })
-                                    .catch(originalError => this.logger.error({ originalError, message: "Failed to write material", data: material }))
-                            )
-                        });
-
-                        materials.Manufactured.forEach(material => {
-                            promises.push(
-                                this.journalDB.getEntry('materials', material.Name.toLowerCase())
-                                    .then(existingMaterial => {
-                                        let updatedMaterial = Object.assign({ Category: "$MICRORESOURCE_CATEGORY_Manufactured;" }, existingMaterial, material);
-                                        updatedMaterial.Name = updatedMaterial.Name.toLowerCase();
-                                        return this.journalDB.putEntry('materials', updatedMaterial)
-                                    })
-                                    .catch(originalError => this.logger.error({ originalError, message: "Failed to write material", data: material }))
-                            )
-                        });
-                    }
-
-                    Promise.all(promises)
-                        .catch(() => { }) //cheap Promise.finally
-                        .then(() => {
-                            resolve(data);
-                        });
-                    break;
-                }
-
-                case journal.JournalEvents.materialCollected: {
-                    if (!this.firstStream) {
-                        let material: MaterialCollected = Object.assign(new MaterialCollected(), data);
-                        this.journalDB.getEntry<Material>('materials', material.Name.toLowerCase())
-                            .then(existingMaterial => {
-                                let updatedMaterial = Object.assign(existingMaterial, material, { Count: existingMaterial.Count + material.Count });
-                                updatedMaterial.Name = updatedMaterial.Name.toLowerCase();
-                                return this.journalDB.putEntry('materials', updatedMaterial)
-                                    .then(() => this.emit('materialUpdated', updatedMaterial));
-                            })
-                            .catch(originalError => this.logger.error({ originalError, message: "Failed to write material", data: material }))
-                            .then(() => {
-                                resolve(data);
-                            });
-                    }
-                    else {
-                        resolve(data);
-                    }
-
-                    break;
-                }
-
-                case journal.JournalEvents.materialDiscarded: {
-                    if (!this.firstStream) {
-                        let materialDiscarded: MaterialDiscarded = Object.assign(new MaterialDiscarded(), data);
-                        this.journalDB.getEntry<Material>('materials', materialDiscarded.Name.toLocaleLowerCase())
-                            .then(existingMaterial => {
-                                let updatedMaterial = Object.assign(existingMaterial, materialDiscarded, { Count: existingMaterial.Count - materialDiscarded.Count });
-                                updatedMaterial.Name = updatedMaterial.Name.toLowerCase();
-                                return this.journalDB.putEntry('materials', updatedMaterial)
-                                    .then(() => this.emit('materialUpdated', updatedMaterial));
-                            })
-                            .catch(originalError => this.logger.error({ originalError, message: "Failed to write material", data: materialDiscarded }))
-                            .then(() => {
-                                resolve(data);
-                            });
-                    } else {
-                        resolve(data);
-                    }
-                    break;
-                }
-
-                case journal.JournalEvents.materialTrade: {
-                    if (!this.firstStream) {
-                        let promises: Promise<any>[] = [];
-                        let materialTrade: MaterialTrade = Object.assign(new MaterialTrade(), data);
-                        //Increase materials received
-                        promises.push(
-                            this.journalDB.getEntry<Material>('materials', materialTrade.Received.Material.toLocaleLowerCase())
-                                .then(existingMaterial => {
-                                    let updatedMaterial = Object.assign(existingMaterial, materialTrade, { Count: existingMaterial.Count + materialTrade.Received.Quantity });
-                                    updatedMaterial.Name = updatedMaterial.Name.toLowerCase();
-                                    return this.journalDB.putEntry('materials', updatedMaterial)
-                                        .then(() => this.emit('materialUpdated', updatedMaterial));
-                                })
-                                .catch(originalError => this.logger.error({ originalError, message: "Failed to write material", data: materialTrade }))
-                        );
-
-                        //Decrease materials paid
-                        promises.push(
-                            this.journalDB.getEntry<Material>('materials', materialTrade.Paid.Material.toLocaleLowerCase())
-                                .then(existingMaterial => {
-                                    let updatedMaterial = Object.assign(existingMaterial, materialTrade, { Count: existingMaterial.Count - materialTrade.Paid.Quantity });
-                                    updatedMaterial.Name = updatedMaterial.Name.toLowerCase();
-                                    return this.journalDB.putEntry('materials', updatedMaterial)
-                                        .then(() => this.emit('materialUpdated', updatedMaterial));
-                                })
-                                .catch(originalError => this.logger.error({ originalError, message: "Failed to write material", data: materialTrade }))
-                        );
-                        Promise.all(promises)
-                            .catch(() => { }) //cheap Promise.finally
-                            .then(() => {
-                                resolve(data);
-                            });
-
-                    }
-                    else {
-                        resolve(data);
-                    }
-
-                    break;
-                }
-
-                case journal.JournalEvents.engineerCraft: {
-                    if (!this.firstStream) {
-                        let engineerCraft: EngineerCraft = Object.assign(new EngineerCraft(), data);
-                        let promises: Promise<any>[] = [];
-
-                        for (let material of engineerCraft.Ingredients) {
-                            promises.push(
-                                this.journalDB.getEntry<Material>('materials', material.Name.toLocaleLowerCase())
-                                    .then(existingMaterial => {
-                                        let updatedMaterial = Object.assign(existingMaterial, material, { Count: existingMaterial.Count - material.Count });
-                                        updatedMaterial.Name = updatedMaterial.Name.toLowerCase();
-                                        return this.journalDB.putEntry('materials', updatedMaterial)
-                                            .then(() => this.emit('materialUpdated', updatedMaterial));
-                                    })
-                                    .catch(originalError => this.logger.error({ originalError, message: "Failed to write material", data: engineerCraft }))
-                            );
+                            break;
                         }
 
-                        Promise.all(promises)
-                            .catch(() => { }) //cheap Promise.finally
-                            .then(() => {
-                                resolve(data);
-                            });
-                    } else {
-                        resolve(data);
-                    }
-                    break;
-                }
+                        //new commander
+                        case journal.JournalEvents.newCommander: {
+                            let newCommander: journal.NewCommander = Object.assign(new journal.NewCommander(), data);
+                            this.ngZone.run(() => this._cmdrName.next(newCommander.Name));
+                            this.journalDB.putCurrentState({ key: "cmdrName", value: newCommander.Name })
+                                .then(() => resolve(data))
+                                .catch(originalError => {
+                                    this.logger.error({ originalError, message: "handleEvent failure" });
+                                    resolve(data);
+                                });
+                            break;
+                        }
 
-                case journal.JournalEvents.engineerContribution: {
-                    if (!this.firstStream) {
-                        let engineerContribution: EngineerContribution = Object.assign(new EngineerContribution(), data);
-                        if (engineerContribution.Material) {
-                            this.journalDB.getEntry<Material>('materials', engineerContribution.Material.toLocaleLowerCase())
-                                .then(existingMaterial => {
-                                    let updatedMaterial = Object.assign(existingMaterial, { Count: existingMaterial.Count - engineerContribution.Quantity });
-                                    updatedMaterial.Name = updatedMaterial.Name.toLowerCase();
-                                    return this.journalDB.putEntry('materials', updatedMaterial)
-                                        .then(() => this.emit('materialUpdated', updatedMaterial));
+                        //docked
+                        case journal.JournalEvents.docked: {
+                            let promises: Promise<any>[] = [];
+                            let docked: journal.Docked = Object.assign(new journal.Docked(), data);
+
+                            promises.push(this.journalDB.putCurrentState({ key: "currentSystem", value: docked.StarSystem })
+                                .catch(originalError => this.logger.error({ originalError, message: "handleEvent failure" }))
+                            );
+
+                            promises.push(this.journalDB.putCurrentState({ key: "currentSystemAddress", value: docked.SystemAddress })
+                                .catch(originalError => this.logger.error({ originalError, message: "handleEvent failure" }))
+                            );
+
+                            this.ngZone.run(() => this._currentSystem.next(docked.StarSystem));
+                            this.ngZone.run(() => this._currentSystemAddress.next(docked.SystemAddress));
+
+                            if (!this.firstStream && !this.beta) {
+                                let location = Object.assign(new journal.Location(), data);
+
+                                combineLatest(
+                                    this.cmdrName,
+                                    this.currentSystemStarPos,
+                                    (cmdrName, starPos) => { return { cmdrName, starPos } }
+                                ).pipe(
+                                    take(1)
+                                )
+                                    .subscribe(combined => {
+                                        this.eddn.sendJournalEvent(docked, combined.cmdrName, combined.starPos);
+                                    })
+                            }
+
+                            Promise.all(promises)
+                                .then(() => resolve(data))
+                                .catch(originalError => {
+                                    this.logger.error({ originalError, data, message: "Docked event failure" });
+                                    resolve(data);
+                                });
+
+                            break;
+                        }
+
+                        //location
+                        case journal.JournalEvents.location: {
+                            let promises: Promise<any>[] = [];
+                            let location: journal.Location = Object.assign(new journal.Location(), data);
+
+                            promises.push(
+                                this.journalDB.putCurrentState({ key: "currentSystem", value: location.StarSystem })
+                                    .catch(originalError => this.logger.error({ originalError, message: "handleEvent failure" }))
+                            );
+
+                            promises.push(
+                                this.journalDB.putCurrentState({ key: "currentSystemStarPos", value: location.StarPos })
+                                    .catch(originalError => this.logger.error({ originalError, message: "handleEvent failure" }))
+                            );
+
+                            promises.push(
+                                this.journalDB.putCurrentState({ key: "currentSystemAddress", value: location.SystemAddress })
+                                    .catch(originalError => this.logger.error({ originalError, message: "handleEvent failure" }))
+                            );
+
+                            this.ngZone.run(() => this._currentSystem.next(location.StarSystem));
+                            this.ngZone.run(() => this._currentSystemStarPos.next(location.StarPos));
+                            this.ngZone.run(() => this._currentSystemAddress.next(location.SystemAddress));
+
+                            if (!this.firstStream && !this.beta) {
+                                let location = Object.assign(new journal.Location(), data);
+                                this.cmdrName.pipe(
+                                    take(1)
+                                ).subscribe(cmdrName => {
+                                    this.eddn.sendJournalEvent(location, cmdrName);
+                                });
+                            }
+
+                            Promise.all(promises)
+                                .then(() => resolve(data))
+                                .catch(originalError => {
+                                    this.logger.error({ originalError, data, message: "Location event Failure" });
+                                    resolve(data);
+                                });
+
+                            break;
+                        }
+
+                        //fsd jump
+                        case journal.JournalEvents.fsdJump: {
+                            let promises: Promise<any>[] = [];
+                            let fsdJump: journal.FSDJump = Object.assign(new journal.FSDJump(), data);
+
+                            promises.push(
+                                this.journalDB.putCurrentState({ key: "currentSystem", value: fsdJump.StarSystem })
+                                    .catch(originalError => this.logger.error({ originalError, message: "handleEvent failure" }))
+                            );
+
+                            promises.push(
+                                this.journalDB.putCurrentState({ key: "currentSystemAddress", value: fsdJump.SystemAddress })
+                                    .catch(originalError => this.logger.error({ originalError, message: "handleEvent failure" }))
+                            );
+
+                            promises.push(
+                                this.journalDB.putCurrentState({ key: "currentSystemStarPos", value: fsdJump.StarPos })
+                                    .catch(originalError => this.logger.error({ originalError, message: "handleEvent failure" }))
+                            );
+
+                            this.ngZone.run(() => this._currentSystem.next(fsdJump.StarSystem));
+                            this.ngZone.run(() => this._currentSystemAddress.next(fsdJump.SystemAddress));
+                            this.ngZone.run(() => this._currentSystemStarPos.next(fsdJump.StarPos));
+
+                            if (!this.firstStream && !this.beta) {
+                                this._cmdrName
+                                    .pipe(
+                                        take(1)
+                                    )
+                                    .subscribe(cmdrName => {
+                                        this.eddn.sendJournalEvent(fsdJump, cmdrName);
+                                    });
+                            }
+
+                            if (fsdJump.Factions) {
+                                for (let faction of fsdJump.Factions) {
+                                    this.journalDB.addEntry("factions", faction)
+                                        .catch(originalError => {
+                                            this.logger.error({
+                                                originalError,
+                                                message: "Faction failed to write to DB",
+                                                data: faction
+                                            })
+                                        });
+                                }
+                            }
+
+                            Promise.all(promises)
+                                .then(() => resolve(data))
+                                .catch(originalError => {
+                                    this.logger.error({ originalError, data, message: "FSDJump Event Failure" });
+                                    resolve(data);
                                 })
-                                .catch(originalError => this.logger.error({ originalError, message: "Failed to write material", data: engineerContribution }))
+                            break;
+                        }
+
+                        //scan
+                        case journal.JournalEvents.scan: {
+                            let scan: journal.Scan = Object.assign(new journal.Scan(), data);
+
+                            if (!this.firstStream && !this.beta) {
+                                combineLatest(
+                                    this.cmdrName,
+                                    this.currentSystem,
+                                    this.currentSystemAddress,
+                                    this.currentSystemStarPos,
+                                    (cmdrName, currentSystem, currentSystemAddress, currentSystemStarPos) => {
+                                        return { cmdrName, currentSystem, currentSystemAddress, currentSystemStarPos }
+                                    }
+                                )
+                                    .pipe(
+                                        take(1)
+                                    )
+                                    .subscribe(combined => {
+                                        this.eddn.sendJournalEvent(scan, combined.cmdrName, combined.currentSystemStarPos, combined.currentSystem, combined.currentSystemAddress);
+                                    });
+                            }
+                            resolve(data);
+                            break;
+
+                        }
+
+                        //supercruise entry
+                        case journal.JournalEvents.supercruiseEntry: {
+                            let supercruiseEntry: journal.SupercruiseEntry = Object.assign(new journal.SupercruiseEntry(), data);
+                            this.ngZone.run(() => this._currentSystem.next(supercruiseEntry.StarSystem));
+                            this.journalDB.putCurrentState({ key: "currentSystem", value: supercruiseEntry.StarSystem })
+                                .then(() => resolve(data))
+                                .catch(originalError => {
+                                    this.logger.error({ originalError, message: "handleEvent failure" });
+                                    resolve(data);
+                                });
+
+                            break;
+                        }
+
+                        //supercruise exit
+                        case journal.JournalEvents.supercruiseExit: {
+                            let supercruiseExit: journal.SupercruiseExit = Object.assign(new journal.SupercruiseExit(), data);
+                            this.ngZone.run(() => this._currentSystem.next(supercruiseExit.StarSystem));
+
+                            this.journalDB.putCurrentState({ key: "currentSystem", value: supercruiseExit.StarSystem })
+                                .then(() => resolve(data))
+                                .catch(originalError => {
+                                    this.logger.error({ originalError, message: "handleEvent failure" });
+                                    resolve(data);
+                                });
+
+                            break;
+                        }
+
+                        //loadout
+                        case journal.JournalEvents.loadout: {
+                            let promises: Promise<any>[] = [];
+                            let loadout: journal.Loadout = Object.assign(new journal.Loadout(), data);
+
+                            this.ngZone.run(() => this._currentShipID.next(loadout.ShipID));
+
+                            promises.push(
+                                this.journalDB.putEntry('ships', loadout)
+                                    .catch(originalError => this.logger.error({ originalError, message: "handleEvent failure" }))
+                            );
+
+                            promises.push(
+                                this.journalDB.putCurrentState({ key: 'shipID', value: loadout.ShipID })
+                                    .catch(originalError => this.logger.error({ originalError, message: "handleEvent failure" }))
+                            );
+
+                            Promise.all(promises)
+                                .then(() => resolve(data))
+                                .catch(originalError => {
+                                    this.logger.error({ originalError, data, message: "Loadout event failure" });
+                                    resolve(data);
+                                })
+                            break;
+                        }
+
+                        //resurrected
+                        case journal.JournalEvents.resurrect: {
+                            let resurrected: journal.Resurrect = Object.assign(new journal.Resurrect(), data);
+
+                            if (resurrected.Option !== "rebuy") {
+                                this._currentShipID.pipe(
+                                    take(1)
+                                ).subscribe(shipID => {
+                                    let loadout: Loadout;
+                                    this.journalDB.getEntry<Loadout>(DBStore.ships, shipID)
+                                        .then((ship: Loadout) => {
+                                            loadout = ship;
+                                            this.journalDB.deleteEntry(DBStore.ships, shipID)
+                                        })
+                                        .then(() => resolve(data))
+                                        .catch(originalError => {
+                                            this.logger.error({ originalError, data, message: "Resurrected event failed to delete ship" });
+                                            resolve(data);
+                                        });
+                                    this.emit("notRebought", loadout);
+                                });
+                            } else {
+                                resolve(data);
+                            }
+
+                            break;
+                        }
+
+                        //shipyardsell
+                        case journal.JournalEvents.shipyardSell: {
+                            let shipyardSell: journal.ShipyardSell = Object.assign(new journal.ShipyardSell(), data);
+
+                            this.journalDB.deleteEntry('ships', shipyardSell.SellShipID)
+                                .then(() => resolve(data))
+                                .catch(originalError => {
+                                    this.logger.error({ originalError, message: "handleEvent failure" });
+                                    resolve(data);
+                                });
+
+                            break;
+                        }
+
+                        //Materials
+                        case journal.JournalEvents.materials: {
+                            let materials: journal.Materials = Object.assign(new journal.Materials(), data);
+
+                            //get existing materials entries from the DB and merge before re-inserting
+
+                            //it would be too time consuming to process every historical materials event
+                            //and update the DB and offer little benefit to the user
+                            let promises: Promise<any>[] = [];
+
+                            if (!this.firstStream) {
+
+                                materials.Encoded.forEach(material => {
+                                    promises.push(
+                                        this.journalDB.getEntry('materials', material.Name.toLowerCase())
+                                            .then(existingMaterial => {
+                                                let updatedMaterial = Object.assign({ Category: "$MICRORESOURCE_CATEGORY_Encoded;" }, existingMaterial, material);
+                                                updatedMaterial.Name = updatedMaterial.Name.toLowerCase();
+                                                return this.journalDB.putEntry('materials', updatedMaterial)
+                                            })
+                                            .catch(originalError => this.logger.error({ originalError, message: "Failed to write material", data: material }))
+                                    )
+                                });
+
+                                materials.Raw.forEach(material => {
+                                    promises.push(
+                                        this.journalDB.getEntry('materials', material.Name.toLowerCase())
+                                            .then(existingMaterial => {
+                                                let updatedMaterial = Object.assign({ Category: "$MICRORESOURCE_CATEGORY_Elements;" }, existingMaterial, material);
+                                                updatedMaterial.Name = updatedMaterial.Name.toLowerCase();
+                                                return this.journalDB.putEntry('materials', updatedMaterial)
+                                            })
+                                            .catch(originalError => this.logger.error({ originalError, message: "Failed to write material", data: material }))
+                                    )
+                                });
+
+                                materials.Manufactured.forEach(material => {
+                                    promises.push(
+                                        this.journalDB.getEntry('materials', material.Name.toLowerCase())
+                                            .then(existingMaterial => {
+                                                let updatedMaterial = Object.assign({ Category: "$MICRORESOURCE_CATEGORY_Manufactured;" }, existingMaterial, material);
+                                                updatedMaterial.Name = updatedMaterial.Name.toLowerCase();
+                                                return this.journalDB.putEntry('materials', updatedMaterial)
+                                            })
+                                            .catch(originalError => this.logger.error({ originalError, message: "Failed to write material", data: material }))
+                                    )
+                                });
+                            }
+
+                            Promise.all(promises)
+                                .catch(() => { }) //cheap Promise.finally
                                 .then(() => {
                                     resolve(data);
                                 });
-                        } else {
+                            break;
+                        }
+
+                        case journal.JournalEvents.materialCollected: {
+                            if (!this.firstStream) {
+                                let material: MaterialCollected = Object.assign(new MaterialCollected(), data);
+                                this.journalDB.getEntry<Material>('materials', material.Name.toLowerCase())
+                                    .then(existingMaterial => {
+                                        let updatedMaterial = Object.assign(existingMaterial, material, { Count: existingMaterial.Count + material.Count });
+                                        updatedMaterial.Name = updatedMaterial.Name.toLowerCase();
+                                        return this.journalDB.putEntry('materials', updatedMaterial)
+                                            .then(() => this.emit('materialUpdated', updatedMaterial));
+                                    })
+                                    .catch(originalError => this.logger.error({ originalError, message: "Failed to write material", data: material }))
+                                    .then(() => {
+                                        resolve(data);
+                                    });
+                            }
+                            else {
+                                resolve(data);
+                            }
+
+                            break;
+                        }
+
+                        case journal.JournalEvents.materialDiscarded: {
+                            if (!this.firstStream) {
+                                let materialDiscarded: MaterialDiscarded = Object.assign(new MaterialDiscarded(), data);
+                                this.journalDB.getEntry<Material>('materials', materialDiscarded.Name.toLocaleLowerCase())
+                                    .then(existingMaterial => {
+                                        let updatedMaterial = Object.assign(existingMaterial, materialDiscarded, { Count: existingMaterial.Count - materialDiscarded.Count });
+                                        updatedMaterial.Name = updatedMaterial.Name.toLowerCase();
+                                        return this.journalDB.putEntry('materials', updatedMaterial)
+                                            .then(() => this.emit('materialUpdated', updatedMaterial));
+                                    })
+                                    .catch(originalError => this.logger.error({ originalError, message: "Failed to write material", data: materialDiscarded }))
+                                    .then(() => {
+                                        resolve(data);
+                                    });
+                            } else {
+                                resolve(data);
+                            }
+                            break;
+                        }
+
+                        case journal.JournalEvents.materialTrade: {
+                            if (!this.firstStream) {
+                                let promises: Promise<any>[] = [];
+                                let materialTrade: MaterialTrade = Object.assign(new MaterialTrade(), data);
+                                //Increase materials received
+                                promises.push(
+                                    this.journalDB.getEntry<Material>('materials', materialTrade.Received.Material.toLocaleLowerCase())
+                                        .then(existingMaterial => {
+                                            let updatedMaterial = Object.assign(existingMaterial, materialTrade, { Count: existingMaterial.Count + materialTrade.Received.Quantity });
+                                            updatedMaterial.Name = updatedMaterial.Name.toLowerCase();
+                                            return this.journalDB.putEntry('materials', updatedMaterial)
+                                                .then(() => this.emit('materialUpdated', updatedMaterial));
+                                        })
+                                        .catch(originalError => this.logger.error({ originalError, message: "Failed to write material", data: materialTrade }))
+                                );
+
+                                //Decrease materials paid
+                                promises.push(
+                                    this.journalDB.getEntry<Material>('materials', materialTrade.Paid.Material.toLocaleLowerCase())
+                                        .then(existingMaterial => {
+                                            let updatedMaterial = Object.assign(existingMaterial, materialTrade, { Count: existingMaterial.Count - materialTrade.Paid.Quantity });
+                                            updatedMaterial.Name = updatedMaterial.Name.toLowerCase();
+                                            return this.journalDB.putEntry('materials', updatedMaterial)
+                                                .then(() => this.emit('materialUpdated', updatedMaterial));
+                                        })
+                                        .catch(originalError => this.logger.error({ originalError, message: "Failed to write material", data: materialTrade }))
+                                );
+                                Promise.all(promises)
+                                    .catch(() => { }) //cheap Promise.finally
+                                    .then(() => {
+                                        resolve(data);
+                                    });
+
+                            }
+                            else {
+                                resolve(data);
+                            }
+
+                            break;
+                        }
+
+                        case journal.JournalEvents.engineerCraft: {
+                            if (!this.firstStream) {
+                                let engineerCraft: EngineerCraft = Object.assign(new EngineerCraft(), data);
+                                let promises: Promise<any>[] = [];
+
+                                for (let material of engineerCraft.Ingredients) {
+                                    promises.push(
+                                        this.journalDB.getEntry<Material>('materials', material.Name.toLocaleLowerCase())
+                                            .then(existingMaterial => {
+                                                let updatedMaterial = Object.assign(existingMaterial, material, { Count: existingMaterial.Count - material.Count });
+                                                updatedMaterial.Name = updatedMaterial.Name.toLowerCase();
+                                                return this.journalDB.putEntry('materials', updatedMaterial)
+                                                    .then(() => this.emit('materialUpdated', updatedMaterial));
+                                            })
+                                            .catch(originalError => this.logger.error({ originalError, message: "Failed to write material", data: engineerCraft }))
+                                    );
+                                }
+
+                                Promise.all(promises)
+                                    .catch(() => { }) //cheap Promise.finally
+                                    .then(() => {
+                                        resolve(data);
+                                    });
+                            } else {
+                                resolve(data);
+                            }
+                            break;
+                        }
+
+                        case journal.JournalEvents.engineerContribution: {
+                            if (!this.firstStream) {
+                                let engineerContribution: EngineerContribution = Object.assign(new EngineerContribution(), data);
+                                if (engineerContribution.Material) {
+                                    this.journalDB.getEntry<Material>('materials', engineerContribution.Material.toLocaleLowerCase())
+                                        .then(existingMaterial => {
+                                            let updatedMaterial = Object.assign(existingMaterial, { Count: existingMaterial.Count - engineerContribution.Quantity });
+                                            updatedMaterial.Name = updatedMaterial.Name.toLowerCase();
+                                            return this.journalDB.putEntry('materials', updatedMaterial)
+                                                .then(() => this.emit('materialUpdated', updatedMaterial));
+                                        })
+                                        .catch(originalError => this.logger.error({ originalError, message: "Failed to write material", data: engineerContribution }))
+                                        .then(() => {
+                                            resolve(data);
+                                        });
+                                } else {
+                                    resolve(data);
+                                }
+                            } else {
+                                resolve(data);
+                            }
+
+
+                            break;
+                        }
+
+                        case journal.JournalEvents.synthesis: {
+                            if (!this.firstStream) {
+                                let synthesis: Synthesis = Object.assign(new Synthesis(), data);
+                                let promises: Promise<any>[] = [];
+
+                                for (let material of synthesis.Materials) {
+                                    promises.push(
+                                        this.journalDB.getEntry<Material>('materials', material.Name.toLocaleLowerCase())
+                                            .then(existingMaterial => {
+                                                let updatedMaterial = Object.assign(existingMaterial, material, { Count: existingMaterial.Count - material.Count });
+                                                updatedMaterial.Name = updatedMaterial.Name.toLowerCase();
+                                                return this.journalDB.putEntry('materials', updatedMaterial)
+                                                    .then(() => this.emit('materialUpdated', updatedMaterial));
+                                            })
+                                            .catch(originalError => this.logger.error({ originalError, message: "Failed to write material", data: synthesis }))
+                                    );
+                                }
+
+                                Promise.all(promises)
+                                    .catch(() => { }) //cheap Promise.finally
+                                    .then(() => resolve(data));
+                            } else {
+                                resolve(data);
+                            }
+
+                            break;
+                        }
+
+                        case journal.JournalEvents.technologyBroker: {
+                            if (!this.firstStream) {
+                                let technologyBroker: TechnologyBroker = Object.assign(new TechnologyBroker(), data);
+                                let promises: Promise<any>[] = [];
+
+                                for (let material of technologyBroker.Materials) {
+                                    promises.push(
+                                        this.journalDB.getEntry<Material>('materials', material.Name.toLocaleLowerCase())
+                                            .then(existingMaterial => {
+                                                let updatedMaterial = Object.assign(existingMaterial, material, { Count: existingMaterial.Count - material.Count });
+                                                updatedMaterial.Name = updatedMaterial.Name.toLowerCase();
+                                                return this.journalDB.putEntry('materials', updatedMaterial)
+                                                    .then(() => this.emit('materialUpdated', updatedMaterial));
+                                            })
+                                            .catch(originalError => this.logger.error({ originalError, message: "Failed to write material", data: technologyBroker }))
+                                    );
+                                }
+
+                                Promise.all(promises)
+                                    .catch(() => { })
+                                    .then(() => {
+                                        resolve(data);
+                                    });
+                            } else {
+                                resolve(data);
+                            }
+
+                            break;
+                        }
+
+                        default: {
                             resolve(data);
                         }
-                    } else {
-                        resolve(data);
+
                     }
-
-
-                    break;
                 }
-
-                case journal.JournalEvents.synthesis: {
-                    if (!this.firstStream) {
-                        let synthesis: Synthesis = Object.assign(new Synthesis(), data);
-                        let promises: Promise<any>[] = [];
-
-                        for (let material of synthesis.Materials) {
-                            promises.push(
-                                this.journalDB.getEntry<Material>('materials', material.Name.toLocaleLowerCase())
-                                    .then(existingMaterial => {
-                                        let updatedMaterial = Object.assign(existingMaterial, material, { Count: existingMaterial.Count - material.Count });
-                                        updatedMaterial.Name = updatedMaterial.Name.toLowerCase();
-                                        return this.journalDB.putEntry('materials', updatedMaterial)
-                                            .then(() => this.emit('materialUpdated', updatedMaterial));
-                                    })
-                                    .catch(originalError => this.logger.error({ originalError, message: "Failed to write material", data: synthesis }))
-                            );
-                        }
-
-                        Promise.all(promises)
-                            .catch(() => { }) //cheap Promise.finally
-                            .then(() => resolve(data));
-                    } else {
-                        resolve(data);
-                    }
-
-                    break;
-                }
-
-                case journal.JournalEvents.technologyBroker: {
-                    if (!this.firstStream) {
-                        let technologyBroker: TechnologyBroker = Object.assign(new TechnologyBroker(), data);
-                        let promises: Promise<any>[] = [];
-
-                        for (let material of technologyBroker.Materials) {
-                            promises.push(
-                                this.journalDB.getEntry<Material>('materials', material.Name.toLocaleLowerCase())
-                                    .then(existingMaterial => {
-                                        let updatedMaterial = Object.assign(existingMaterial, material, { Count: existingMaterial.Count - material.Count });
-                                        updatedMaterial.Name = updatedMaterial.Name.toLowerCase();
-                                        return this.journalDB.putEntry('materials', updatedMaterial)
-                                            .then(() => this.emit('materialUpdated', updatedMaterial));
-                                    })
-                                    .catch(originalError => this.logger.error({ originalError, message: "Failed to write material", data: technologyBroker }))
-                            );
-                        }
-
-                        Promise.all(promises)
-                            .catch(() => { })
-                            .then(() => {
-                                resolve(data);
-                            });
-                    } else {
-                        resolve(data);
-                    }
-
-                    break;
-                }
-
-                default: {
-                    resolve(data);
-                }
-
-            }
+            )
         })
     }
 
@@ -975,6 +982,14 @@ export class JournalService extends EventEmitter {
         });
 
         return selectedDir ? selectedDir[0] : undefined;
+    }
+
+    private cmdrUsernameMatch() {
+        return combineLatest(
+            this.userService.user,
+            this.cmdrName,
+            (user, cmdrName) => user.username.toLowerCase() === cmdrName.toLowerCase())
+            .pipe(take(1))
     }
 
 
