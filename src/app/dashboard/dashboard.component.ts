@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit, NgZone } from '@angular/core';
 const fs = require('fs');
 import { JournalService } from '../journal/journal.service';
 import { JournalEvents, JournalEvent, MissionCompleted, LoadGame, NewCommander } from 'cmdr-journal/dist';
@@ -39,7 +39,8 @@ export class DashboardComponent implements OnDestroy, OnInit {
         public userService: UserService,
         public appErrorService: AppErrorService,
         public trackedFaction: TrackingFaction,
-        public progressBar: ProgressBarService
+        public progressBar: ProgressBarService,
+        private zone: NgZone
     ) {
         this.currentSystem = journalService.currentSystem;
     }
@@ -77,18 +78,18 @@ export class DashboardComponent implements OnDestroy, OnInit {
             });
 
         this.journalService.on('ready', () => {
-        combineLatest(
-            this.userService.user,
-            this.journalService.cmdrName,
-            (user, cmdrName) => {
-                return { user, cmdrName }
-            })
-            .pipe(takeWhile(() => this.alive))
-            .subscribe(({ user, cmdrName }) => {
-                if (user) {
-                    this.checkNameMismatch(user.username, cmdrName);
-                }
-            });
+            combineLatest(
+                this.userService.user,
+                this.journalService.cmdrName,
+                (user, cmdrName) => {
+                    return { user, cmdrName }
+                })
+                .pipe(takeWhile(() => this.alive))
+                .subscribe(({ user, cmdrName }) => {
+                    if (user) {
+                        this.checkNameMismatch(user.username, cmdrName);
+                    }
+                });
         });
 
         this.trackedFaction.faction
@@ -128,12 +129,13 @@ export class DashboardComponent implements OnDestroy, OnInit {
     }
 
     checkNameMismatch(username: string, cmdrName: string) {
-
-        if (cmdrName.toLowerCase() !== username.toLowerCase()) {
-            this.appErrorService.addError("cmdrNameMismatch", { message: `⚠️️️️You are logged in as ${username.toUpperCase()} but appear to be playing as ${cmdrName.toUpperCase()}` });
-        } else {
-            this.appErrorService.removeError("cmdrNameMismatch");
-        }
+        this.zone.run(() => {
+            if (cmdrName.toLowerCase() !== username.toLowerCase()) {
+                this.appErrorService.addError("cmdrNameMismatch", { message: `⚠️️️️You are logged in as ${username.toUpperCase()} but appear to be playing as ${cmdrName.toUpperCase()}` });
+            } else {
+                this.appErrorService.removeError("cmdrNameMismatch");
+            }
+        })
     }
 
     doTabChange(e: MatTabChangeEvent) {
