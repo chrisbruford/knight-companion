@@ -150,7 +150,7 @@ export class DBService implements OnDestroy {
                     err => {
                         this.logger.error({
                             originalError: err,
-                            message: 'journalDBService.addEntry error',
+                            message: 'journalDBService.putCurrentState error',
                             data: {
                                 store,
                                 entry
