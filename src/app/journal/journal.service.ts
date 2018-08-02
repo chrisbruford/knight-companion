@@ -949,7 +949,8 @@ export class JournalService extends EventEmitter {
                         }
 
                     }
-                }
+                },
+                error => reject(error)
             )
         })
     }
