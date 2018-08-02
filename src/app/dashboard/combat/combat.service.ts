@@ -126,7 +126,7 @@ export class CombatService implements OnDestroy {
             if (fileHeader.part === 1) {
                 this._combatBondsRedeemed = 0;
             }
-        })
+        });
     }
 
     interdictedAlert(interdicted: Interdicted): Observable<boolean> {
