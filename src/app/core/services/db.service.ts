@@ -82,8 +82,8 @@ export class DBService implements OnDestroy {
                     let db = (<IDBOpenDBRequest>evt.target).result;
                     this.errorService.removeError('dbFail');
 
-                    db.onerror = (err: any) => {
-                        this.db.error(err);
+                    db.onerror = (err: ErrorEvent) => {
+                        logger.error({originalError: err, message: "DB Error"});
                     }
 
                     this.db.next(db);
@@ -93,16 +93,16 @@ export class DBService implements OnDestroy {
                     this.db.error(block);
                 }
 
-                openRequest.onerror = (originalError: any) => {
+                openRequest.onerror = (originalError: ErrorEvent) => {
+                    originalError.stopPropagation();
                     this.logger.error({ originalError, message: "Unrecoverable error opening initial DB" });
                     this.errorService.addError('dbFail', { message: 'An internal database error has occured. This app may not function as intended.' });
-                    this.db.error(originalError);
                 }
             });
     }
 
     putCurrentState(entry: { key: string, value: any }): Promise<boolean> {
-        let store = "currentState"
+        let store = "currentState";
 
         return new Promise<boolean>((resolve, reject) => {
             this.db.pipe(
@@ -117,7 +117,9 @@ export class DBService implements OnDestroy {
                             resolve(true);
                         }
 
-                        transaction.onerror = (err: any) => {
+                        transaction.onerror = (err: ErrorEvent) => {
+                            err.stopPropagation();
+                            
                             reject({
                                 originalError: err,
                                 message: 'transaction error',
@@ -143,7 +145,8 @@ export class DBService implements OnDestroy {
 
                         let request = objectStore.put(entry);
 
-                        request.onerror = (err) => {
+                        request.onerror = (err: ErrorEvent) => {
+                            err.stopPropagation();
                             reject({ originalError: err, message: "putCurrentState request error" });
                         }
                     },
@@ -175,7 +178,8 @@ export class DBService implements OnDestroy {
                         resolve(true);
                     }
 
-                    transaction.onerror = (err: any) => {
+                    transaction.onerror = (err: ErrorEvent) => {
+                        err.stopPropagation();
                         reject({
                             originalError: err,
                             message: 'transaction error',
@@ -201,7 +205,8 @@ export class DBService implements OnDestroy {
 
                     let request = objectStore.add(entry);
 
-                    request.onerror = originalError => {
+                    request.onerror = (originalError: ErrorEvent) => {
+                        originalError.stopPropagation();
                         reject({ originalError, message: "addEntry request error", data: entry });
                     }
                 },
@@ -233,7 +238,8 @@ export class DBService implements OnDestroy {
                         resolve(true);
                     }
 
-                    transaction.onerror = (err: any) => {
+                    transaction.onerror = (err: ErrorEvent) => {
+                        err.stopPropagation();
                         reject({
                             originalError: err,
                             message: 'transaction error',
@@ -259,7 +265,8 @@ export class DBService implements OnDestroy {
 
                     let request = objectStore.put(entry);
 
-                    request.onerror = (err) => {
+                    request.onerror = (err: ErrorEvent) => {
+                        err.stopPropagation();
                         reject({ originalError: err, message: "putEntry request error" });
                     }
                 },
@@ -290,7 +297,8 @@ export class DBService implements OnDestroy {
                         resolve(true);
                     }
 
-                    transaction.onerror = (err: any) => {
+                    transaction.onerror = (err: ErrorEvent) => {
+                        err.stopPropagation();
                         reject({
                             originalError: err,
                             message: 'transaction error',
@@ -316,7 +324,8 @@ export class DBService implements OnDestroy {
 
                     let request = objectStore.delete(key);
 
-                    request.onerror = (err) => {
+                    request.onerror = (err: ErrorEvent) => {
+                        err.stopPropagation();
                         reject({ originalError: err, message: "putEntry request error" });
                     }
                 },
@@ -349,7 +358,8 @@ export class DBService implements OnDestroy {
                         resolve((<IDBRequest>evt.target).result);
                     }
 
-                    request.onerror = (err) => {
+                    request.onerror = (err: ErrorEvent) => {
+                        err.stopPropagation();
                         reject({
                             originalError: err,
                             message: 'journalDBService.getEntry request error',
@@ -396,7 +406,8 @@ export class DBService implements OnDestroy {
                         }
                     }
 
-                    request.onerror = err => {
+                    request.onerror = (err: ErrorEvent) => {
+                        err.stopPropagation();
                         reject({
                             originalError: err,
                             message: "Error in getAll transaction"

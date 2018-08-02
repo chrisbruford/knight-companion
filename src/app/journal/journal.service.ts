@@ -173,6 +173,7 @@ export class JournalService extends EventEmitter {
                         if (!data) {
                             let thePromise = new Promise((resolve, reject) => {
                                 let stream = this.journalQueue.addPath(`${dir}/${path}`);
+
                                 stream
                                     .on('data', (data: journal.JournalEvent) => {
                                         //events need to be processed in order otherwise things like ships being sold
@@ -522,15 +523,9 @@ export class JournalService extends EventEmitter {
 
                             promises.push(
                                 this.journalDB.putCurrentState({ key: "currentSystem", value: fsdJump.StarSystem })
-                                    .catch(originalError => this.logger.error({ originalError, message: "handleEvent failure" }))
-                            );
-
-                            promises.push(
+                                    .catch(originalError => this.logger.error({ originalError, message: "handleEvent failure" })),
                                 this.journalDB.putCurrentState({ key: "currentSystemAddress", value: fsdJump.SystemAddress })
-                                    .catch(originalError => this.logger.error({ originalError, message: "handleEvent failure" }))
-                            );
-
-                            promises.push(
+                                    .catch(originalError => this.logger.error({ originalError, message: "handleEvent failure" })),
                                 this.journalDB.putCurrentState({ key: "currentSystemStarPos", value: fsdJump.StarPos })
                                     .catch(originalError => this.logger.error({ originalError, message: "handleEvent failure" }))
                             );
@@ -563,7 +558,9 @@ export class JournalService extends EventEmitter {
                             }
 
                             Promise.all(promises)
-                                .then(() => resolve(data))
+                                .then(() => {
+                                    resolve(data)
+                                })
                                 .catch(originalError => {
                                     this.logger.error({ originalError, data, message: "FSDJump Event Failure" });
                                     resolve(data);
