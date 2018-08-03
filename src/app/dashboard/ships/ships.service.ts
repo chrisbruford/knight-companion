@@ -14,7 +14,7 @@ import { DelCommanderShipEvent } from "../../core/inara/models/del-commander-shi
 @Injectable()
 export class ShipsService {
 
-    private ships = new Map<number, Loadout>();
+    public ships = new Map<number, Loadout>();
     private shipsObservable = new BehaviorSubject<Map<number, Loadout>>(this.ships);
 
     constructor(
