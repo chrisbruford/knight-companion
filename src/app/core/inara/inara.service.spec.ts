@@ -1,9 +1,9 @@
 import { InaraService } from './inara.service';
 import { InaraEvent } from './models/inara-event.model';
-import { HttpClient } from '../../../../node_modules/@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { InaraResponse } from './models/inara-response.model';
 import { InaraEventResponse } from './models/inara-event-response.model';
-import { of } from '../../../../node_modules/rxjs';
+import { of, Observable, BehaviorSubject } from 'rxjs';
 import { DBService } from '../services/db.service';
 import { JournalService } from '../../journal/journal.service';
 import { DBStore } from '../enums/db-stores.enum';
@@ -11,28 +11,43 @@ import { AppSetting } from '../enums/app-settings.enum';
 import { remote } from 'electron';
 import { AddCommanderShipEvent } from './models/add-commander-ship-event.model';
 import { EventEmitter } from 'events';
-import { async, TestBed } from '../../../../node_modules/@angular/core/testing';
+import { async, TestBed, fakeAsync, flushMicrotasks } from '@angular/core/testing';
+import { SettingsService } from '../../dashboard/settings/settings.service';
+import { AppErrorService } from '../services/app-error.service';
+import { settings } from 'cluster';
 
 describe('Inara service', () => {
     let inara: InaraService;
     let dummyInaraEvent: InaraEvent;
     let fakeHttp: jasmine.SpyObj<HttpClient>;
-    let fakeDB: jasmine.SpyObj<DBService>;
     let fakeJournal: EventEmitter;
     let fakeAPIKey = '123456789abcde';
 
+    interface FakeSettingService {
+        _settings: BehaviorSubject<{ setting: AppSetting, value: boolean }>;
+        getSetting(): { setting: AppSetting, value: boolean },
+        settings: Observable<{ setting: AppSetting, value: boolean }>
+    }
+
     beforeEach(async(() => {
         fakeHttp = jasmine.createSpyObj('HttpClient', ['post']);
-        fakeDB = jasmine.createSpyObj('DBService', ['getEntry']);
 
-        fakeDB.getEntry.and.callFake((store: string, key: any) => {
-            switch (store) {
-                case DBStore.appSettings: {
-                    switch (key) {
-                        case AppSetting.inaraAPIKey: {
-                            return of(fakeAPIKey)
-                        }
-                    }
+        let fakeSettingsService: FakeSettingService = {
+            _settings: new BehaviorSubject({ setting: AppSetting.inaraBroadcasts, value: true }),
+            getSetting: jasmine.createSpy('getSetting').and.callFake(() => of({ setting: AppSetting.inaraBroadcasts, value: false })),
+            get settings() { return this._settings.asObservable() }
+        }
+
+        let fakeAppErrorService = {};
+
+
+        (<jasmine.Spy>fakeSettingsService.getSetting).and.callFake((key: any) => {
+            switch (key) {
+                case AppSetting.inaraAPIKey: {
+                    return Promise.resolve(fakeAPIKey);
+                }
+                case AppSetting.inaraBroadcasts: {
+                    return Promise.resolve(true)
                 }
             }
         });
@@ -44,8 +59,9 @@ describe('Inara service', () => {
         TestBed.configureTestingModule({
             providers: [
                 { provide: HttpClient, useValue: fakeHttp },
-                { provide: DBService, useValue: fakeDB },
+                { provide: SettingsService, useValue: fakeSettingsService },
                 { provide: JournalService, useValue: fakeJournal },
+                { provide: AppErrorService, useValue: fakeAppErrorService },
                 InaraService
             ]
         })
@@ -95,7 +111,17 @@ describe('Inara service', () => {
         })
 
 
-        it('should send all batched events to Inara when requested', () => {
+        it('should send all batched events to Inara when requested', fakeAsync(() => {
+            const settingsService: FakeSettingService = TestBed.get(SettingsService);
+            (<jasmine.Spy>settingsService.getSetting).and.callFake((setting: AppSetting) => {
+                switch (setting) {
+                    case AppSetting.inaraAPIKey:
+                        return Promise.resolve('123456789abcde');
+                    case AppSetting.inaraBroadcasts:
+                        return true;
+                }
+            });
+
             fakeResponse.header = {
                 eventStatus: 200,
                 eventData: {
@@ -107,11 +133,22 @@ describe('Inara service', () => {
             fakeHttp.post.and.callFake((url: string, data: any) => of(fakeResponse));
             expect(inara.getEvents().length).toBe(3);
             inara.submitEvents().subscribe();
+            flushMicrotasks();
             expect(inara.getEvents().length).toBe(0);
             expect(fakeHttp.post).toHaveBeenCalledWith(process.env.INARA_API_ENDPOINT, jasmine.objectContaining(expectedSubmission))
-        });
+        }));
 
         it('should reject batched events when Inara rejects them', (done) => {
+            const settingsService: FakeSettingService = TestBed.get(SettingsService);
+            (<jasmine.Spy>settingsService.getSetting).and.callFake((setting: AppSetting) => {
+                switch (setting) {
+                    case AppSetting.inaraAPIKey:
+                        return Promise.resolve('123456789abcde');
+                    case AppSetting.inaraBroadcasts:
+                        return true;
+                }
+            });
+
             fakeResponse.header = {
                 eventStatus: 400,
                 eventData: {
@@ -131,5 +168,15 @@ describe('Inara service', () => {
                     done()
                 });
         });
+
+        it('should not send events when setting is disabled', (() => {
+            const settingsService: FakeSettingService = TestBed.get(SettingsService);
+            settingsService._settings.next({setting: AppSetting.inaraBroadcasts, value: false});
+
+            expect(inara.getEvents().length).toBe(3);
+            inara.submitEvents().subscribe(()=>{},()=>{});
+            expect(inara.getEvents().length).toBe(3);
+            expect(fakeHttp.post).not.toHaveBeenCalled();
+        }));
     })
 });
