@@ -14,9 +14,9 @@ import { Subject, Observable } from "rxjs";
     styleUrls: ["./ships.component.scss"]
 }) export class ShipsComponent {
 
-    private ships: Loadout[];
+    public ships: Loadout[];
     private alive = true;
-    private columnsToDisplay = ['slot', 'item'];
+    public columnsToDisplay = ['slot', 'item'];
 
     constructor(
         private shipsService: ShipsService,
