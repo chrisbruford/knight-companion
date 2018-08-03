@@ -4,8 +4,9 @@ import { JournalEvents, FSDJump } from 'cmdr-journal/dist';
 import { AppErrorService } from './app-error.service';
 import { DBStore } from '../enums/db-stores.enum';
 import { UserService } from './user.service';
-import { switchMap, filter, take, takeWhile } from '../../../../node_modules/rxjs/operators';
-import { Observable, BehaviorSubject } from '../../../../node_modules/rxjs';
+import { switchMap, filter, take, takeWhile } from 'rxjs/operators';
+import { Observable, BehaviorSubject } from 'rxjs';
+import { AppErrorTitle } from '../error-bar/app-error-title.enum';
 
 @Injectable({
     providedIn: 'root'
@@ -80,7 +81,7 @@ export class DBService implements OnDestroy {
 
                 openRequest.onsuccess = (evt) => {
                     let db = (<IDBOpenDBRequest>evt.target).result;
-                    this.errorService.removeError('dbFail');
+                    this.errorService.removeError(AppErrorTitle.dbError);
 
                     db.onerror = (err: ErrorEvent) => {
                         logger.error({originalError: err, message: "DB Error"});
@@ -96,7 +97,7 @@ export class DBService implements OnDestroy {
                 openRequest.onerror = (originalError: ErrorEvent) => {
                     originalError.stopPropagation();
                     this.logger.error({ originalError, message: "Unrecoverable error opening initial DB" });
-                    this.errorService.addError('dbFail', { message: 'An internal database error has occured. This app may not function as intended.' });
+                    this.errorService.addError(AppErrorTitle.dbError, { message: 'An internal database error has occured. This app may not function as intended.' });
                 }
             });
     }

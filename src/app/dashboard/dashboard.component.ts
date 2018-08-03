@@ -13,6 +13,7 @@ import { AppErrorService } from '../core/services/app-error.service';
 import { MatTabChangeEvent } from '@angular/material';
 import { TrackingFaction } from './tracking-faction.service';
 import { ProgressBarService } from '../core/progress-bar/progress-bar.service';
+import { AppErrorTitle } from '../core/error-bar/app-error-title.enum';
 
 @Component({
     templateUrl: 'dashboard.component.html',
@@ -67,13 +68,13 @@ export class DashboardComponent implements OnDestroy, OnInit {
                     this.username = user.username;
 
                     if (!user.discordID || !user.discordID.length) {
-                        this.appErrorService.addError("no-discord", { message: `️️️️️️️⚠️️️️Your account has not been linked with Discord` });
+                        this.appErrorService.addError(AppErrorTitle.noDiscord, { message: `️️️️️️️⚠️️️️Your account has not been linked with Discord` });
                     } else {
-                        this.appErrorService.removeError("no-discord");
+                        this.appErrorService.removeError(AppErrorTitle.noDiscord);
                     }
                 } else {
-                    this.appErrorService.removeError("no-discord");
-                    this.appErrorService.removeError("cmdrNameMismatch");
+                    this.appErrorService.removeError(AppErrorTitle.noDiscord);
+                    this.appErrorService.removeError(AppErrorTitle.cmdrUsernameMismatch);
                 }
             });
 
@@ -131,9 +132,9 @@ export class DashboardComponent implements OnDestroy, OnInit {
     checkNameMismatch(username: string, cmdrName: string) {
         this.zone.run(() => {
             if (cmdrName.toLowerCase() !== username.toLowerCase()) {
-                this.appErrorService.addError("cmdrNameMismatch", { message: `⚠️️️️You are logged in as ${username.toUpperCase()} but appear to be playing as ${cmdrName.toUpperCase()}` });
+                this.appErrorService.addError(AppErrorTitle.cmdrUsernameMismatch, { message: `⚠️️️️You are logged in as ${username.toUpperCase()} but appear to be playing as ${cmdrName.toUpperCase()}` });
             } else {
-                this.appErrorService.removeError("cmdrNameMismatch");
+                this.appErrorService.removeError(AppErrorTitle.cmdrUsernameMismatch);
             }
         })
     }

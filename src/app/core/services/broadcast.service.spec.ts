@@ -1,8 +1,8 @@
 import { BroadcastService } from "./broadcast.service";
-import { HttpClient } from "../../../../node_modules/@angular/common/http";
+import { HttpClient } from "@angular/common/http";
 import { SettingsService } from "../../dashboard/settings/settings.service";
-import { async, TestBed } from "../../../../node_modules/@angular/core/testing";
-import { Subject } from "../../../../node_modules/rxjs";
+import { async, TestBed } from "@angular/core/testing";
+import { Subject } from "rxjs";
 import { AppSetting } from "../enums/app-settings.enum";
 
 interface SettingsServiceStub {
