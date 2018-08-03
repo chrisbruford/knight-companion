@@ -6,6 +6,8 @@ const helpers = require('./helpers');
 const ElectronConnectWebpackPlugin = require('electron-connect-webpack-plugin');
 const path = require('path');
 
+process.env.ELECTRON_ENABLE_SECURITY_WARNINGS = true;
+
 module.exports = webpackMerge(commonConfig, {
     devtool: 'cheap-module-eval-source-map',
 
