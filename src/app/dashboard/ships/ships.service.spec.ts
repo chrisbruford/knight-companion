@@ -1,18 +1,18 @@
 import { ShipsService } from "./ships.service";
 import { JournalService } from "../../journal/journal.service";
 import { DBService } from "../../core/services/db.service";
-import { NgZone } from "../../../../node_modules/@angular/core";
-import { HttpClient } from "../../../../node_modules/@angular/common/http";
+import { NgZone } from "@angular/core";
+import { HttpClient } from "@angular/common/http";
 import { InaraService } from "../../core/inara/inara.service";
 import { FakeJournalService } from "../../journal/journal.service.mock";
 import { LoggerService, RE } from "../../core/services";
 import { JournalQueueService } from "../../journal/journalQueue.service";
 import { EDDNService } from "../../journal/eddn.service";
-import { TestBed, async } from "../../../../node_modules/@angular/core/testing";
+import { TestBed, async } from "@angular/core/testing";
 import { AppErrorService } from "../../core/services/app-error.service";
 import { AppError } from "../../core/error-bar/app-error.model";
 import { EventEmitter } from 'events';
-import { Loadout, JournalEvents, ShipyardSell } from "../../../../node_modules/cmdr-journal/dist";
+import { Loadout, JournalEvents, ShipyardSell } from "cmdr-journal/dist";
 
 
 describe('ShipService', () => {

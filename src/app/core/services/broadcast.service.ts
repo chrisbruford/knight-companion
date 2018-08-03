@@ -1,9 +1,9 @@
 import { Injectable } from '@angular/core';
 import { SettingsService } from '../../dashboard/settings/settings.service';
-import { Observable, throwError } from '../../../../node_modules/rxjs';
+import { Observable, throwError } from 'rxjs';
 import { AppSetting } from '../enums/app-settings.enum';
-import { HttpClient } from '../../../../node_modules/@angular/common/http';
-import { filter } from '../../../../node_modules/rxjs/operators';
+import { HttpClient } from '@angular/common/http';
+import { filter } from 'rxjs/operators';
 
 @Injectable({
     providedIn: 'root'

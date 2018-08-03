@@ -2,7 +2,7 @@ import { Injectable } from "@angular/core";
 import { DBService } from "../../core/services/db.service";
 import { DBStore } from "../../core/enums/db-stores.enum";
 import { AppSetting } from "../../core/enums/app-settings.enum";
-import { Subject } from "../../../../node_modules/rxjs";
+import { Subject } from "rxjs";
 
 @Injectable({
     providedIn: 'root'
