@@ -6,7 +6,7 @@
                     {{ship.ShipName || ship.Ship}}
                 </mat-panel-title>
                 <mat-panel-description>
-                    {{ship.ShipIdent}} <ng-container *ngIf='ship.ShipName && ship.ShipName !== ship.Ship'>- {{ship.ShipName}}</ng-container>
+                    <ng-container *ngIf='ship.ShipName && ship.ShipName !== ship.Ship'>{{ship.Ship}}</ng-container>
                 </mat-panel-description>
             </mat-expansion-panel-header>
 
