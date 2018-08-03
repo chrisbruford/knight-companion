@@ -7,6 +7,7 @@ import { DBService } from "../../core/services/db.service";
 import { Observable, of, BehaviorSubject } from "rxjs";
 import { takeWhile } from "rxjs/operators";
 import { TrackingFaction } from "../tracking-faction.service";
+import { BroadcastService } from "../../core/services/broadcast.service";
 
 @Injectable()
 export class MissionService {
@@ -34,7 +35,8 @@ export class MissionService {
         private http: HttpClient,
         private journalService: JournalService,
         private journalDB: DBService,
-        private trackingFaction: TrackingFaction
+        private trackingFaction: TrackingFaction,
+        private broadcastService: BroadcastService
     ) {
         this._missionsCompleted = [];
         this._factionMissionsCompleted = [];
@@ -83,7 +85,7 @@ export class MissionService {
 
     private completedMissionAlert(missionCompleted: MissionCompleted, cmdrName: string) {
         cmdrName = encodeURIComponent(cmdrName);
-        return this.http.post(`${process.env.API_ENDPOINT}/missions/completed/${cmdrName}`, { missionCompleted })
+        return this.broadcastService.broadcast(`${process.env.API_ENDPOINT}/missions/completed/${cmdrName}`, { missionCompleted });
     }
 
     filterMissions() {

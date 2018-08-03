@@ -6,6 +6,7 @@ import { Interdicted, RedeemVoucher, JournalEvents, FileHeader } from 'cmdr-jour
 import { LoggerService } from '../../core/services/logger.service';
 import { JournalService } from '../../journal/journal.service';
 import { TrackingFaction } from '../tracking-faction.service';
+import { BroadcastService } from '../../core/services/broadcast.service';
 
 @Injectable()
 export class CombatService implements OnDestroy {
@@ -45,7 +46,8 @@ export class CombatService implements OnDestroy {
         private journalService: JournalService,
         private http: HttpClient,
         private logger: LoggerService,
-        private trackingFaction: TrackingFaction
+        private trackingFaction: TrackingFaction,
+        private broadcastService: BroadcastService
     ) {
 
         this._combatBondsRedeemed = 0;
@@ -130,11 +132,11 @@ export class CombatService implements OnDestroy {
     }
 
     interdictedAlert(interdicted: Interdicted): Observable<boolean> {
-        return this.http.post<boolean>(`${process.env.API_ENDPOINT}/combat/interdicted/${this.cmdrName.toLowerCase()}`, { interdicted, system: this.currentSystem })
+        return this.broadcastService.broadcast<boolean>(`${process.env.API_ENDPOINT}/combat/interdicted/${this.cmdrName.toLowerCase()}`, { interdicted, system: this.currentSystem });
     }
 
     bondsAlert(redeemVoucher: RedeemVoucher): Observable<boolean> {
-        return this.http.post<boolean>(`${process.env.API_ENDPOINT}/combat/redeemVoucher`, { redeemVoucher, cmdrName: this.cmdrName.toLowerCase() })
+        return this.broadcastService.broadcast<boolean>(`${process.env.API_ENDPOINT}/combat/redeemVoucher`, { redeemVoucher, cmdrName: this.cmdrName.toLowerCase() });
     }
 
     ngOnDestroy() {
