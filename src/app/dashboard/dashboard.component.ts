@@ -14,6 +14,7 @@ import { MatTabChangeEvent } from '@angular/material';
 import { TrackingFaction } from './tracking-faction.service';
 import { ProgressBarService } from '../core/progress-bar/progress-bar.service';
 import { AppErrorTitle } from '../core/error-bar/app-error-title.enum';
+import { InaraService } from '../core/inara/inara.service';
 
 @Component({
     templateUrl: 'dashboard.component.html',
@@ -41,6 +42,7 @@ export class DashboardComponent implements OnDestroy, OnInit {
         public appErrorService: AppErrorService,
         public trackedFaction: TrackingFaction,
         public progressBar: ProgressBarService,
+        private inara: InaraService,
         private zone: NgZone
     ) {
         this.currentSystem = journalService.currentSystem;

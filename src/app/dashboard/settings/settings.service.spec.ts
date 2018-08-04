@@ -44,8 +44,8 @@ describe("SettingsService", () => {
         settingsService.updateSetting(AppSetting.broadcasts, true)
             .then(() => {
                 settingsService.getSetting(AppSetting.broadcasts)
-                    .then(setting => {
-                        expect(setting).toEqual(true);
+                    .then((setting: {setting: AppSetting, value: any}) => {
+                        expect(setting.value).toEqual(true);
                         expect(dbServiceSpy.getEntry).not.toHaveBeenCalled();
                         done();
                     });
@@ -53,17 +53,17 @@ describe("SettingsService", () => {
     });
 
     it('should cache a setting if fetched from DB', (done) => {
-        dbServiceSpy.getEntry.and.callFake(() => Promise.resolve(true));
+        dbServiceSpy.getEntry.and.callFake(() => Promise.resolve({setting: AppSetting.broadcasts, value: true}));
 
         settingsService.getSetting(AppSetting.broadcasts)
-            .then(setting => {
-                expect(setting).toEqual(true);
+            .then((setting: {setting: AppSetting, value: any}) => {
+                expect(setting.value).toEqual(true);
                 expect(dbServiceSpy.getEntry).toHaveBeenCalled();
                 dbServiceSpy.getEntry.calls.reset();
             })
             .then(()=>settingsService.getSetting(AppSetting.broadcasts))
-            .then(setting=>{
-                expect(setting).toEqual(true);
+            .then((setting: {setting: AppSetting, value: any})=>{
+                expect(setting.value).toEqual(true);
                 expect(dbServiceSpy.getEntry).not.toHaveBeenCalled();
                 done();
             })
@@ -75,8 +75,8 @@ describe("SettingsService", () => {
         settingsService.updateSetting(AppSetting.broadcasts, true)
             .then(() => {
                 settingsService.getSetting(AppSetting.broadcasts)
-                    .then(setting => {
-                        expect(setting).toEqual(true);
+                    .then((setting: {setting: AppSetting, value: any}) => {
+                        expect(setting.value).toEqual(true);
                         expect(dbServiceSpy.getEntry).not.toHaveBeenCalled();
                         done();
                     });
