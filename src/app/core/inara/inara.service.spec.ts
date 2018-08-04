@@ -44,10 +44,10 @@ describe('Inara service', () => {
         (<jasmine.Spy>fakeSettingsService.getSetting).and.callFake((key: any) => {
             switch (key) {
                 case AppSetting.inaraAPIKey: {
-                    return Promise.resolve(fakeAPIKey);
+                    return Promise.resolve({setting: AppSetting.inaraAPIKey, value: fakeAPIKey});
                 }
                 case AppSetting.inaraBroadcasts: {
-                    return Promise.resolve(true)
+                    return Promise.resolve({setting: AppSetting.inaraBroadcasts, value: true})
                 }
             }
         });
@@ -101,7 +101,7 @@ describe('Inara service', () => {
             expectedSubmission = {
                 header: jasmine.objectContaining({
                     APIkey: fakeAPIKey,
-                    appName: 'knights-companion',
+                    appName: 'knight-companion',
                     appVersion: remote.app.getVersion(),
                     commanderName: 'Test CMDR',
                     isDeveloped: true
@@ -112,16 +112,6 @@ describe('Inara service', () => {
 
 
         it('should send all batched events to Inara when requested', fakeAsync(() => {
-            const settingsService: FakeSettingService = TestBed.get(SettingsService);
-            (<jasmine.Spy>settingsService.getSetting).and.callFake((setting: AppSetting) => {
-                switch (setting) {
-                    case AppSetting.inaraAPIKey:
-                        return Promise.resolve('123456789abcde');
-                    case AppSetting.inaraBroadcasts:
-                        return true;
-                }
-            });
-
             fakeResponse.header = {
                 eventStatus: 200,
                 eventData: {
@@ -139,16 +129,6 @@ describe('Inara service', () => {
         }));
 
         it('should reject batched events when Inara rejects them', (done) => {
-            const settingsService: FakeSettingService = TestBed.get(SettingsService);
-            (<jasmine.Spy>settingsService.getSetting).and.callFake((setting: AppSetting) => {
-                switch (setting) {
-                    case AppSetting.inaraAPIKey:
-                        return Promise.resolve('123456789abcde');
-                    case AppSetting.inaraBroadcasts:
-                        return true;
-                }
-            });
-
             fakeResponse.header = {
                 eventStatus: 400,
                 eventData: {

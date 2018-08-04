@@ -42,28 +42,29 @@ import { AppErrorTitle } from "../error-bar/app-error-title.enum";
         )
             .subscribe(setting => this.allowInara = setting.value);
 
-        this.journal.on(JournalEvents.fsdJump, () => this.sendToInara);
-        this.journal.on(JournalEvents.undocked, () => this.sendToInara);
-        this.journal.on(JournalEvents.resurrect, () => this.sendToInara);
+        this.journal.on(JournalEvents.fsdJump, () => this.sendToInara());
+        this.journal.on(JournalEvents.undocked, () => this.sendToInara());
+        this.journal.on(JournalEvents.resurrect, () => this.sendToInara());
     }
 
     addEvent(event: InaraEvent) {
         this._events.push(event);
+        console.log('Adding event',event);
     }
 
-    submitEvents(): Observable<InaraResponse> {
+    private submitEvents(): Observable<InaraResponse> {
         if (this.allowInara) {
             return combineLatest(
                 this.journal.cmdrName,
-                this.settingsService.getSetting<string>(AppSetting.inaraAPIKey)
+                this.settingsService.getSetting<{setting: AppSetting, value: string}>(AppSetting.inaraAPIKey)
             )
                 .pipe(
                     flatMap(([cmdrName, inaraAPIKey]) => {
                         const submission: Submission = {
                             header: {
-                                appName: 'knights-companion',
+                                appName: 'knight-companion',
                                 appVersion: remote.app.getVersion(),
-                                APIkey: inaraAPIKey,
+                                APIkey: inaraAPIKey.value,
                                 commanderName: cmdrName,
                                 isDeveloped: true
                             },
@@ -93,7 +94,8 @@ import { AppErrorTitle } from "../error-bar/app-error-title.enum";
         }
     }
 
-    sendToInara() {
+    public sendToInara() {
+        if (this._events.length === 0) { return }
         this.submitEvents().subscribe(
             res => {
                 this.appError.removeError(AppErrorTitle.inaraError);

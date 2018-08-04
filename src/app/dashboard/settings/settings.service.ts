@@ -23,7 +23,7 @@ import { Subject } from "rxjs";
             .then(
                 result => {
                     if (result) {
-                        this._settings.set(setting, value);
+                        this._settings.set(setting, {key: setting, value});
                         this.setting$.next({
                             setting,
                             value
