@@ -42,7 +42,7 @@
     "@types/node": "^8.10.12",
     "angular2-template-loader": "^0.6.2",
     "awesome-typescript-loader": "^3.5.0",
-    "cmdr-journal": "^3.4.3",
+    "cmdr-journal": "^3.4.4",
     "copy-webpack-plugin": "^4.5.1",
     "cross-env": "^5.1.4",
     "css-loader": "^0.26.1",
