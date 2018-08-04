@@ -49,10 +49,9 @@ import { AppErrorTitle } from "../error-bar/app-error-title.enum";
 
     addEvent(event: InaraEvent) {
         this._events.push(event);
-        console.log('Adding event',event);
     }
 
-    private submitEvents(): Observable<InaraResponse> {
+    submitEvents(): Observable<InaraResponse> {
         if (this.allowInara) {
             return combineLatest(
                 this.journal.cmdrName,
@@ -94,8 +93,7 @@ import { AppErrorTitle } from "../error-bar/app-error-title.enum";
         }
     }
 
-    public sendToInara() {
-        if (this._events.length === 0) { return }
+    sendToInara() {
         this.submitEvents().subscribe(
             res => {
                 this.appError.removeError(AppErrorTitle.inaraError);
