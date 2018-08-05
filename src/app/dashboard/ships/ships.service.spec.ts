@@ -72,7 +72,18 @@ describe('ShipService', () => {
         loadout.ShipID = 123456789;
         loadout.timestamp = new Date().toUTCString();
         fakeJournalService.emit(JournalEvents.loadout, loadout);
-        expect(inaraService.addEvent).toHaveBeenCalledWith(jasmine.objectContaining(new SetCommanderShipLoadoutEvent(loadout)));
+
+        let expected = {
+            eventTimestamp: jasmine.any(String),
+            eventName: 'setCommanderShipLoadout',
+            eventData: jasmine.objectContaining({
+                shipType: loadout.Ship,
+                shipGameID: loadout.ShipID,
+                shipLoadout: jasmine.any(Array)
+            })
+        }
+
+        expect(inaraService.addEvent).toHaveBeenCalledWith(jasmine.objectContaining(expected));
     });
 
     it('should add a delCommanderShip event to the inara service when a ship is sold or not rebought', () => {
