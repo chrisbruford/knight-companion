@@ -65,39 +65,41 @@ export class ShipsService {
     }
 
     getOrbisShortUrl(lsturl: string, format: string): Observable<string> {
-        console.log(lsturl);
-        return this.http.post<OrbisUrl>('https://s.orbis.zone/a', `url=${encodeURIComponent(lsturl)}&format=${format}&action=shorturl`, {
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded'
-            }
-        }).pipe(
-            retry(3),
-            catchError((err)=>this.handleError(err,false)),
-            map(res=>{
-                if (res && res.success) {
-                    return res.shorturl
-                } else {
-                    return lsturl
-                }
-            })
-        )
+
+        const data = new FormData();
+        data.append('url', lsturl);
+        data.append('format', format);
+        data.append('action', 'shorturl');
+
+        return this.http.post<OrbisUrl>('https://s.orbis.zone/api.php', data)
+            .pipe(
+                retry(3),
+                catchError((err) => this.handleError(err, false)),
+                map(res => {
+                    if (res && res.success) {
+                        return res.shorturl
+                    } else {
+                        return lsturl
+                    }
+                })
+            )
     }
 
-    
-    
+
+
     private handleError(error: HttpErrorResponse, rethrow = true) {
         if (error.error instanceof ErrorEvent) {
-          console.error('An error occurred:', error.error.message);
+            console.error('An error occurred:', error.error.message);
         } else {
-          console.error(
-            `Backend returned code ${error.status}, ` +
-            `body was: ${error.error}`);
+            console.error(
+                `Backend returned code ${error.status}, ` +
+                `body was: ${error.error}`);
         }
         if (rethrow) {
             return throwError(
-              'Unable to complete request. Please try again later.');
+                'Unable to complete request. Please try again later.');
         }
-      };
+    };
 
 
 }
