@@ -45,9 +45,11 @@ import { AppErrorTitle } from "../error-bar/app-error-title.enum";
         this.journal.on(JournalEvents.fsdJump, () => this.sendToInara());
         this.journal.on(JournalEvents.undocked, () => this.sendToInara());
         this.journal.on(JournalEvents.resurrect, () => this.sendToInara());
+        this.journal.on("Shutdown", () => this.sendToInara());
     }
 
     addEvent(event: InaraEvent) {
+        console.log(`Adding event`, event);
         this._events.push(event);
     }
 
@@ -55,7 +57,7 @@ import { AppErrorTitle } from "../error-bar/app-error-title.enum";
         if (this.allowInara) {
             return combineLatest(
                 this.journal.cmdrName,
-                this.settingsService.getSetting<{setting: AppSetting, value: string}>(AppSetting.inaraAPIKey)
+                this.settingsService.getSetting<{ setting: AppSetting, value: string }>(AppSetting.inaraAPIKey)
             )
                 .pipe(
                     flatMap(([cmdrName, inaraAPIKey]) => {
@@ -69,7 +71,7 @@ import { AppErrorTitle } from "../error-bar/app-error-title.enum";
                             },
                             events: this._events
                         }
-
+                        console.log(`Submitting events`, submission);
                         return this.http.post<InaraResponse>(process.env.INARA_API_ENDPOINT, submission)
                     }),
                     retryWhen(err => {
