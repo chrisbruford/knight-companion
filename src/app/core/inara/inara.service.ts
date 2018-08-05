@@ -49,7 +49,6 @@ import { AppErrorTitle } from "../error-bar/app-error-title.enum";
     }
 
     addEvent(event: InaraEvent) {
-        console.log(`Adding event`, event);
         this._events.push(event);
     }
 
@@ -71,7 +70,6 @@ import { AppErrorTitle } from "../error-bar/app-error-title.enum";
                             },
                             events: this._events
                         }
-                        console.log(`Submitting events`, submission);
                         return this.http.post<InaraResponse>(process.env.INARA_API_ENDPOINT, submission)
                     }),
                     retryWhen(err => {
