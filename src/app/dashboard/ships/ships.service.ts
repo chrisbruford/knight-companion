@@ -64,7 +64,7 @@ export class ShipsService {
 
     getOrbisShortUrl(lsturl: string, format: string): Observable<string> {
         console.log(lsturl);
-        return this.http.post<OrbisUrl>('https://s.orbis.zone/a', `lsturl=${encodeURIComponent(lsturl)}&format=${format}`, {
+        return this.http.post<OrbisUrl>('https://s.orbis.zone/a', `url=${encodeURIComponent(lsturl)}&format=${format}&action=shorturl`, {
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded'
             }
@@ -73,7 +73,7 @@ export class ShipsService {
             catchError((err)=>this.handleError(err,false)),
             map(res=>{
                 if (res && res.success) {
-                    return res.short
+                    return res.shorturl
                 } else {
                     return lsturl
                 }
