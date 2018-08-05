@@ -1,5 +1,5 @@
 import { InaraEvent } from "./inara-event.model";
-import { Loadout } from "cmdr-journal";
+import { Loadout } from "cmdr-journal/dist";
 
 export class SetCommanderShipEvent extends InaraEvent {
     eventName = "setCommanderShip";
