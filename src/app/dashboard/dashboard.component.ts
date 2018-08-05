@@ -15,6 +15,12 @@ import { TrackingFaction } from './tracking-faction.service';
 import { ProgressBarService } from '../core/progress-bar/progress-bar.service';
 import { AppErrorTitle } from '../core/error-bar/app-error-title.enum';
 import { InaraService } from '../core/inara/inara.service';
+import { ShipsService } from './ships/ships.service';
+import { MaterialsService } from './materials/materials.service';
+import { CombatService } from './combat/combat.service';
+import { ExplorationService } from './exploration/exploration.service';
+import { MissionService } from './missions/mission.service';
+import { SettingsService } from './settings/settings.service';
 
 @Component({
     templateUrl: 'dashboard.component.html',
@@ -43,7 +49,13 @@ export class DashboardComponent implements OnDestroy, OnInit {
         public trackedFaction: TrackingFaction,
         public progressBar: ProgressBarService,
         private inara: InaraService,
-        private zone: NgZone
+        private zone: NgZone,
+        private shipsService: ShipsService,
+        private materialsService: MaterialsService,
+        private combatService: CombatService,
+        private explorationService: ExplorationService,
+        private missionService: MissionService,
+        private settingsService: SettingsService
     ) {
         this.currentSystem = journalService.currentSystem;
     }

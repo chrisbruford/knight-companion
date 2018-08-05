@@ -13,7 +13,9 @@ import { DelCommanderShipEvent } from "../../core/inara/models/del-commander-shi
 import { SetCommanderShipLoadout } from "../../core/inara/models/set-commander-ship-loadout.model";
 import { SetCommanderShipEvent } from "../../core/inara/models/set-commander-ship-event.model";
 
-@Injectable()
+@Injectable({
+    providedIn: 'root'
+})
 export class ShipsService {
 
     public ships = new Map<number, Loadout>();

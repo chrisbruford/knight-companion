@@ -40,12 +40,7 @@ import { SettingsComponent } from './settings/settings.component';
     ],
     exports: [DashboardComponent],
     providers: [
-        CombatService, 
-        MissionService,
-        ExplorationService,
-        ShipsService,
-        TrackingFaction,
-        MaterialsService
+        TrackingFaction
     ]
 }) 
 export class DashboardModule {}

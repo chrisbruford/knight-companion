@@ -9,7 +9,9 @@ import { takeWhile } from "rxjs/operators";
 import { TrackingFaction } from "../tracking-faction.service";
 import { BroadcastService } from "../../core/services/broadcast.service";
 
-@Injectable()
+@Injectable({
+    providedIn: 'root'
+})
 export class MissionService {
 
     private _missionsCompleted: OriginatedMission[];
