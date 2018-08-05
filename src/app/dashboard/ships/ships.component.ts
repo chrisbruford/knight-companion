@@ -48,10 +48,12 @@ import { Subject, Observable } from "rxjs";
 
         zlib.gzip(loadout, (err, result) => {
             if (err) { urlObs.error(new Error('gzip error')) }
-            this.shipsService.getOrbisShortUrl(`https://coriolis.edcd.io/import?data=${result.toString("base64")}`, 'json')
-                .subscribe(url => {
-                    urlObs.next(url);
-                })
+            //removed for now as API is unreliable and opaque
+            // this.shipsService.getOrbisShortUrl(`https://coriolis.io/import?data=${result.toString("base64")}`, 'json')
+            //     .subscribe(url => {
+            //         urlObs.next(url);
+            //     })
+            urlObs.next(`https://coriolis.io/import?data=${result.toString("base64")}`);
         })
 
         return urlObs.asObservable();
