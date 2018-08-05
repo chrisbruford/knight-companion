@@ -33,7 +33,7 @@ import { shell } from "electron";
 
         settingPromises.push(this.settingsService.getSetting<{ key: string, value: any }>(AppSetting.broadcasts)
             .then(setting => {
-                this.broadcasts = setting ? setting.value : false;
+                this.broadcasts = setting !== undefined ? setting.value : true;
             })
             .catch(err => {
                 console.log(err);
