@@ -10,7 +10,7 @@ import { OrbisUrl } from "./orbis-url.model";
 import { InaraService } from "../../core/inara/inara.service";
 import { AddCommanderShipEvent } from "../../core/inara/models/add-commander-ship-event.model";
 import { DelCommanderShipEvent } from "../../core/inara/models/del-commander-ship-event.model";
-import { SetCommanderShipLoadout } from "../../core/inara/models/set-commander-ship-loadout.model";
+import { SetCommanderShipLoadoutEvent } from "../../core/inara/models/set-commander-ship-loadout-event.model";
 import { SetCommanderShipEvent } from "../../core/inara/models/set-commander-ship-event.model";
 
 @Injectable({
@@ -41,7 +41,7 @@ export class ShipsService {
         journalService.on(JournalEvents.loadout, (loadout: Loadout) => {
             this.ships.set(loadout.ShipID, loadout);
             this.inara.addEvent(new SetCommanderShipEvent(loadout));
-            this.inara.addEvent(new SetCommanderShipLoadout(loadout));
+            this.inara.addEvent(new SetCommanderShipLoadoutEvent(loadout));
             zone.run(() => this.shipsObservable.next(this.ships));
         });
 

@@ -1,6 +1,6 @@
 import { InaraEvent } from "./inara-event.model";
-import { JournalEvent, JournalEvents, Loadout, DamageType, WeaponMode, ModuleAttribute } from "cmdr-journal";
-import { CabinClass } from "../../../../../node_modules/cmdr-journal/dist/enums/cabin-class.enum";
+import { JournalEvent, JournalEvents, Loadout, DamageType, WeaponMode, ModuleAttribute } from "cmdr-journal/dist";
+import { CabinClass } from "cmdr-journal/dist/enums/cabin-class.enum";
 
 interface EventData {
     shipType: string;
@@ -34,7 +34,7 @@ interface LoadoutItem {
     }
 }
 
-export class SetCommanderShipLoadout extends InaraEvent {
+export class SetCommanderShipLoadoutEvent extends InaraEvent {
     eventName = "setCommanderShipLoadout";
     eventData: EventData;
 

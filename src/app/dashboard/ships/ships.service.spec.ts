@@ -14,7 +14,7 @@ import { AppError } from "../../core/error-bar/app-error.model";
 import { EventEmitter } from 'events';
 import { Loadout, JournalEvents, ShipyardSell } from "cmdr-journal/dist";
 import { SetCommanderShipEvent } from "../../core/inara/models/set-commander-ship-event.model";
-import { SetCommanderShipLoadout } from "../../core/inara/models/set-commander-ship-loadout.model";
+import { SetCommanderShipLoadoutEvent } from "../../core/inara/models/set-commander-ship-loadout-event.model";
 
 
 describe('ShipService', () => {
@@ -65,14 +65,14 @@ describe('ShipService', () => {
         expect(inaraService.addEvent).toHaveBeenCalledWith(jasmine.objectContaining(new SetCommanderShipEvent(loadout)));
     });
 
-    it('should add a setCommanderShipLoadout event when a loadout event occurs',()=>{
+    it('should add a setCommanderShipLoadoutEvent event when a loadout event occurs',()=>{
         let inaraService: InaraService = TestBed.get(InaraService);
         let loadout = new Loadout();
         loadout.Ship = "Python";
         loadout.ShipID = 123456789;
         loadout.timestamp = new Date().toUTCString();
         fakeJournalService.emit(JournalEvents.loadout, loadout);
-        expect(inaraService.addEvent).toHaveBeenCalledWith(jasmine.objectContaining(new SetCommanderShipLoadout(loadout)));
+        expect(inaraService.addEvent).toHaveBeenCalledWith(jasmine.objectContaining(new SetCommanderShipLoadoutEvent(loadout)));
     });
 
     it('should add a delCommanderShip event to the inara service when a ship is sold or not rebought', () => {
