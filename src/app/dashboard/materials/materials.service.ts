@@ -6,7 +6,9 @@ import { KOKMaterials } from "./kok-materials.model";
 import { DBService } from "../../core/services/db.service";
 import { Material } from "./material.model";
 
-@Injectable() export class MaterialsService {
+@Injectable({
+    providedIn: 'root'
+}) export class MaterialsService {
 
     private _materials: KOKMaterials;
 

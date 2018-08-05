@@ -8,7 +8,9 @@ import { JournalService } from '../../journal/journal.service';
 import { TrackingFaction } from '../tracking-faction.service';
 import { BroadcastService } from '../../core/services/broadcast.service';
 
-@Injectable()
+@Injectable({
+    providedIn: 'root'
+})
 export class CombatService implements OnDestroy {
 
     private _combatBondsRedeemed: number;

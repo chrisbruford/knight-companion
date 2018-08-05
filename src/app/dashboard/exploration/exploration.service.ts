@@ -4,7 +4,9 @@ import { JournalEvents } from 'cmdr-journal/dist';
 import { FSDJump } from 'cmdr-journal/dist';
 import { BehaviorSubject } from 'rxjs';
 
-@Injectable()
+@Injectable({
+    providedIn: 'root'
+})
 export class ExplorationService {
     
     distanceTravelled = new BehaviorSubject(0)
