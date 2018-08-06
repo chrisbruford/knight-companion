@@ -23,7 +23,7 @@ import { filter } from 'rxjs/operators';
     }
 
     broadcast<T>(url: string, message: any): Observable<T> {
-        if (this.allowBroadcasts) {
+        if (this.allowBroadcasts || this.allowBroadcasts === undefined) {
             return this.http.post<T>(url, message);
         } else {
             return throwError(new Error("Broadcasts not enabled"));
