@@ -1,6 +1,6 @@
 const webpack = require('webpack');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
-const ExtractTextPlugin = require('extract-text-webpack-plugin');
+const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const helpers = require('./helpers');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 const path = require('path');
@@ -25,8 +25,11 @@ module.exports = {
                 test: /\.ts$/,
                 loaders: [
                     {
-                        loader: 'awesome-typescript-loader',
-                        options: { configFileName: helpers.root('src', 'tsconfig.json') }
+                        loader: 'ts-loader',
+                        // options: {
+                        //     transpileOnly: true,
+                        //     experimentalWatchApi: true,
+                        // }
                     }, 'angular2-template-loader'
                 ]
             },
@@ -40,27 +43,29 @@ module.exports = {
             },
             {
                 test: /\.scss$/,
-                exclude: helpers.root('src','app'),
-                use: [{
-                    loader: ExtractTextPlugin.extract({ fallbackLoader: 'style-loader', loader: 'css-loader?sourceMap' })
-                },
-                {
-                    loader: 'css-loader'
-                }, 
-                {
-                    loader: "resolve-url-loader"
-                },
-                {
-                    loader: "sass-loader", 
-                    options: {
-                        sourceMaps: true,
-                        includePaths: [path.resolve(__dirname, '../src/assets/scss')]
+                exclude: helpers.root('src', 'app'),
+                use: [
+                    {
+                        loader: MiniCssExtractPlugin.loader
+                    },
+                    {
+                        loader: 'css-loader'
+                    },
+                    {
+                        loader: 'resolve-url-loader'
+                    },
+                    {
+                        loader: 'sass-loader',
+                        options: {
+                            sourceMaps: true,
+                            includePaths: [path.resolve(__dirname, '../src/assets/scss')]
+                        }
                     }
-                }]
+                ]
             },
             {
                 test: /\.scss$/,
-                include: helpers.root('src','app'),
+                include: helpers.root('src', 'app'),
                 use: [
                     {
                         loader: 'raw-loader'
@@ -85,18 +90,14 @@ module.exports = {
             {} // a map of your routes
         ),
 
-        new webpack.optimize.CommonsChunkPlugin({
-            name: ['app', 'vendor', 'polyfills']
-        }),
-
         new HtmlWebpackPlugin({
             template: 'src/index.html'
         }),
 
         new CopyWebpackPlugin([
-            {from: helpers.root('./src/index.js'),to: helpers.root('./dist/index.js')},
-            {from: helpers.root('./package.json'),to: helpers.root('./dist/package.json')},
-            {from: helpers.root('./dev-app-update.yml'),to: helpers.root('./dist/dev-app-update.yml')}
+            { from: helpers.root('./src/index.js'), to: helpers.root('./dist/index.js') },
+            { from: helpers.root('./package.json'), to: helpers.root('./dist/package.json') },
+            { from: helpers.root('./dev-app-update.yml'), to: helpers.root('./dist/dev-app-update.yml') }
         ])
     ]
 };
