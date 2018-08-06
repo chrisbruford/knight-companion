@@ -109,7 +109,7 @@ function createWindow() {
 
     mainWindow = new BrowserWindow({
         width: 630,
-        height: 640,
+        height: 700,
         backgroundColor: '#000',
         icon: './icons/icon.png'
     });
