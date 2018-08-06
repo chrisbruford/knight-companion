@@ -1,10 +1,8 @@
 const webpack = require('webpack');
 const webpackMerge = require('webpack-merge');
-const ExtractTextPlugin = require('extract-text-webpack-plugin');
+const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const commonConfig = require('./webpack.common.js');
 const helpers = require('./helpers');
-const ElectronConnectWebpackPlugin = require('electron-connect-webpack-plugin');
-const path = require('path');
 
 const ENV = process.env.NODE_ENV = process.env.ENV = 'production';
 
@@ -18,7 +16,7 @@ module.exports = webpackMerge(commonConfig, {
   plugins: [
     new webpack.NoEmitOnErrorsPlugin(),
     
-    new ExtractTextPlugin('[name].[hash].css'),
+    new MiniCssExtractPlugin({filename: '[name].css'}),
     new webpack.DefinePlugin({
       'process.env': {
         'ENV': JSON.stringify(ENV),
