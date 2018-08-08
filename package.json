@@ -9,11 +9,11 @@
     "url": "https://github.com/chrisbruford/knight-companion.git"
   },
   "scripts": {
-    "start": "cross-env ENV=development webpack --config config/webpack.dev.js --watch",
-    "staging": "cross-env ENV=development webpack --config config/webpack.staging.js --watch",
-    "live": "cross-env ENV=development webpack --config config/webpack.live.js --watch",
-    "package": "rimraf dist && webpack --config config/webpack.prod.js --progress --profile --bail && electron-builder --config builder.dev.config.json",
-    "release": "rimraf dist && webpack --config config/webpack.prod.js --progress --profile --bail && electron-builder --config builder.prod.config.json",
+    "start": "cross-env ENV=development webpack --config .config/webpack.dev.js --watch",
+    "staging": "cross-env ENV=development webpack --config .config/webpack.staging.js --watch",
+    "live": "cross-env ENV=development webpack --config .config/webpack.live.js --watch",
+    "package": "rimraf dist && webpack --config .config/webpack.prod.js --progress --profile --bail && electron-builder --config .config/builder.dev.config.json",
+    "release": "rimraf dist && webpack --config .config/webpack.prod.js --progress --profile --bail && electron-builder --config .config/builder.prod.config.json",
     "test": "karma start"
   },
   "license": "MIT",

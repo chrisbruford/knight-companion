@@ -1,6 +1,6 @@
 var webpack = require('webpack');
 var helpers = require('./helpers');
-const ExtractTextPlugin = require('extract-text-webpack-plugin');
+const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 
 module.exports = {
     devtool: 'inline-source-map',
@@ -16,8 +16,7 @@ module.exports = {
                 test: /\.ts$/,
                 loaders: [
                     {
-                        loader: 'awesome-typescript-loader',
-                        options: { configFileName: helpers.root('src', 'tsconfig.json') }
+                        loader: 'ts-loader',
                     }, 'angular2-template-loader'
                 ]
             },
@@ -32,24 +31,25 @@ module.exports = {
             {
                 test: /\.scss$/,
                 exclude: helpers.root('src', 'app'),
-                use: [{
-                    loader: ExtractTextPlugin.extract({ fallbackLoader: 'style-loader', loader: 'css-loader?sourceMap' })
-                },
-                {
-                    loader: 'css-loader',
-                    options: {
-                        sourceMaps: true
-                    }
-                },
-                {
-                    loader: "resolve-url-loader"
-                },
-                {
-                    loader: "sass-loader",
-                    options: {
-                        sourceMaps: true
-                    }
-                }]
+                use: [
+                    {
+                        loader: MiniCssExtractPlugin.loader
+                    },
+                    {
+                        loader: 'css-loader',
+                        options: {
+                            sourceMaps: true
+                        }
+                    },
+                    {
+                        loader: "resolve-url-loader"
+                    },
+                    {
+                        loader: "sass-loader",
+                        options: {
+                            sourceMaps: true
+                        }
+                    }]
             },
             {
                 test: /\.scss$/,
