@@ -4,6 +4,7 @@ const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const helpers = require('./helpers');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 const path = require('path');
+const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 require('dotenv').config();
 
 module.exports = {
@@ -26,10 +27,10 @@ module.exports = {
                 loaders: [
                     {
                         loader: 'ts-loader',
-                        // options: {
-                        //     transpileOnly: true,
-                        //     experimentalWatchApi: true,
-                        // }
+                        options: {
+                            transpileOnly: true,
+                            experimentalWatchApi: true,
+                        }
                     }, 'angular2-template-loader'
                 ]
             },
@@ -82,6 +83,9 @@ module.exports = {
     },
 
     plugins: [
+        new ForkTsCheckerWebpackPlugin({
+            tsconfig: './src/tsconfig.json'
+        }),
         // Workaround for angular/angular#11580
         new webpack.ContextReplacementPlugin(
             // The (\\|\/) piece accounts for path separators in *nix and Windows

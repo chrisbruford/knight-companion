@@ -1,6 +1,8 @@
 var webpack = require('webpack');
 var helpers = require('./helpers');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
+const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
+const path = require('path');
 
 module.exports = {
     devtool: 'inline-source-map',
@@ -17,6 +19,11 @@ module.exports = {
                 loaders: [
                     {
                         loader: 'ts-loader',
+                        options: {
+                            transpileOnly: true,
+                            experimentalWatchApi: true,
+                            configFile: path.resolve(__dirname,'../src/tsconfig.json')
+                        }
                     }, 'angular2-template-loader'
                 ]
             },
@@ -67,6 +74,9 @@ module.exports = {
     },
 
     plugins: [
+        new ForkTsCheckerWebpackPlugin({
+            tsconfig: './src/tsconfig.json'
+        }),
         new webpack.ContextReplacementPlugin(
             // The (\\|\/) piece accounts for path separators in *nix and Windows
             /angular(\\|\/)core(\\|\/)(esm(\\|\/)src|src)(\\|\/)linker/,
