@@ -109,7 +109,7 @@ export class JournalService extends EventEmitter {
                 })
             });
 
-        localStorage.logDir = this._logDir = localStorage.logDir || this.detectDir() || this.selectDirDialog();
+        localStorage['logDir'] = this._logDir = localStorage['logDir'] || this.detectDir() || this.selectDirDialog();
         this.streamAll(this._logDir);
     }
 
