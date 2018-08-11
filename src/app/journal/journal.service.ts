@@ -31,6 +31,7 @@ export class JournalService extends EventEmitter {
 
     private _logDir: string;
     private _beta: boolean;
+    private _currentStation = new BehaviorSubject<string>(null);
     private _currentSystem = new BehaviorSubject("Unknown");
     private _currentSystemAddress = new BehaviorSubject(NaN);
     private _currentSystemStarPos = new BehaviorSubject<[number, number, number]>([NaN, NaN, NaN]);
@@ -53,6 +54,18 @@ export class JournalService extends EventEmitter {
             .then(currentSystem => {
                 if (currentSystem && currentSystem.value && typeof currentSystem.value === "string") {
                     this._currentSystem.next(currentSystem.value);
+                }
+            }).catch(err => {
+                this.logger.error({
+                    originalError: err,
+                    message: "currentState.currentSystem initial setup failure"
+                })
+            });
+
+        this.journalDB.getEntry<{ key: string, value: string }>("currentState", "currentStation")
+            .then(currentStation => {
+                if (currentStation && currentStation.value && typeof currentStation.value === "string") {
+                    this._currentStation.next(currentStation.value);
                 }
             }).catch(err => {
                 this.logger.error({
@@ -115,6 +128,10 @@ export class JournalService extends EventEmitter {
 
     get logDirectory() {
         return this._logDir;
+    }
+
+    get currentStation(): Observable<string> {
+        return this._currentStation.asObservable();
     }
 
     get currentSystem(): Observable<string> {
@@ -437,6 +454,10 @@ export class JournalService extends EventEmitter {
                             let promises: Promise<any>[] = [];
                             let docked: journal.Docked = Object.assign(new journal.Docked(), data);
 
+                            promises.push(this.journalDB.putCurrentState({ key: "currentStation", value: docked.StationName })
+                                .catch(originalError => this.logger.error({ originalError, message: "handleEvent failure" }))
+                            );
+
                             promises.push(this.journalDB.putCurrentState({ key: "currentSystem", value: docked.StarSystem })
                                 .catch(originalError => this.logger.error({ originalError, message: "handleEvent failure" }))
                             );
@@ -445,6 +466,7 @@ export class JournalService extends EventEmitter {
                                 .catch(originalError => this.logger.error({ originalError, message: "handleEvent failure" }))
                             );
 
+                            this.ngZone.run(() => this._currentStation.next(docked.StationName));
                             this.ngZone.run(() => this._currentSystem.next(docked.StarSystem));
                             this.ngZone.run(() => this._currentSystemAddress.next(docked.SystemAddress));
 
@@ -473,6 +495,26 @@ export class JournalService extends EventEmitter {
                             break;
                         }
 
+                        //undocked
+                        case journal.JournalEvents.undocked: {
+                            let undocked = Object.assign(new journal.Undocked(), data);
+                            
+                            let promises: Promise<any>[] = [];
+
+                            promises.push(this.journalDB.putCurrentState({ key: "currentStation", value: null })
+                                .catch(originalError => this.logger.error({ originalError, message: "handleEvent failure" }))
+                            );
+
+                            Promise.all(promises)
+                                .then(() => resolve(data))
+                                .catch(originalError => {
+                                    this.logger.error({ originalError, data, message: "Undocked event failure" });
+                                    resolve(data);
+                                });
+
+                            break;
+                        }
+
                         //location
                         case journal.JournalEvents.location: {
                             let promises: Promise<any>[] = [];
@@ -493,6 +535,13 @@ export class JournalService extends EventEmitter {
                                     .catch(originalError => this.logger.error({ originalError, message: "handleEvent failure" }))
                             );
 
+                            if (location.Docked && location.StationName) {
+                                promises.push(
+                                    this.journalDB.putCurrentState({ key: "currentStation", value: location.StationName })
+                                        .catch(originalError => this.logger.error({ originalError, message: "handleEvent failure" }))
+                                );
+                                this.ngZone.run(() => this._currentStation.next(location.StationName));
+                            }
                             this.ngZone.run(() => this._currentSystem.next(location.StarSystem));
                             this.ngZone.run(() => this._currentSystemStarPos.next(location.StarPos));
                             this.ngZone.run(() => this._currentSystemAddress.next(location.SystemAddress));
