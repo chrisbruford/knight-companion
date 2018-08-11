@@ -60,12 +60,16 @@ describe('ShipService', () => {
         let loadout = new Loadout();
         loadout.Ship = "Python";
         loadout.ShipID = 123456789;
-        loadout.timestamp = new Date().toUTCString();
         fakeJournalService.emit(JournalEvents.loadout, loadout);
-        expect(inaraService.addEvent).toHaveBeenCalledWith(jasmine.objectContaining(new SetCommanderShipEvent(loadout)));
+
+        let expected = Object.assign(new SetCommanderShipEvent(loadout),{
+            eventTimestamp: jasmine.any(String)
+        });
+
+        expect(inaraService.addEvent).toHaveBeenCalledWith(jasmine.objectContaining(expected));
     });
 
-    it('should add a setCommanderShipLoadoutEvent event when a loadout event occurs',()=>{
+    it('should add a setCommanderShipLoadoutEvent event when a loadout event occurs', () => {
         let inaraService: InaraService = TestBed.get(InaraService);
         let loadout = new Loadout();
         loadout.Ship = "Python";
