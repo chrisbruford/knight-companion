@@ -3,7 +3,7 @@ import { InaraEvent } from "./models/inara-event.model";
 import { HttpClient, HttpErrorResponse } from "@angular/common/http";
 import { catchError, retryWhen, delay, take, tap, map, flatMap, takeWhile, filter } from "rxjs/operators";
 import { InaraResponse } from "./models/inara-response.model";
-import { Observable, throwError, combineLatest } from "rxjs";
+import { Observable, throwError, combineLatest, Observer } from "rxjs";
 import { DBService } from "../services/db.service";
 import { Submission } from "./models/submission.model";
 import { remote } from "electron";
@@ -14,6 +14,8 @@ import { JournalEvents } from "cmdr-journal/dist";
 import { SettingsService } from "../../dashboard/settings/settings.service";
 import { AppErrorService } from "../services/app-error.service";
 import { AppErrorTitle } from "../error-bar/app-error-title.enum";
+import { InaraError } from "./inara-error";
+import { InaraErrorCode } from "./inara-error-code";
 
 
 @Injectable({
@@ -53,6 +55,8 @@ import { AppErrorTitle } from "../error-bar/app-error-title.enum";
     }
 
     submitEvents(): Observable<InaraResponse> {
+        if (!this._events || this._events.length === 0) { return throwError(new InaraError("There are no events to send", InaraErrorCode.NoEvents)) }
+
         if (this.allowInara) {
             return combineLatest(
                 this.journal.cmdrName,
@@ -80,29 +84,49 @@ import { AppErrorTitle } from "../error-bar/app-error-title.enum";
                         )
                     }),
                     map(res => {
-                        this._events = [];
                         if (res.header.eventStatus !== 200) {
+                            //offset subsequent removals by -n each time an element is removed
+                            let n = 0;
+                            if (res.events) {
+                                for (let [i, event] of res.events.entries()) {
+                                    if (event.eventStatus !== 400) { continue }
+                                    else {
+                                        this._events.splice(i - n++, 1);
+                                    }
+                                }
+                            }
                             throw res
                         } else {
+                            this._events = [];
                             return res
                         }
                     })
                 )
         } else {
-            return throwError(new Error("Inara broadcasts not allowed"))
+            return throwError(new InaraError("Inara broadcasts not allowed", InaraErrorCode.UserDeniedPermission))
         }
     }
 
-    sendToInara() {
-        this.submitEvents().subscribe(
-            res => {
-                this.appError.removeError(AppErrorTitle.inaraError);
-            },
-            err => {
-                let message = err.message === "Inara broadcasts not allowed" ? err.message : "Failed to submit data to Inara"
-                this.appError.addError(AppErrorTitle.inaraError, message)
-            }
-        )
+    sendToInara(): Observable<InaraResponse> {
+        return Observable.create((observer: Observer<InaraResponse>) => {
+            console.log('started');
+            this.submitEvents()
+                .pipe(take(1))
+                .subscribe(
+                    res => {
+                        this.appError.removeError(AppErrorTitle.inaraError);
+                        observer.next(res);
+                    },
+                    err => {
+                        if (!(err instanceof InaraError)) {
+                            this.appError.addError(AppErrorTitle.inaraError, new Error("Failed to submit data to Inara"));
+                        } else {
+                            //TODO any handling required for specific InaraError
+                        }
+                        observer.error(err);
+                    }
+                )
+        })
     }
 
     ngOnDestroy() {
