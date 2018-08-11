@@ -4,6 +4,8 @@ const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 const path = require('path');
 
+const ENV = process.env.ENV = process.env.NODE_ENV = 'test';
+
 module.exports = {
     devtool: 'inline-source-map',
     target: 'electron-renderer',
