@@ -15,6 +15,7 @@ import { async, TestBed, fakeAsync, flushMicrotasks } from '@angular/core/testin
 import { SettingsService } from '../../dashboard/settings/settings.service';
 import { AppErrorService } from '../services/app-error.service';
 import { settings } from 'cluster';
+import { FSDJump, JournalEvents } from '../../../../node_modules/cmdr-journal/dist';
 
 describe('Inara service', () => {
     let inara: InaraService;
@@ -38,7 +39,7 @@ describe('Inara service', () => {
             get settings() { return this._settings.asObservable() }
         }
 
-        let fakeAppErrorService = {};
+        let fakeAppErrorService = jasmine.createSpyObj<AppErrorService>('AppErrorService',['addError','removeError']);
 
 
         (<jasmine.Spy>fakeSettingsService.getSetting).and.callFake((key: any) => {
@@ -159,6 +160,27 @@ describe('Inara service', () => {
             expect(inara.getEvents().length).toBe(3);
             expect(fakeHttp.post).not.toHaveBeenCalled();
         }));
+
+        it('should send events on FSD Jump',fakeAsync(()=>{
+
+            let fakeResponse = new InaraResponse();
+            fakeResponse.header = {
+                eventStatus: 200,
+                eventData: {
+                    userID: 123456,
+                    userName: 'Test User'
+                }
+            }
+
+            fakeHttp.post.and.callFake((url: string, data: any) => of(fakeResponse));
+
+            expect(inara.getEvents().length).toBe(3);
+            let js: JournalService = TestBed.get(JournalService);
+            js.emit(JournalEvents.fsdJump,new FSDJump());
+            flushMicrotasks();
+            expect(inara.getEvents().length).toBe(0);
+            expect(fakeHttp.post).toHaveBeenCalled();
+        }))
 
     });
 

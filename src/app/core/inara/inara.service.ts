@@ -121,7 +121,7 @@ import { InaraErrorCode } from "./inara-error-code";
                         //TODO any handling required for specific InaraError
                     }
                 }
-            )
+            );
     }
 
     ngOnDestroy() {
