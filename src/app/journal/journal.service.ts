@@ -802,6 +802,7 @@ export class JournalService extends EventEmitter {
                                 let material: MaterialCollected = Object.assign(new MaterialCollected(), data);
                                 this.journalDB.getEntry<Material>('materials', material.Name.toLowerCase())
                                     .then(existingMaterial => {
+                                        if (!existingMaterial) { existingMaterial = material };
                                         let updatedMaterial = Object.assign(existingMaterial, material, { Count: existingMaterial.Count + material.Count });
                                         updatedMaterial.Name = updatedMaterial.Name.toLowerCase();
                                         return this.journalDB.putEntry('materials', updatedMaterial)
@@ -824,7 +825,12 @@ export class JournalService extends EventEmitter {
                                 let materialDiscarded: MaterialDiscarded = Object.assign(new MaterialDiscarded(), data);
                                 this.journalDB.getEntry<Material>('materials', materialDiscarded.Name.toLocaleLowerCase())
                                     .then(existingMaterial => {
-                                        let updatedMaterial = Object.assign(existingMaterial, materialDiscarded, { Count: existingMaterial.Count - materialDiscarded.Count });
+                                        let updatedMaterial: Material;
+                                        if (!existingMaterial) { 
+                                            updatedMaterial = Object.assign({}, materialDiscarded, { Count: existingMaterial.Count - materialDiscarded.Count })
+                                        } else {
+                                            updatedMaterial = Object.assign(existingMaterial, materialDiscarded, { Count: existingMaterial.Count - materialDiscarded.Count });
+                                        }
                                         updatedMaterial.Name = updatedMaterial.Name.toLowerCase();
                                         return this.journalDB.putEntry('materials', updatedMaterial)
                                             .then(() => this.emit('materialUpdated', updatedMaterial));
@@ -847,7 +853,17 @@ export class JournalService extends EventEmitter {
                                 promises.push(
                                     this.journalDB.getEntry<Material>('materials', materialTrade.Received.Material.toLocaleLowerCase())
                                         .then(existingMaterial => {
-                                            let updatedMaterial = Object.assign(existingMaterial, materialTrade, { Count: existingMaterial.Count + materialTrade.Received.Quantity });
+                                            let updatedMaterial: Material;
+                                            if (!existingMaterial) { 
+                                                updatedMaterial = new Material(); 
+                                                updatedMaterial.Name = materialTrade.Received.Material;
+                                                updatedMaterial.Name_Localised = materialTrade.Received.Material_Localised;
+                                                updatedMaterial.Category = materialTrade.Received.Category;
+                                                updatedMaterial.Category_Localised = materialTrade.Received.Category_Localised;
+                                                updatedMaterial.Count = materialTrade.Received.Quantity;
+                                            } else {
+                                                updatedMaterial = Object.assign(existingMaterial, { Count: existingMaterial.Count || 0 + materialTrade.Received.Quantity });
+                                            }
                                             updatedMaterial.Name = updatedMaterial.Name.toLowerCase();
                                             return this.journalDB.putEntry('materials', updatedMaterial)
                                                 .then(() => this.emit('materialUpdated', updatedMaterial));
@@ -859,7 +875,7 @@ export class JournalService extends EventEmitter {
                                 promises.push(
                                     this.journalDB.getEntry<Material>('materials', materialTrade.Paid.Material.toLocaleLowerCase())
                                         .then(existingMaterial => {
-                                            let updatedMaterial = Object.assign(existingMaterial, materialTrade, { Count: existingMaterial.Count - materialTrade.Paid.Quantity });
+                                            let updatedMaterial = Object.assign(existingMaterial, { Count: existingMaterial.Count - materialTrade.Paid.Quantity });
                                             updatedMaterial.Name = updatedMaterial.Name.toLowerCase();
                                             return this.journalDB.putEntry('materials', updatedMaterial)
                                                 .then(() => this.emit('materialUpdated', updatedMaterial));
