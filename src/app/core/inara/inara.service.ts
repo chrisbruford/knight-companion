@@ -107,26 +107,21 @@ import { InaraErrorCode } from "./inara-error-code";
         }
     }
 
-    sendToInara(): Observable<InaraResponse> {
-        return Observable.create((observer: Observer<InaraResponse>) => {
-            console.log('started');
-            this.submitEvents()
-                .pipe(take(1))
-                .subscribe(
-                    res => {
-                        this.appError.removeError(AppErrorTitle.inaraError);
-                        observer.next(res);
-                    },
-                    err => {
-                        if (!(err instanceof InaraError)) {
-                            this.appError.addError(AppErrorTitle.inaraError, new Error("Failed to submit data to Inara"));
-                        } else {
-                            //TODO any handling required for specific InaraError
-                        }
-                        observer.error(err);
+    private sendToInara(): void {
+        this.submitEvents()
+            .pipe(take(1))
+            .subscribe(
+                res => {
+                    this.appError.removeError(AppErrorTitle.inaraError);
+                },
+                err => {
+                    if (!(err instanceof InaraError)) {
+                        this.appError.addError(AppErrorTitle.inaraError, new Error("Failed to submit data to Inara"));
+                    } else {
+                        //TODO any handling required for specific InaraError
                     }
-                )
-        })
+                }
+            )
     }
 
     ngOnDestroy() {
