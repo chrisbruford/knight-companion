@@ -175,7 +175,7 @@ describe('Inara service', () => {
 
             fakeHttp.post.and.callFake((url: string, data: any) => of(fakeResponse));
             expect(inara.getEvents().length).toBe(0);
-            inara.sendToInara().subscribe(()=>{},()=>{});
+            inara.submitEvents().subscribe(()=>{},()=>{});
             flushMicrotasks();
             expect(inara.getEvents().length).toBe(0);
             expect(fakeHttp.post).not.toHaveBeenCalled();
