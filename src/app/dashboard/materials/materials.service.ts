@@ -5,6 +5,11 @@ import { BehaviorSubject } from "rxjs";
 import { KOKMaterials } from "./kok-materials.model";
 import { DBService } from "../../core/services/db.service";
 import { Material } from "./material.model";
+import { KOKJournalEvents } from '../../journal/kok-journal-events.enum';
+import { InaraService } from "../../core/inara/inara.service";
+import { InaraMaterial } from "../../core/inara/models/inara-material.model";
+import { SetCommanderInventoryMaterialsEvent } from "../../core/inara/models/set-commander-inventory-materials-event.model";
+import { SetCommanderMaterialsItemEvent } from "../../core/inara/models/set-commander-materials-item-event.model";
 
 @Injectable({
     providedIn: 'root'
@@ -20,7 +25,8 @@ import { Material } from "./material.model";
 
     constructor(
         private journal: JournalService,
-        private journalDB: DBService
+        private journalDB: DBService,
+        private inaraService: InaraService
     ) {
 
         this._materials = {
@@ -64,25 +70,32 @@ import { Material } from "./material.model";
             .catch()
 
         journal.on(JournalEvents.materials, (materials: Materials) => {
+            let inaraMaterials: InaraMaterial[] = [];
+
             materials.Encoded.forEach(material => {
                 let updatedMaterial = Object.assign({},this._materials.encoded.get(material.Name),material);
                 this._materials.encoded.set(material.Name, updatedMaterial);
+                inaraMaterials.push({itemCount: updatedMaterial.Count, itemName: updatedMaterial.Name});
             });
 
             materials.Raw.forEach(material => {
                 let updatedMaterial = Object.assign({},this._materials.encoded.get(material.Name),material);
                 this._materials.raw.set(material.Name, updatedMaterial);
+                inaraMaterials.push({itemCount: updatedMaterial.Count, itemName: updatedMaterial.Name});
             });
 
             materials.Manufactured.forEach(material => {
                 let updatedMaterial = Object.assign({},this._materials.encoded.get(material.Name),material);
                 this._materials.manufactured.set(material.Name, updatedMaterial);
+                inaraMaterials.push({itemCount: updatedMaterial.Count, itemName: updatedMaterial.Name});
             });
 
+            let setCommanderInventoryMaterialsEvent = new SetCommanderInventoryMaterialsEvent(inaraMaterials);
+            this.inaraService.addEvent(setCommanderInventoryMaterialsEvent);
             this._material$.next(this._materials);
         });
 
-        journal.on('materialUpdated', (material: Material) => {
+        journal.on(KOKJournalEvents.materialUpdate, (material: Material) => {
             switch (material.Category) {
                 case "Manufactured":
                 case "$MICRORESOURCE_CATEGORY_Manufactured;": {
@@ -101,8 +114,12 @@ import { Material } from "./material.model";
                 }
             }
 
+            let setCommanderMaterialsItemEvent = new SetCommanderMaterialsItemEvent({
+                itemName: material.Name,
+                itemCount: material.Count
+            })
+            this.inaraService.addEvent(setCommanderMaterialsItemEvent);
             this._material$.next(this._materials);
-        
         });
     }
 

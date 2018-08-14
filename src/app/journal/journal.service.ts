@@ -14,11 +14,12 @@ import { LoggerService } from '../core/services/logger.service';
 import { JournalQueueService } from './journalQueue.service';
 import { EventEmitter } from 'events';
 import { setInterval, clearInterval } from 'timers';
-import { FileHeader, FSDJump, MissionCompleted, MaterialCollected, MaterialDiscarded, MaterialTrade, EngineerCraft, EngineerContribution, Synthesis, TechnologyBroker, Loadout } from 'cmdr-journal/dist';
+import { FileHeader, FSDJump, MissionCompleted, MaterialCollected, MaterialDiscarded, MaterialTrade, EngineerCraft, EngineerContribution, Synthesis, TechnologyBroker, Loadout, ScientificResearch } from 'cmdr-journal/dist';
 import { EDDNService } from './eddn.service';
 import { Material } from '../dashboard/materials/material.model';
 import { DBStore } from '../core/enums/db-stores.enum';
 import { UserService } from '../core/services';
+import { KOKJournalEvents } from './kok-journal-events.enum';
 
 @Injectable()
 export class JournalService extends EventEmitter {
@@ -498,7 +499,7 @@ export class JournalService extends EventEmitter {
                         //undocked
                         case journal.JournalEvents.undocked: {
                             let undocked = Object.assign(new journal.Undocked(), data);
-                            
+
                             let promises: Promise<any>[] = [];
 
                             promises.push(this.journalDB.putCurrentState({ key: "currentStation", value: null })
@@ -717,7 +718,7 @@ export class JournalService extends EventEmitter {
                                             this.logger.error({ originalError, data, message: "Resurrected event failed to delete ship" });
                                             resolve(data);
                                         });
-                                    this.emit("notRebought", loadout);
+                                    this.emit(KOKJournalEvents.notRebought, loadout);
                                 });
                             } else {
                                 resolve(data);
@@ -759,6 +760,7 @@ export class JournalService extends EventEmitter {
                                                 let updatedMaterial = Object.assign({ Category: "$MICRORESOURCE_CATEGORY_Encoded;" }, existingMaterial, material);
                                                 updatedMaterial.Name = updatedMaterial.Name.toLowerCase();
                                                 return this.journalDB.putEntry('materials', updatedMaterial)
+                                                    .then(() => this.emit(KOKJournalEvents.materialUpdate, updatedMaterial));
                                             })
                                             .catch(originalError => this.logger.error({ originalError, message: "Failed to write material", data: material }))
                                     )
@@ -771,6 +773,7 @@ export class JournalService extends EventEmitter {
                                                 let updatedMaterial = Object.assign({ Category: "$MICRORESOURCE_CATEGORY_Elements;" }, existingMaterial, material);
                                                 updatedMaterial.Name = updatedMaterial.Name.toLowerCase();
                                                 return this.journalDB.putEntry('materials', updatedMaterial)
+                                                    .then(() => this.emit(KOKJournalEvents.materialUpdate, updatedMaterial));
                                             })
                                             .catch(originalError => this.logger.error({ originalError, message: "Failed to write material", data: material }))
                                     )
@@ -783,6 +786,7 @@ export class JournalService extends EventEmitter {
                                                 let updatedMaterial = Object.assign({ Category: "$MICRORESOURCE_CATEGORY_Manufactured;" }, existingMaterial, material);
                                                 updatedMaterial.Name = updatedMaterial.Name.toLowerCase();
                                                 return this.journalDB.putEntry('materials', updatedMaterial)
+                                                    .then(() => this.emit(KOKJournalEvents.materialUpdate, updatedMaterial));
                                             })
                                             .catch(originalError => this.logger.error({ originalError, message: "Failed to write material", data: material }))
                                     )
@@ -806,7 +810,7 @@ export class JournalService extends EventEmitter {
                                         let updatedMaterial = Object.assign(existingMaterial, material, { Count: existingMaterial.Count + material.Count });
                                         updatedMaterial.Name = updatedMaterial.Name.toLowerCase();
                                         return this.journalDB.putEntry('materials', updatedMaterial)
-                                            .then(() => this.emit('materialUpdated', updatedMaterial));
+                                            .then(() => this.emit(KOKJournalEvents.materialUpdate, updatedMaterial));
                                     })
                                     .catch(originalError => this.logger.error({ originalError, message: "Failed to write material", data: material }))
                                     .then(() => {
@@ -826,14 +830,14 @@ export class JournalService extends EventEmitter {
                                 this.journalDB.getEntry<Material>('materials', materialDiscarded.Name.toLocaleLowerCase())
                                     .then(existingMaterial => {
                                         let updatedMaterial: Material;
-                                        if (!existingMaterial) { 
+                                        if (!existingMaterial) {
                                             updatedMaterial = Object.assign({}, materialDiscarded, { Count: existingMaterial.Count - materialDiscarded.Count })
                                         } else {
                                             updatedMaterial = Object.assign(existingMaterial, materialDiscarded, { Count: existingMaterial.Count - materialDiscarded.Count });
                                         }
                                         updatedMaterial.Name = updatedMaterial.Name.toLowerCase();
                                         return this.journalDB.putEntry('materials', updatedMaterial)
-                                            .then(() => this.emit('materialUpdated', updatedMaterial));
+                                            .then(() => this.emit(KOKJournalEvents.materialUpdate, updatedMaterial));
                                     })
                                     .catch(originalError => this.logger.error({ originalError, message: "Failed to write material", data: materialDiscarded }))
                                     .then(() => {
@@ -854,8 +858,8 @@ export class JournalService extends EventEmitter {
                                     this.journalDB.getEntry<Material>('materials', materialTrade.Received.Material.toLocaleLowerCase())
                                         .then(existingMaterial => {
                                             let updatedMaterial: Material;
-                                            if (!existingMaterial) { 
-                                                updatedMaterial = new Material(); 
+                                            if (!existingMaterial) {
+                                                updatedMaterial = new Material();
                                                 updatedMaterial.Name = materialTrade.Received.Material;
                                                 updatedMaterial.Name_Localised = materialTrade.Received.Material_Localised;
                                                 updatedMaterial.Category = materialTrade.Received.Category;
@@ -866,7 +870,7 @@ export class JournalService extends EventEmitter {
                                             }
                                             updatedMaterial.Name = updatedMaterial.Name.toLowerCase();
                                             return this.journalDB.putEntry('materials', updatedMaterial)
-                                                .then(() => this.emit('materialUpdated', updatedMaterial));
+                                                .then(() => this.emit(KOKJournalEvents.materialUpdate, updatedMaterial));
                                         })
                                         .catch(originalError => this.logger.error({ originalError, message: "Failed to write material", data: materialTrade }))
                                 );
@@ -878,7 +882,7 @@ export class JournalService extends EventEmitter {
                                             let updatedMaterial = Object.assign(existingMaterial, { Count: existingMaterial.Count - materialTrade.Paid.Quantity });
                                             updatedMaterial.Name = updatedMaterial.Name.toLowerCase();
                                             return this.journalDB.putEntry('materials', updatedMaterial)
-                                                .then(() => this.emit('materialUpdated', updatedMaterial));
+                                                .then(() => this.emit(KOKJournalEvents.materialUpdate, updatedMaterial));
                                         })
                                         .catch(originalError => this.logger.error({ originalError, message: "Failed to write material", data: materialTrade }))
                                 );
@@ -908,7 +912,7 @@ export class JournalService extends EventEmitter {
                                                 let updatedMaterial = Object.assign(existingMaterial, material, { Count: existingMaterial.Count - material.Count });
                                                 updatedMaterial.Name = updatedMaterial.Name.toLowerCase();
                                                 return this.journalDB.putEntry('materials', updatedMaterial)
-                                                    .then(() => this.emit('materialUpdated', updatedMaterial));
+                                                    .then(() => this.emit(KOKJournalEvents.materialUpdate, updatedMaterial));
                                             })
                                             .catch(originalError => this.logger.error({ originalError, message: "Failed to write material", data: engineerCraft }))
                                     );
@@ -934,7 +938,7 @@ export class JournalService extends EventEmitter {
                                             let updatedMaterial = Object.assign(existingMaterial, { Count: existingMaterial.Count - engineerContribution.Quantity });
                                             updatedMaterial.Name = updatedMaterial.Name.toLowerCase();
                                             return this.journalDB.putEntry('materials', updatedMaterial)
-                                                .then(() => this.emit('materialUpdated', updatedMaterial));
+                                                .then(() => this.emit(KOKJournalEvents.materialUpdate, updatedMaterial));
                                         })
                                         .catch(originalError => this.logger.error({ originalError, message: "Failed to write material", data: engineerContribution }))
                                         .then(() => {
@@ -958,12 +962,12 @@ export class JournalService extends EventEmitter {
 
                                 for (let material of synthesis.Materials) {
                                     promises.push(
-                                        this.journalDB.getEntry<Material>('materials', material.Name.toLocaleLowerCase())
+                                        this.journalDB.getEntry<Material>('materials', material.Name.toLowerCase())
                                             .then(existingMaterial => {
                                                 let updatedMaterial = Object.assign(existingMaterial, material, { Count: existingMaterial.Count - material.Count });
                                                 updatedMaterial.Name = updatedMaterial.Name.toLowerCase();
                                                 return this.journalDB.putEntry('materials', updatedMaterial)
-                                                    .then(() => this.emit('materialUpdated', updatedMaterial));
+                                                    .then(() => this.emit(KOKJournalEvents.materialUpdate, updatedMaterial));
                                             })
                                             .catch(originalError => this.logger.error({ originalError, message: "Failed to write material", data: synthesis }))
                                     );
@@ -972,6 +976,25 @@ export class JournalService extends EventEmitter {
                                 Promise.all(promises)
                                     .catch(() => { }) //cheap Promise.finally
                                     .then(() => resolve(data));
+                            } else {
+                                resolve(data);
+                            }
+
+                            break;
+                        }
+
+                        case journal.JournalEvents.scientificResearch: {
+                            if (!this.firstStream) {
+                                let scientificResearch: ScientificResearch = Object.assign(new ScientificResearch(), data);
+                                this.journalDB.getEntry<Material>(DBStore.materials, scientificResearch.Name.toLowerCase())
+                                    .then(existingMaterial => {
+                                        existingMaterial.Count -= scientificResearch.Count;
+                                        return this.journalDB.putEntry(DBStore.materials, existingMaterial)
+                                            .then(() => {
+                                                this.emit(KOKJournalEvents.materialUpdate, existingMaterial)
+                                            })
+                                    })
+                                    .catch(originalError => this.logger.error({ originalError, message: "Failed to write material", data: scientificResearch }))
                             } else {
                                 resolve(data);
                             }
@@ -991,7 +1014,7 @@ export class JournalService extends EventEmitter {
                                                 let updatedMaterial = Object.assign(existingMaterial, material, { Count: existingMaterial.Count - material.Count });
                                                 updatedMaterial.Name = updatedMaterial.Name.toLowerCase();
                                                 return this.journalDB.putEntry('materials', updatedMaterial)
-                                                    .then(() => this.emit('materialUpdated', updatedMaterial));
+                                                    .then(() => this.emit(KOKJournalEvents.materialUpdate, updatedMaterial));
                                             })
                                             .catch(originalError => this.logger.error({ originalError, message: "Failed to write material", data: technologyBroker }))
                                     );
