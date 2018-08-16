@@ -384,7 +384,12 @@ export class JournalService extends EventEmitter {
                                     for (let material of missionCompleted.MaterialsReward) {
                                         this.journalDB.getEntry('materials', material.Name.toLowerCase())
                                             .then((existingMaterial: Material) => {
-                                                let updatedMaterial = Object.assign(existingMaterial, material, { Count: existingMaterial.Count + material.Count });
+                                                let updatedMaterial: Material;
+                                                if (existingMaterial) {
+                                                    updatedMaterial = Object.assign(existingMaterial, material, { Count: existingMaterial.Count + material.Count });
+                                                } else {
+                                                    updatedMaterial = material;
+                                                }
                                                 updatedMaterial.Name = updatedMaterial.Name.toLowerCase();
                                                 return this.journalDB.putEntry('materials', updatedMaterial).then(() => {
                                                     this.emit('materialUpdated', updatedMaterial);
@@ -806,8 +811,12 @@ export class JournalService extends EventEmitter {
                                 let material: MaterialCollected = Object.assign(new MaterialCollected(), data);
                                 this.journalDB.getEntry<Material>('materials', material.Name.toLowerCase())
                                     .then(existingMaterial => {
-                                        if (!existingMaterial) { existingMaterial = material };
-                                        let updatedMaterial = Object.assign(existingMaterial, material, { Count: existingMaterial.Count + material.Count });
+                                        let updatedMaterial: Material;
+                                        if (!existingMaterial) {
+                                            updatedMaterial = material;
+                                        } else {
+                                            updatedMaterial = Object.assign(existingMaterial, material, { Count: existingMaterial.Count + material.Count });
+                                        }
                                         updatedMaterial.Name = updatedMaterial.Name.toLowerCase();
                                         return this.journalDB.putEntry('materials', updatedMaterial)
                                             .then(() => this.emit(KOKJournalEvents.materialUpdate, updatedMaterial));
