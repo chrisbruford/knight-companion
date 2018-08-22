@@ -10,7 +10,7 @@ const rxPaths = require('rxjs/_esm5/path-mapping');
 module.exports = {
     entry: {
         'polyfills': './src/polyfills.ts',
-        'vendor': './src/vendor.ts',
+        // 'vendor': './src/vendor.ts',
         'app': './src/app.ts',
     },
 
