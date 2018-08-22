@@ -24,13 +24,15 @@ autoUpdater.autoDownload = true;
 autoUpdater.autoInstallOnAppQuit = true;
 
 //check for update in background silently first
-autoUpdater.checkForUpdates()
-    .catch(err => console.log('Update checker error'))
-    .then(() => {
-        autoUpdater.on('update-not-available', (info) => {
-            dialog.showMessageBox({ message: "There are no updates available" });
-        })
-    });
+if (process.env.ENV === "production") {
+    autoUpdater.checkForUpdates()
+        .catch(err => console.log('Update checker error'))
+        .then(() => {
+            autoUpdater.on('update-not-available', (info) => {
+                dialog.showMessageBox({ message: "There are no updates available" });
+            })
+        });
+}
 
 autoUpdater.on('error', (err) => {
     sendStatusToWindow('Error in auto-updater. ' + err);
