@@ -2,7 +2,7 @@
 
         <mat-tab label="All">
                 <mat-form-field>
-                    <input matInput (keyup)="applyMaterialFilter('all',$event.target.value)" placeholder="Filter">
+                    <input matInput (keyup)="applyMaterialFilter(materialCategory.all,$event.target.value)" placeholder="Filter">
                 </mat-form-field>
         
                 <mat-table [dataSource]="allDataSource">
@@ -24,7 +24,7 @@
 
     <mat-tab label="Raw">
         <mat-form-field>
-            <input matInput (keyup)="applyMaterialFilter('raw',$event.target.value)" placeholder="Filter">
+            <input matInput (keyup)="applyMaterialFilter(materialCategory.raw,$event.target.value)" placeholder="Filter">
         </mat-form-field>
 
         <mat-table [dataSource]="rawDataSource">
@@ -46,7 +46,7 @@
 
     <mat-tab label="Manufactured">
         <mat-form-field>
-            <input matInput (keyup)="applyMaterialFilter('manufactured',$event.target.value)" placeholder="Filter">
+            <input matInput (keyup)="applyMaterialFilter(materialCategory.manufactured,$event.target.value)" placeholder="Filter">
         </mat-form-field>
 
         <mat-table [dataSource]="manufacturedDataSource">
@@ -68,7 +68,7 @@
 
     <mat-tab label="Encoded">
         <mat-form-field>
-            <input matInput (keyup)="applyMaterialFilter('encoded',$event.target.value)" placeholder="Filter">
+            <input matInput (keyup)="applyMaterialFilter(materialCategory.encoded,$event.target.value)" placeholder="Filter">
         </mat-form-field>
 
         <mat-table [dataSource]="encodedDataSource">

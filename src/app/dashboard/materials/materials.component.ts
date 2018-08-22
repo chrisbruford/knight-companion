@@ -3,7 +3,7 @@ import { MaterialsService } from "./materials.service";
 import { KOKMaterials } from "./kok-materials.model";
 import { takeWhile } from "rxjs/operators";
 import { MatTableDataSource, MatTab } from '@angular/material';
-import { MaterialCategory } from "./material.enum";
+import { MaterialCategory } from "./material-category.enum";
 import { Material } from "./material.model";
 
 @Component({
@@ -13,6 +13,7 @@ import { Material } from "./material.model";
 }) export class MaterialsComponenet implements OnDestroy {
 
     materials: KOKMaterials;
+    materialCategory = MaterialCategory;
     alive: boolean;
     columnsToDisplay: string[];
     rawDataSource: MatTableDataSource<Material>;

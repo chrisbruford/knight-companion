@@ -1,7 +1,4 @@
 import { Component, OnInit, Input } from '@angular/core';
-import { JournalService } from '../../journal/journal.service';
-import { JournalEvents, JournalEvent, Interdicted, RedeemVoucher, FileHeader } from 'cmdr-journal/dist';
-import { Subscription } from 'rxjs';
 import { CombatService } from './combat.service';
 import { takeWhile } from 'rxjs/operators';
 import { TrackingFaction } from '../tracking-faction.service';
@@ -14,14 +11,13 @@ import { TrackingFaction } from '../tracking-faction.service';
 export class CombatComponent implements OnInit {
 
     private alive = true;
-    private combatBondsRedeemed = 0;
-    private factionCombatBondsRedeemed = 0;
-    private bountyVouchersRedeemed = 0;
-    private factionBountyVouchersRedeemed = 0;
-    private trackedFaction: string;
+    public combatBondsRedeemed = 0;
+    public factionCombatBondsRedeemed = 0;
+    public bountyVouchersRedeemed = 0;
+    public factionBountyVouchersRedeemed = 0;
+    public trackedFaction: string;
 
     constructor(
-        private journalService: JournalService,
         private combatService: CombatService,
         private trackingFaction: TrackingFaction
     ) { }

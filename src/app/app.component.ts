@@ -1,9 +1,9 @@
 import { Component } from '@angular/core';
-import { Router, RouterStateSnapshot } from '@angular/router';
+import { Router } from '@angular/router';
 import { AppErrorService } from './core/services/app-error.service';
 import { UserService } from './core/services/user.service';
 import { LoggerService } from './core/services/logger.service';
-import { ipcRenderer, IpcMessageEvent, Event } from 'electron';
+import { ipcRenderer, Event } from 'electron';
 import { UpdateCheckResult } from 'electron-updater';
 import { NgZone } from '@angular/core';
 import { takeWhile } from 'rxjs/operators';
@@ -23,7 +23,7 @@ export class AppComponent {
     private journalProgress: Observable<number>;
 
     constructor(
-        private appErrorService: AppErrorService,
+        public appErrorService: AppErrorService,
         private userService: UserService,
         private router: Router,
         private logger: LoggerService,

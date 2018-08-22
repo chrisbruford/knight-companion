@@ -14,10 +14,10 @@ import { PlatformService } from "../core/services/platform-service";
 })
 export class ProfileComponent {
 
-    private user: User | null = null;
-    private profileForm: FormGroup;
-    private continents: Observable<string[]>;
-    private platforms: Observable<string[]>;
+    public user: User | null = null;
+    public profileForm: FormGroup;
+    public continents: Observable<string[]>;
+    public platforms: Observable<string[]>;
     private alive = true;
 
     constructor(

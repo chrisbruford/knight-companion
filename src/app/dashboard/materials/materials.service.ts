@@ -1,6 +1,6 @@
 import { Injectable } from "@angular/core";
 import { JournalService } from "../../journal/journal.service";
-import { JournalEvents, JournalEvent, Materials, MissionCompleted } from "cmdr-journal/dist";
+import { JournalEvents, Materials } from "cmdr-journal/dist";
 import { BehaviorSubject } from "rxjs";
 import { KOKMaterials } from "./kok-materials.model";
 import { DBService } from "../../core/services/db.service";
