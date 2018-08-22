@@ -1,25 +1,31 @@
 const webpack = require('webpack');
 const webpackMerge = require('webpack-merge');
-const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const commonConfig = require('./webpack.common.js');
 const helpers = require('./helpers');
 const ElectronConnectWebpackPlugin = require('electron-connect-webpack-plugin');
 const path = require('path');
+const AngularCompilerPlugin = require('@ngtools/webpack').AngularCompilerPlugin;
 
 process.env.ELECTRON_ENABLE_SECURITY_WARNINGS = true;
+const ENV = process.env.NODE_ENV = process.env.ENV = 'development';
 
 module.exports = webpackMerge(commonConfig, {
+    mode: 'development',
     devtool: 'cheap-module-eval-source-map',
 
     output: {
         path: helpers.root('dist'),
         filename: '[name].js',
-        chunkFilename: '[id].chunk.js'
+        chunkFilename: '[id].chunk.js',
+        pathinfo: false
     },
 
-    plugins: [
-        new MiniCssExtractPlugin({filename: '[name].css'}),
+    watchOptions: {
+        ignored: /node_modules/
+    },
 
+
+    plugins: [
         new webpack.DefinePlugin({
             'process.env': {
                 'ENV': JSON.stringify('development'),
@@ -32,11 +38,14 @@ module.exports = webpackMerge(commonConfig, {
         new ElectronConnectWebpackPlugin({
             path: path.join(__dirname, "../dist"),
             logLevel: 0
-        })
-    ],
+        }),
 
-    devServer: {
-        historyApiFallback: true,
-        stats: 'minimal'
-    }
+        new AngularCompilerPlugin({
+            tsConfigPath: path.resolve(__dirname,'../src/tsconfig.json'),
+            entryModule: path.resolve(__dirname, '../src/app/app.module#AppModule'),
+            sourceMap: true,
+            skipCodeGeneration: true
+        })
+
+    ],
 });

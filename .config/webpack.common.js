@@ -4,8 +4,8 @@ const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const helpers = require('./helpers');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 const path = require('path');
-const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 require('dotenv').config();
+const rxPaths = require('rxjs/_esm5/path-mapping');
 
 module.exports = {
     entry: {
@@ -15,7 +15,9 @@ module.exports = {
     },
 
     resolve: {
-        extensions: ['.ts', '.js']
+        extensions: ['.ts', '.js'],
+        modules: [path.resolve('../src'), 'node_modules'],
+        alias: rxPaths()
     },
 
     target: "electron-renderer",
@@ -23,16 +25,8 @@ module.exports = {
     module: {
         rules: [
             {
-                test: /\.ts$/,
-                loaders: [
-                    {
-                        loader: 'ts-loader',
-                        options: {
-                            transpileOnly: true,
-                            experimentalWatchApi: true,
-                        }
-                    }, 'angular2-template-loader'
-                ]
+                test: /(?:\.ngfactory\.js|\.ngstyle\.js|\.ts)$/,
+                loader: '@ngtools/webpack'
             },
             {
                 test: /\.html$/,
@@ -83,9 +77,7 @@ module.exports = {
     },
 
     plugins: [
-        new ForkTsCheckerWebpackPlugin({
-            tsconfig: './src/tsconfig.json'
-        }),
+        new MiniCssExtractPlugin({ filename: '[name].css' }),
 
         new HtmlWebpackPlugin({
             template: 'src/index.html'
@@ -95,6 +87,8 @@ module.exports = {
             { from: helpers.root('./src/index.js'), to: helpers.root('./dist/index.js') },
             { from: helpers.root('./package.json'), to: helpers.root('./dist/package.json') },
             { from: helpers.root('./dev-app-update.yml'), to: helpers.root('./dist/dev-app-update.yml') }
-        ])
+        ]),
+
+        new webpack.optimize.ModuleConcatenationPlugin()
     ]
 };
