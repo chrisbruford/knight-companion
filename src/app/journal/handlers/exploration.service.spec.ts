@@ -1,6 +1,6 @@
 import { fakeAsync, tick } from '@angular/core/testing';
 import { ExplorationService } from './exploration.service';
-import { JournalService } from '../../journal/journal.service';
+import { JournalService } from '../journal.service';
 import { EventEmitter } from 'events';
 import { JournalEvents, FSDJump } from 'cmdr-journal/dist';
 

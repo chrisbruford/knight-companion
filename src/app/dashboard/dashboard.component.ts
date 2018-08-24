@@ -15,11 +15,11 @@ import { TrackingFaction } from './tracking-faction.service';
 import { ProgressBarService } from '../core/progress-bar/progress-bar.service';
 import { AppErrorTitle } from '../core/error-bar/app-error-title.enum';
 import { InaraService } from '../core/inara/inara.service';
-import { ShipsService } from './ships/ships.service';
-import { MaterialsService } from './materials/materials.service';
-import { CombatService } from './combat/combat.service';
-import { ExplorationService } from './exploration/exploration.service';
-import { MissionService } from './missions/mission.service';
+import { ShipsService } from '../journal/handlers/ships.service';
+import { MaterialsService } from '../journal/handlers/materials.service';
+import { CombatService } from '../journal/handlers/combat.service';
+import { ExplorationService } from '../journal/handlers/exploration.service';
+import { MissionService } from '../journal/handlers/mission.service';
 import { SettingsService } from './settings/settings.service';
 
 @Component({

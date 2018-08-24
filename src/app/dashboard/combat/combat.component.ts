@@ -1,5 +1,5 @@
 import { Component, OnInit, Input } from '@angular/core';
-import { CombatService } from './combat.service';
+import { CombatService } from '../../journal/handlers/combat.service';
 import { takeWhile } from 'rxjs/operators';
 import { TrackingFaction } from '../tracking-faction.service';
 

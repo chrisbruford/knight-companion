@@ -1,5 +1,5 @@
 import { Component, OnDestroy } from "@angular/core";
-import { MaterialsService } from "./materials.service";
+import { MaterialsService } from "../../journal/handlers/materials.service";
 import { KOKMaterials } from "./kok-materials.model";
 import { takeWhile } from "rxjs/operators";
 import { MatTableDataSource, MatTab } from '@angular/material';

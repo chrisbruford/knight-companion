@@ -1,21 +1,20 @@
 import { Injectable, OnDestroy } from "@angular/core";
 import { InaraEvent } from "./models/inara-event.model";
-import { HttpClient, HttpErrorResponse } from "@angular/common/http";
-import { catchError, retryWhen, delay, take, tap, map, flatMap, takeWhile, filter } from "rxjs/operators";
+import { HttpClient } from "@angular/common/http";
+import { retryWhen, delay, take, tap, map, flatMap, takeWhile, filter } from "rxjs/operators";
 import { InaraResponse } from "./models/inara-response.model";
 import { Observable, throwError, combineLatest, Observer } from "rxjs";
-import { DBService } from "../services/db.service";
 import { Submission } from "./models/submission.model";
 import { remote } from "electron";
-import { DBStore } from "../enums/db-stores.enum";
 import { AppSetting } from "../enums/app-settings.enum";
 import { JournalService } from "../../journal/journal.service";
-import { JournalEvents } from "cmdr-journal/dist";
+import { JournalEvents, Statistics } from "cmdr-journal/dist";
 import { SettingsService } from "../../dashboard/settings/settings.service";
 import { AppErrorService } from "../services/app-error.service";
 import { AppErrorTitle } from "../error-bar/app-error-title.enum";
 import { InaraError } from "./inara-error";
 import { InaraErrorCode } from "./inara-error-code";
+import { SetCommanderGameStatistics } from "./models/set-commander-game-statistics.model";
 
 
 @Injectable({
@@ -44,6 +43,13 @@ import { InaraErrorCode } from "./inara-error-code";
         )
             .subscribe(setting => this.allowInara = setting.value);
 
+        //Events that don't need any processing can be added directly
+        this.journal.on(JournalEvents.statistics, (statistics: Statistics) => {
+            const setCommanderGameStatistics = new SetCommanderGameStatistics(statistics);
+            this.addEvent(setCommanderGameStatistics);
+        });
+
+        //BATCH SEND TO INARA
         this.journal.on(JournalEvents.fsdJump, () => this.sendToInara());
         this.journal.on(JournalEvents.undocked, () => this.sendToInara());
         this.journal.on(JournalEvents.resurrect, () => this.sendToInara());

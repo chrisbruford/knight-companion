@@ -2,7 +2,7 @@ import { NgModule } from '@angular/core';
 import { JournalService } from './journal.service';
 import { DBService } from '../core/services/db.service';
 import { JournalQueueService } from './journalQueue.service';
-import { EDDNService } from './eddn.service';
+import { EDDNService } from './handlers/eddn.service';
 
 @NgModule({
     imports: [],
@@ -11,8 +11,7 @@ import { EDDNService } from './eddn.service';
     providers: [
         JournalService,
         DBService,
-        JournalQueueService,
-        EDDNService
+        JournalQueueService
     ]
 })
 export class JournalModule { }

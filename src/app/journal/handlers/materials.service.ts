@@ -1,11 +1,11 @@
 import { Injectable } from "@angular/core";
-import { JournalService } from "../../journal/journal.service";
+import { JournalService } from "../journal.service";
 import { JournalEvents, Materials } from "cmdr-journal/dist";
 import { BehaviorSubject } from "rxjs";
-import { KOKMaterials } from "./kok-materials.model";
+import { KOKMaterials } from "../../dashboard/materials/kok-materials.model";
 import { DBService } from "../../core/services/db.service";
-import { Material } from "./material.model";
-import { KOKJournalEvents } from '../../journal/kok-journal-events.enum';
+import { Material } from "../../dashboard/materials/material.model";
+import { KOKJournalEvents } from '../kok-journal-events.enum';
 import { InaraService } from "../../core/inara/inara.service";
 import { InaraMaterial } from "../../core/inara/models/inara-material.model";
 import { SetCommanderInventoryMaterialsEvent } from "../../core/inara/models/set-commander-inventory-materials-event.model";

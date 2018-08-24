@@ -1,11 +1,13 @@
 import { Injectable } from "@angular/core";
 import { Docked, FSDJump, Scan, Location } from "cmdr-journal/dist";
-import { JournalService } from "./journal.service";
+import { JournalService } from "../journal.service";
 import { HttpClient } from "@angular/common/http";
-import { LoggerService } from '../core/services/logger.service';
+import { LoggerService } from '../../core/services/logger.service';
 import { remote } from 'electron';
 
-@Injectable()
+@Injectable({
+    providedIn: 'root'
+})
 export class EDDNService {
 
     constructor(

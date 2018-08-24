@@ -4,7 +4,7 @@ import { DBService } from '../../core/services/db.service';
 import { JournalEvents, JournalEvent, MissionCompleted, MissionAccepted, MissionAbandoned, MissionFailed, LoadGame, NewCommander } from 'cmdr-journal/dist';
 import { Subscription, Observable } from 'rxjs';
 import { OriginatedMission } from './originatedMission';
-import { MissionService } from './mission.service';
+import { MissionService } from '../../journal/handlers/mission.service';
 import { takeWhile } from 'rxjs/operators';
 import { TrackingFaction } from '../tracking-faction.service';
 

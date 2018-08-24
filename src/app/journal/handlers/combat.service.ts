@@ -4,8 +4,8 @@ import { Observable, BehaviorSubject } from 'rxjs';
 import { catchError, takeWhile } from 'rxjs/operators';
 import { Interdicted, RedeemVoucher, JournalEvents, FileHeader } from 'cmdr-journal/dist';
 import { LoggerService } from '../../core/services/logger.service';
-import { JournalService } from '../../journal/journal.service';
-import { TrackingFaction } from '../tracking-faction.service';
+import { JournalService } from '../journal.service';
+import { TrackingFaction } from '../../dashboard/tracking-faction.service';
 import { BroadcastService } from '../../core/services/broadcast.service';
 
 @Injectable({

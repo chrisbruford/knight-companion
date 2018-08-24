@@ -1,12 +1,12 @@
 import { Injectable, NgZone } from "@angular/core";
 import { Observable, throwError } from 'rxjs';
 import { of, BehaviorSubject } from 'rxjs';
-import { JournalService } from "../../journal/journal.service";
+import { JournalService } from "../journal.service";
 import { JournalEvents, Loadout, Resurrect, ShipyardSell } from "cmdr-journal/dist";
 import { DBService } from "../../core/services/db.service";
 import { HttpClient, HttpErrorResponse } from "@angular/common/http";
 import { map, retry, catchError } from "rxjs/operators";
-import { OrbisUrl } from "./orbis-url.model";
+import { OrbisUrl } from "../../dashboard/ships/orbis-url.model";
 import { InaraService } from "../../core/inara/inara.service";
 import { AddCommanderShipEvent } from "../../core/inara/models/add-commander-ship-event.model";
 import { DelCommanderShipEvent } from "../../core/inara/models/del-commander-ship-event.model";

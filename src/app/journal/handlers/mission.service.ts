@@ -1,11 +1,11 @@
 import { Injectable } from "@angular/core";
 import { MissionCompleted, JournalEvents, MissionAccepted, JournalEvent, Docked, MissionAbandoned, MissionFailed } from "cmdr-journal/dist";
-import { JournalService } from "../../journal/journal.service";
-import { OriginatedMission } from "./originatedMission";
+import { JournalService } from "../journal.service";
+import { OriginatedMission } from "../../dashboard/missions/originatedMission";
 import { DBService } from "../../core/services/db.service";
 import { BehaviorSubject, combineLatest, fromEvent } from "rxjs";
 import { takeWhile, withLatestFrom, tap } from "rxjs/operators";
-import { TrackingFaction } from "../tracking-faction.service";
+import { TrackingFaction } from "../../dashboard/tracking-faction.service";
 import { BroadcastService } from "../../core/services/broadcast.service";
 import { InaraService } from "../../core/inara/inara.service";
 import { AddCommanderMissionEvent } from "../../core/inara/add-commander-mission-event.model";

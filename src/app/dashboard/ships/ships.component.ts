@@ -1,5 +1,5 @@
 import { Component, NgZone } from "@angular/core";
-import { ShipsService } from "./ships.service";
+import { ShipsService } from "../../journal/handlers/ships.service";
 import { Loadout } from "cmdr-journal/dist";
 import { takeWhile, catchError } from "rxjs/operators";
 import { shell, clipboard } from 'electron';

@@ -12,7 +12,7 @@ import { JournalQueueService } from './journalQueue.service';
 import { EventEmitter } from 'events';
 import { setInterval, clearInterval } from 'timers';
 import { FileHeader, MissionCompleted, MaterialCollected, MaterialDiscarded, MaterialTrade, EngineerCraft, EngineerContribution, Synthesis, TechnologyBroker, Loadout, ScientificResearch } from 'cmdr-journal/dist';
-import { EDDNService } from './eddn.service';
+import { EDDNService } from './handlers/eddn.service';
 import { Material } from '../dashboard/materials/material.model';
 import { DBStore } from '../core/enums/db-stores.enum';
 import { UserService } from '../core/services';

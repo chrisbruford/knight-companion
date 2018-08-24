@@ -1,13 +1,13 @@
 import { ShipsService } from "./ships.service";
-import { JournalService } from "../../journal/journal.service";
+import { JournalService } from "../journal.service";
 import { DBService } from "../../core/services/db.service";
 import { NgZone } from "@angular/core";
 import { HttpClient } from "@angular/common/http";
 import { InaraService } from "../../core/inara/inara.service";
-import { FakeJournalService } from "../../journal/journal.service.mock";
+import { FakeJournalService } from "../journal.service.mock";
 import { LoggerService, RE } from "../../core/services";
-import { JournalQueueService } from "../../journal/journalQueue.service";
-import { EDDNService } from "../../journal/eddn.service";
+import { JournalQueueService } from "../journalQueue.service";
+import { EDDNService } from "./eddn.service";
 import { TestBed, async } from "@angular/core/testing";
 import { AppErrorService } from "../../core/services/app-error.service";
 import { AppError } from "../../core/error-bar/app-error.model";

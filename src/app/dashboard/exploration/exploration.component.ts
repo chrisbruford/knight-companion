@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { ExplorationService } from './exploration.service';
+import { ExplorationService } from '../../journal/handlers/exploration.service';
 import { BehaviorSubject } from 'rxjs';
 
 @Component({

@@ -1,10 +1,10 @@
 import { TestBed, fakeAsync } from "@angular/core/testing";
-import { JournalService } from "../../journal/journal.service";
+import { JournalService } from "../journal.service";
 import { DBService } from "../../core/services/db.service";
 import { MaterialsService } from "./materials.service";
 import { EventEmitter } from "events";
-import { KOKJournalEvents } from "../../journal/kok-journal-events.enum";
-import { Material } from "./material.model";
+import { KOKJournalEvents } from "../kok-journal-events.enum";
+import { Material } from "../../dashboard/materials/material.model";
 import { InaraService } from "../../core/inara/inara.service";
 import { SetCommanderMaterialsItemEvent } from "../../core/inara/models/set-commander-materials-item-event.model";
 import { SetCommanderInventoryMaterialsEvent } from "../../core/inara/models/set-commander-inventory-materials-event.model";

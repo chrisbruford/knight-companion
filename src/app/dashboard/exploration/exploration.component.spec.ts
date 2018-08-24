@@ -2,7 +2,7 @@ import { TestBed, async, ComponentFixture, tick, fakeAsync } from '@angular/core
 import { DecimalPipe } from '@angular/common';
 import { ExplorationComponent } from './exploration.component';
 import { BehaviorSubject } from 'rxjs';
-import { ExplorationService } from './exploration.service';
+import { ExplorationService } from '../../journal/handlers/exploration.service';
 import { LightyearPipe } from '../../shared/pipes/ly.pipe';
 
 describe('exploration.component', () => {
