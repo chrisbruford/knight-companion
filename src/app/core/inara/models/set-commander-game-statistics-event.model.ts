@@ -103,7 +103,7 @@ interface InaraStatistics {
     };
 }
 
-export class SetCommanderGameStatistics extends InaraEvent {
+export class SetCommanderGameStatisticsEvent extends InaraEvent {
     eventName = 'setCommanderGameStatistics';
     eventData: InaraStatistics
 

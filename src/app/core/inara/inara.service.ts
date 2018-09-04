@@ -14,7 +14,7 @@ import { AppErrorService } from "../services/app-error.service";
 import { AppErrorTitle } from "../error-bar/app-error-title.enum";
 import { InaraError } from "./inara-error";
 import { InaraErrorCode } from "./inara-error-code";
-import { SetCommanderGameStatistics } from "./models/set-commander-game-statistics.model";
+import { SetCommanderGameStatisticsEvent } from "./models/set-commander-game-statistics-event.model";
 
 
 @Injectable({
@@ -42,12 +42,6 @@ import { SetCommanderGameStatistics } from "./models/set-commander-game-statisti
             filter(setting => setting.setting === AppSetting.inaraBroadcasts)
         )
             .subscribe(setting => this.allowInara = setting.value);
-
-        //Events that don't need any processing can be added directly
-        this.journal.on(JournalEvents.statistics, (statistics: Statistics) => {
-            const setCommanderGameStatistics = new SetCommanderGameStatistics(statistics);
-            this.addEvent(setCommanderGameStatistics);
-        });
 
         //BATCH SEND TO INARA
         this.journal.on(JournalEvents.fsdJump, () => this.sendToInara());
