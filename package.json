@@ -43,7 +43,7 @@
     "@types/semver": "^5.5.0",
     "angular2-template-loader": "^0.6.2",
     "awesome-typescript-loader": "^5.2.0",
-    "cmdr-journal": "^3.4.4",
+    "cmdr-journal": "^4.0.0",
     "copy-webpack-plugin": "^4.5.1",
     "cross-env": "^5.2.0",
     "css-loader": "^1.0.0",
