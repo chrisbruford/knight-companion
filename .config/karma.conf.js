@@ -1,31 +1,39 @@
-var webpackConfig = require('./webpack.test');
+var webpackConfig = require("./webpack.test");
 
-module.exports = function (config) {
-    config.set({
-        frameworks: ['jasmine'],
+module.exports = function(config) {
+  config.set({
+    frameworks: ["jasmine"],
 
-        files: [
-            { pattern: './karma-test-shim.js', watched: false }
-        ],
+    files: [{ pattern: "./karma-test-shim.js", watched: false }],
 
-        preprocessors: {
-            './karma-test-shim.js': ['webpack', 'electron', 'sourcemap']
-        },
+    preprocessors: {
+      "./karma-test-shim.js": ["webpack", "electron", "sourcemap"]
+    },
 
-        webpack: webpackConfig,
+    webpack: webpackConfig,
 
-        webpackMiddleware: {
-            stats: 'errors-only'
-        },
+    webpackMiddleware: {
+      stats: "errors-only"
+    },
 
-        webpackServer: {
-            noInfo: true
-        },
+    webpackServer: {
+      noInfo: true
+    },
 
-        reporters: ['progress'],
-        browsers: ['Electron'],
-        client: {
-            useIframe: false
+    reporters: ["progress"],
+    browsers: ["CustomElectron"],
+    customLaunchers: {
+      CustomElectron: {
+        base: "Electron",
+        browserWindowOptions: {
+          webPreferences: {
+            nodeIntegration: true
+          }
         }
-    });
+      }
+    },
+    client: {
+      useIframe: false
+    }
+  });
 };
