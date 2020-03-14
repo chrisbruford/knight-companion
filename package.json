@@ -1,7 +1,7 @@
 {
   "name": "knight-companion",
   "productName": "knight-companion",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "author": "Chris Bruford",
   "description": "A companion app for members of the Knights of Karma",
   "repository": {
@@ -43,7 +43,7 @@
     "angular2-template-loader": "^0.6.2",
     "awesome-typescript-loader": "^5.2.1",
     "cmdr-journal": "^4.1.0",
-    "copy-webpack-plugin": "^4.6.0",
+    "copy-webpack-plugin": "^5.1.1",
     "cross-env": "^5.2.0",
     "css-loader": "^1.0.1",
     "css-to-string-loader": "^0.1.2",
@@ -58,7 +58,7 @@
     "html-loader": "^0.5.1",
     "html-webpack-plugin": "^3.2.0",
     "jasmine-core": "^3.3.0",
-    "karma": "^2.0.5",
+    "karma": "^4.4.1",
     "karma-chrome-launcher": "^2.2.0",
     "karma-electron": "^6.0.0",
     "karma-jasmine": "^1.1.2",
