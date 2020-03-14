@@ -1,6 +1,5 @@
 import { Injectable, NgZone } from "@angular/core";
-import { Observable, throwError } from 'rxjs';
-import { of, BehaviorSubject } from 'rxjs';
+import { Observable, throwError ,  of, BehaviorSubject } from 'rxjs';
 import { JournalService } from "../../journal/journal.service";
 import { JournalEvents, Loadout, Resurrect, ShipyardSell } from "cmdr-journal/dist";
 import { DBService } from "../../core/services/db.service";
