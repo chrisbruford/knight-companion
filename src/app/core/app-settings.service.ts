@@ -1,6 +1,5 @@
-import { Injectable } from '@angular/core';
 export class AppSettingsService {
-    constructor() {}
+  constructor() {}
 
-    public static API_ENDPOINT='https://www.knightsofkarma.com/api';
+  public static API_ENDPOINT = "https://www.knightsofkarma.com/api";
 }
