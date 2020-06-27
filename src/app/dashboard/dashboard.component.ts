@@ -6,8 +6,8 @@ import {
   JournalEvent,
   MissionCompleted,
   LoadGame,
-  NewCommander
-} from "cmdr-journal/dist";
+  NewCommander,
+} from "cmdr-journal";
 import { Observable, combineLatest, of } from "rxjs";
 import { map, merge, tap, takeWhile, debounceTime, take } from "rxjs/operators";
 import { FactionService } from "../core/services/faction.service";
@@ -31,7 +31,7 @@ import { SettingsService } from "./settings/settings.service";
 @Component({
   templateUrl: "dashboard.component.html",
   styleUrls: ["dashboard.component.scss"],
-  selector: "app-dashboard"
+  selector: "app-dashboard",
 })
 export class DashboardComponent implements OnDestroy, OnInit {
   missionsCompleted: MissionCompleted[] = [];
@@ -79,24 +79,26 @@ export class DashboardComponent implements OnDestroy, OnInit {
     //username/cmdrname check
     this.journalService.cmdrName
       .pipe(takeWhile(() => this.alive))
-      .subscribe(cmdrName => (this.cmdrName = cmdrName));
+      .subscribe((cmdrName) => (this.cmdrName = cmdrName));
 
-    this.userService.user.pipe(takeWhile(() => this.alive)).subscribe(user => {
-      if (user) {
-        this.username = user.username;
+    this.userService.user
+      .pipe(takeWhile(() => this.alive))
+      .subscribe((user) => {
+        if (user) {
+          this.username = user.username;
 
-        if (!user.discordID || !user.discordID.length) {
-          this.appErrorService.addError(AppErrorTitle.noDiscord, {
-            message: `️️️️️️️⚠️️️️Your account has not been linked with Discord`
-          });
+          if (!user.discordID || !user.discordID.length) {
+            this.appErrorService.addError(AppErrorTitle.noDiscord, {
+              message: `️️️️️️️⚠️️️️Your account has not been linked with Discord`,
+            });
+          } else {
+            this.appErrorService.removeError(AppErrorTitle.noDiscord);
+          }
         } else {
           this.appErrorService.removeError(AppErrorTitle.noDiscord);
+          this.appErrorService.removeError(AppErrorTitle.cmdrUsernameMismatch);
         }
-      } else {
-        this.appErrorService.removeError(AppErrorTitle.noDiscord);
-        this.appErrorService.removeError(AppErrorTitle.cmdrUsernameMismatch);
-      }
-    });
+      });
 
     this.journalService.on("ready", () => {
       combineLatest(
@@ -114,16 +116,16 @@ export class DashboardComponent implements OnDestroy, OnInit {
         });
     });
 
-    this.trackedFaction.faction.pipe(take(1)).subscribe(faction => {
+    this.trackedFaction.faction.pipe(take(1)).subscribe((faction) => {
       this.trackingFaction.setValue(faction);
       this.trackingFaction.valueChanges
         .pipe(
           debounceTime(500),
-          tap(inputValue => {
+          tap((inputValue) => {
             this.trackedFaction.setFaction(inputValue);
           }),
-          map(inputValue => {
-            let outputArray = this.knownFactions.filter(faction => {
+          map((inputValue) => {
+            let outputArray = this.knownFactions.filter((faction) => {
               let escapedInputValue = inputValue.replace(
                 /[-\/\\^$*+?.()|[\]{}]/g,
                 "\\$&"
@@ -135,20 +137,20 @@ export class DashboardComponent implements OnDestroy, OnInit {
           }),
           takeWhile(() => this.alive)
         )
-        .subscribe(filteredKnownFactions => {
+        .subscribe((filteredKnownFactions) => {
           this.filteredKnownFactions = filteredKnownFactions;
         });
     });
 
     this.factionService
       .getAllFactions()
-      .then(factions => {
+      .then((factions) => {
         this.knownFactions = factions;
       })
-      .catch(err =>
+      .catch((err) =>
         this.logger.error({
           originalError: err,
-          message: "Error fetching all known factions in dashboard component"
+          message: "Error fetching all known factions in dashboard component",
         })
       );
   }
@@ -157,7 +159,7 @@ export class DashboardComponent implements OnDestroy, OnInit {
     this.zone.run(() => {
       if (cmdrName.toLowerCase() !== username.toLowerCase()) {
         this.appErrorService.addError(AppErrorTitle.cmdrUsernameMismatch, {
-          message: `⚠️️️️You are logged in as ${username.toUpperCase()} but appear to be playing as ${cmdrName.toUpperCase()}`
+          message: `⚠️️️️You are logged in as ${username.toUpperCase()} but appear to be playing as ${cmdrName.toUpperCase()}`,
         });
       } else {
         this.appErrorService.removeError(AppErrorTitle.cmdrUsernameMismatch);

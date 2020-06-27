@@ -40,10 +40,10 @@ export class EDDNService {
       }
 
       Object.assign(evt, {
-        StarPos: starPos
+        StarPos: starPos,
       });
 
-      delete evt.CockpitBreached;
+      delete evt.CockpitBreach;
       delete evt.ActiveFine;
       delete evt.Wanted;
     } else if (evt instanceof FSDJump) {
@@ -53,7 +53,7 @@ export class EDDNService {
       delete evt.JumpDist;
       delete evt.Wanted;
 
-      evt.Factions?.forEach(faction => {
+      evt.Factions?.forEach((faction) => {
         delete faction.HappiestSystem;
         delete faction.HomeSystem;
         delete faction.MyReputation;
@@ -69,13 +69,13 @@ export class EDDNService {
       Object.assign(evt, {
         StarSystem: starSystem,
         StarPos: starPos,
-        SystemAddress: systemAddress
+        SystemAddress: systemAddress,
       });
     } else if (evt instanceof Location) {
       delete evt.Latitude;
       delete evt.Longitude;
       delete evt.Wanted;
-      evt.Factions?.forEach(faction => {
+      evt.Factions?.forEach((faction) => {
         delete faction.HappiestSystem;
         delete faction.HomeSystem;
         delete faction.MyReputation;
@@ -88,15 +88,15 @@ export class EDDNService {
       header: {
         uploaderID: cmdrName,
         softwareName: "Knights of Karma Companion",
-        softwareVersion: remote.app.getVersion()
+        softwareVersion: remote.app.getVersion(),
       },
-      message: removeLocalised(evt)
+      message: removeLocalised(evt),
     };
 
     this.http
       .post("https://eddn.edcd.io:4430/upload/", submission, {
-        responseType: "text"
+        responseType: "text",
       })
-      .subscribe(console.log, err => this.logger.error(err));
+      .subscribe(console.log, (err) => this.logger.error(err));
   }
 }

@@ -193,7 +193,7 @@ export class JournalService extends EventEmitter {
                                 let stream = this.journalQueue.addPath(`${dir}/${path}`);
 
                                 stream
-                                    .on('data', (data: journal.JournalEvent) => {
+                                    .on('data', (data: journal.JournalEventsUnion) => {
                                         //events need to be processed in order otherwise things like ships being sold
                                         //might be processed before the ship was purchased
                                         stream.pause();
@@ -247,7 +247,7 @@ export class JournalService extends EventEmitter {
         let newStream = this.journalQueue.addStream(stream);
         let eventHandlers: Promise<any>[] = [];
         newStream
-            .on('data', (data: journal.JournalEvent) => {
+            .on('data', (data: journal.JournalEventsUnion) => {
                 newStream.pause();
                 let eventHandler = this.handleEvent(data)
                     .then(() => {
@@ -358,7 +358,7 @@ export class JournalService extends EventEmitter {
             });
     }
 
-    private async handleEvent(data: journal.JournalEvent): Promise<any> {
+    private async handleEvent(data: journal.JournalEventsUnion): Promise<any> {
         //all journal events come here to be checked for interest
         //at service level and whether should be persisted to IDB
         return new Promise((resolve, reject) => {
@@ -444,9 +444,8 @@ export class JournalService extends EventEmitter {
 
                         //new commander
                         case journal.JournalEvents.newCommander: {
-                            let newCommander: journal.NewCommander = Object.assign(new journal.NewCommander(), data);
-                            this.ngZone.run(() => this._cmdrName.next(newCommander.Name));
-                            this.journalDB.putCurrentState({ key: "cmdrName", value: newCommander.Name })
+                            this.ngZone.run(() => this._cmdrName.next(data.Name));
+                            this.journalDB.putCurrentState({ key: "cmdrName", value: data.Name })
                                 .then(() => resolve(data))
                                 .catch(originalError => {
                                     this.logger.error({ originalError, message: "handleEvent failure" });
@@ -522,35 +521,35 @@ export class JournalService extends EventEmitter {
                         }
 
                         //location
+                        case journal.JournalEvents.carrierJump:
                         case journal.JournalEvents.location: {
                             let promises: Promise<any>[] = [];
-                            let location: journal.Location = Object.assign(new journal.Location(), data);
 
                             promises.push(
-                                this.journalDB.putCurrentState({ key: "currentSystem", value: location.StarSystem })
+                                this.journalDB.putCurrentState({ key: "currentSystem", value: data.StarSystem })
                                     .catch(originalError => this.logger.error({ originalError, message: "handleEvent failure" }))
                             );
 
                             promises.push(
-                                this.journalDB.putCurrentState({ key: "currentSystemStarPos", value: location.StarPos })
+                                this.journalDB.putCurrentState({ key: "currentSystemStarPos", value: data.StarPos })
                                     .catch(originalError => this.logger.error({ originalError, message: "handleEvent failure" }))
                             );
 
                             promises.push(
-                                this.journalDB.putCurrentState({ key: "currentSystemAddress", value: location.SystemAddress })
+                                this.journalDB.putCurrentState({ key: "currentSystemAddress", value: data.SystemAddress })
                                     .catch(originalError => this.logger.error({ originalError, message: "handleEvent failure" }))
                             );
 
-                            if (location.Docked && location.StationName) {
+                            if (data.Docked && data.StationName) {
                                 promises.push(
-                                    this.journalDB.putCurrentState({ key: "currentStation", value: location.StationName })
+                                    this.journalDB.putCurrentState({ key: "currentStation", value: data.StationName })
                                         .catch(originalError => this.logger.error({ originalError, message: "handleEvent failure" }))
                                 );
-                                this.ngZone.run(() => this._currentStation.next(location.StationName));
+                                this.ngZone.run(() => this._currentStation.next(data.StationName));
                             }
-                            this.ngZone.run(() => this._currentSystem.next(location.StarSystem));
-                            this.ngZone.run(() => this._currentSystemStarPos.next(location.StarPos));
-                            this.ngZone.run(() => this._currentSystemAddress.next(location.SystemAddress));
+                            this.ngZone.run(() => this._currentSystem.next(data.StarSystem));
+                            this.ngZone.run(() => this._currentSystemStarPos.next(data.StarPos));
+                            this.ngZone.run(() => this._currentSystemAddress.next(data.SystemAddress));
 
                             if (!this.firstStream && !this.beta) {
                                 let location = Object.assign(new journal.Location(), data);
