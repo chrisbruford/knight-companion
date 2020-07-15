@@ -26,22 +26,22 @@ autoUpdater.autoInstallOnAppQuit = true;
 //check for update in background silently first
 autoUpdater
   .checkForUpdates()
-  .catch(err => console.log("Update checker error"))
+  .catch((err) => console.log("Update checker error"))
   .then(() => {
-    autoUpdater.on("update-not-available", info => {
+    autoUpdater.on("update-not-available", (info) => {
       dialog.showMessageBox({ message: "There are no updates available" });
     });
   });
 
-autoUpdater.on("error", err => {
+autoUpdater.on("error", (err) => {
   sendStatusToWindow("Error in auto-updater. " + err);
 });
 
-autoUpdater.on("download-progress", progressObj => {
+autoUpdater.on("download-progress", (progressObj) => {
   mainWindow.webContents.send("update-download-progress", progressObj);
 });
 
-autoUpdater.on("update-downloaded", info => {
+autoUpdater.on("update-downloaded", (info) => {
   mainWindow.webContents.send("update-ready", info);
 });
 
@@ -52,7 +52,7 @@ function buildKokMenu({ login = true }) {
     label: login ? "Login" : "Logout",
     click() {
       mainWindow.webContents.send(login ? "login" : "logout");
-    }
+    },
   };
 
   const menuTemplate = [
@@ -60,7 +60,7 @@ function buildKokMenu({ login = true }) {
       label: "Dashboard",
       click() {
         mainWindow.webContents.send("navigate", "dashboard");
-      }
+      },
     },
     {
       label: "Account",
@@ -71,9 +71,9 @@ function buildKokMenu({ login = true }) {
           click() {
             mainWindow.webContents.send("navigate", "account/profile");
           },
-          enabled: login ? false : true
-        }
-      ]
+          enabled: login ? false : true,
+        },
+      ],
     },
     {
       label: "Help",
@@ -83,17 +83,17 @@ function buildKokMenu({ login = true }) {
           click() {
             autoUpdater
               .checkForUpdates()
-              .catch(err => console.log("Update checker error"));
-          }
-        }
-      ]
-    }
+              .catch((err) => console.log("Update checker error"));
+          },
+        },
+      ],
+    },
   ];
 
   if (process.env.ENV === "development") {
     menuTemplate.push({
       label: "Dev",
-      submenu: [{ label: "Dev tools", role: "toggledevtools" }]
+      submenu: [{ label: "Dev tools", role: "toggledevtools" }],
     });
     mainWindow.webContents.openDevTools();
   }
@@ -113,10 +113,9 @@ function createWindow() {
     width: 630,
     height: 700,
     backgroundColor: "#000",
-    icon: "./icons/icon.png",
     webPreferences: {
-      nodeIntegration: true
-    }
+      nodeIntegration: true,
+    },
   });
 
   //Application menus
@@ -129,12 +128,12 @@ function createWindow() {
     url.format({
       pathname: path.resolve(__dirname, "index.html"),
       protocol: "file",
-      slashes: true
+      slashes: true,
     })
   );
 
   // Emitted when the window is closed.
-  mainWindow.on("closed", function() {
+  mainWindow.on("closed", function () {
     // Dereference the window object, usually you would store windows
     // in an array if your app supports multi windows, this is the time
     // when you should delete the corresponding element.
@@ -150,7 +149,7 @@ app.on("ready", () => {
 });
 
 // Quit when all windows are closed.
-app.on("window-all-closed", function() {
+app.on("window-all-closed", function () {
   // On OS X it is common for applications and their menu bar
   // to stay active until the user quits explicitly with Cmd + Q
   if (process.platform !== "darwin") {
@@ -158,7 +157,7 @@ app.on("window-all-closed", function() {
   }
 });
 
-app.on("activate", function() {
+app.on("activate", function () {
   // On OS X it's common to re-create a window in the app when the
   // dock icon is clicked and there are no other windows open.
   if (mainWindow === null) {

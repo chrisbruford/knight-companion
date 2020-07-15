@@ -1,172 +1,330 @@
 <div class="tracking-faction-container">
-    <mat-form-field>
-        <input type="text" matInput [formControl]="trackingFaction" [matAutocomplete]="autoCompleteFaction" placeholder="Your Faction">
-    </mat-form-field>
-    <mat-autocomplete #autoCompleteFaction="matAutocomplete">
-        <mat-option *ngFor="let faction of filteredKnownFactions | async" [value]="faction.Name">{{faction.Name}}</mat-option>
-    </mat-autocomplete>
+  <mat-form-field>
+    <input
+      type="text"
+      matInput
+      [formControl]="trackingFaction"
+      [matAutocomplete]="autoCompleteFaction"
+      placeholder="Your Faction"
+    />
+  </mat-form-field>
+  <mat-autocomplete #autoCompleteFaction="matAutocomplete">
+    <mat-option
+      *ngFor="let faction of filteredKnownFactions | async"
+      [value]="faction.Name"
+      >{{ faction.Name }}</mat-option
+    >
+  </mat-autocomplete>
 </div>
 
-<mat-tab-group dynamicHeight [(selectedIndex)]="selectedDashboardTab" (selectedTabChange)="doTabChange($event)">
-    <mat-tab>
-        <ng-template mat-tab-label>
-            <div class="icon-container">
-                <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 777.656 694.155" enable-background="new 0 0 777.656 694.155" xml:space="preserve">
-                    <g id="Layer_4">
-                        <polygon opacity="0.5" fill="#FFFFFF" points="472.443,345.049 345.163,215.419 345.163,281.706 225.297,281.706 233.177,299.329 
+<mat-tab-group
+  dynamicHeight
+  [(selectedIndex)]="selectedDashboardTab"
+  (selectedTabChange)="doTabChange($event)"
+>
+  <mat-tab>
+    <ng-template mat-tab-label>
+      <div class="icon-container">
+        <svg
+          version="1.1"
+          xmlns="http://www.w3.org/2000/svg"
+          xmlns:xlink="http://www.w3.org/1999/xlink"
+          x="0px"
+          y="0px"
+          viewBox="0 0 777.656 694.155"
+          enable-background="new 0 0 777.656 694.155"
+          xml:space="preserve"
+        >
+          <g id="Layer_4">
+            <polygon
+              opacity="0.5"
+              fill="#FFFFFF"
+              points="472.443,345.049 345.163,215.419 345.163,281.706 225.297,281.706 233.177,299.329 
 		345.163,299.329 362.787,299.329 362.787,281.706 362.787,258.523 447.744,345.049 362.787,431.575 362.787,406.825 
-		362.787,389.201 345.163,389.201 273.361,389.201 281.241,406.825 345.163,406.825 345.163,474.677 	" />
-                        <g>
-                            <polygon opacity="0.5" fill="#FFFFFF" points="472.443,345.049 345.163,215.419 345.163,281.706 225.297,281.706 233.177,299.329 
+		362.787,389.201 345.163,389.201 273.361,389.201 281.241,406.825 345.163,406.825 345.163,474.677 	"
+            />
+            <g>
+              <polygon
+                opacity="0.5"
+                fill="#FFFFFF"
+                points="472.443,345.049 345.163,215.419 345.163,281.706 225.297,281.706 233.177,299.329 
 			345.163,299.329 362.787,299.329 362.787,281.706 362.787,258.523 447.744,345.049 362.787,431.575 362.787,406.825 
-			362.787,389.201 345.163,389.201 273.361,389.201 281.241,406.825 345.163,406.825 345.163,474.677 		" />
-                            <g>
-                                <line opacity="0.5" fill="none" stroke="#FFFFFF" stroke-width="14.6861" x1="75.192" y1="304.987" x2="192.681" y2="545.837"
-                                />
-                                <line opacity="0.5" fill="none" stroke="#FFFFFF" stroke-width="14.6861" x1="148.643" y1="276.479" x2="264.598" y2="515.722"
-                                />
-                                <path fill="#FFFFFF" d="M198.555,215.108l-20.56-40.534L116.937,164l-73.784,31.109L0,252.705l17.842,55.507L130.45,552.232
+			362.787,389.201 345.163,389.201 273.361,389.201 281.241,406.825 345.163,406.825 345.163,474.677 		"
+              />
+              <g>
+                <line
+                  opacity="0.5"
+                  fill="none"
+                  stroke="#FFFFFF"
+                  stroke-width="14.6861"
+                  x1="75.192"
+                  y1="304.987"
+                  x2="192.681"
+                  y2="545.837"
+                />
+                <line
+                  opacity="0.5"
+                  fill="none"
+                  stroke="#FFFFFF"
+                  stroke-width="14.6861"
+                  x1="148.643"
+                  y1="276.479"
+                  x2="264.598"
+                  y2="515.722"
+                />
+                <path
+                  fill="#FFFFFF"
+                  d="M198.555,215.108l-20.56-40.534L116.937,164l-73.784,31.109L0,252.705l17.842,55.507L130.45,552.232
 				L203.255,557l70.297-39.945l39.647-54.283L198.555,215.108z M52.282,207.275l66.186-28.069l49.728,8.514l13.463,26.542
 				l-35.802,55.91l-66.69,26.464l-50.447-4.419l-12.731-36.115L52.282,207.275z M263.804,505.483l-63.552,36.627l-60.19-4.02
-				L33.68,307.14l47.975,4.309l74.018-29.373l33.455-52.245l107.064,231.374L263.804,505.483z" />
-                                <path opacity="0.5" fill="#FFFFFF" d="M92.685,265.097l-29.139-1.308l-6.428-25.71l17.846-23.818l29.432-12.409l25.912,4.487
+				L33.68,307.14l47.975,4.309l74.018-29.373l33.455-52.245l107.064,231.374L263.804,505.483z"
+                />
+                <path
+                  opacity="0.5"
+                  fill="#FFFFFF"
+                  d="M92.685,265.097l-29.139-1.308l-6.428-25.71l17.846-23.818l29.432-12.409l25.912,4.487
 				l9.702,19.128l-17.899,27.953L92.685,265.097z M74.766,250.063l15.51,0.697l22.334-8.863l11.046-17.25l-2.811-5.541
-				l-14.835-2.541l-22.056,9.354l-11.393,15.327L74.766,250.063z" />
-                            </g>
-                        </g>
-                    </g>
-                    <g id="Layer_3">
-                        <path opacity="0.5" fill="none" stroke="#FFFFFF" stroke-width="23.2782" d="M354.615,673.192
-		c163.307-14.345,291.492-154.872,291.492-326.114c0-172.261-129.716-313.442-294.41-326.358" />
-                        <path fill="#FFFFFF" d="M430.579,0C319.691,0,220.952,52.003,157.413,132.951l28.298,4.9c5.45-6.362,11.151-12.543,17.125-18.517
+				l-14.835-2.541l-22.056,9.354l-11.393,15.327L74.766,250.063z"
+                />
+              </g>
+            </g>
+          </g>
+          <g id="Layer_3">
+            <path
+              opacity="0.5"
+              fill="none"
+              stroke="#FFFFFF"
+              stroke-width="23.2782"
+              d="M354.615,673.192
+		c163.307-14.345,291.492-154.872,291.492-326.114c0-172.261-129.716-313.442-294.41-326.358"
+            />
+            <path
+              fill="#FFFFFF"
+              d="M430.579,0C319.691,0,220.952,52.003,157.413,132.951l28.298,4.9c5.45-6.362,11.151-12.543,17.125-18.517
 		c29.587-29.587,64.034-52.813,102.384-69.034C344.91,33.512,387.087,25,430.579,25s85.668,8.512,125.359,25.3
 		c38.35,16.221,72.797,39.447,102.384,69.034c29.587,29.587,52.813,64.034,69.034,102.384c16.788,39.691,25.3,81.868,25.3,125.359
 		s-8.512,85.668-25.3,125.359c-16.221,38.35-39.447,72.797-69.034,102.384s-64.034,52.813-102.384,69.034
 		c-39.691,16.788-81.868,25.3-125.359,25.3s-85.668-8.512-125.359-25.3c-31.206-13.199-59.826-31.038-85.347-53.166l-7.857,4.465
 		l-25.868-1.694c62.729,62.237,149.084,100.695,244.432,100.695c191.686,0,347.077-155.392,347.077-347.077S622.264,0,430.579,0z"
-                        />
-                    </g>
-                </svg>
-            </div>
-        </ng-template>
-        <app-missions></app-missions>
-    </mat-tab>
-    <mat-tab>
-        <ng-template mat-tab-label>
-            <div class="icon-container">
-                <svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
-                    viewBox="174 168 635 631" enable-background="new 174 168 635 631" xml:space="preserve">
-                    <g id="Layer_2">
-                        <circle fill="#FFFFFF" cx="492" cy="483" r="23" />
-                        <path fill="#FFFFFF" d="M492,220.5c-144.975,0-262.5,117.525-262.5,262.5s117.526,262.5,262.499,262.5
+            />
+          </g>
+        </svg>
+      </div>
+    </ng-template>
+    <app-missions></app-missions>
+  </mat-tab>
+  <mat-tab>
+    <ng-template mat-tab-label>
+      <div class="icon-container">
+        <svg
+          version="1.1"
+          id="Layer_1"
+          xmlns="http://www.w3.org/2000/svg"
+          xmlns:xlink="http://www.w3.org/1999/xlink"
+          x="0px"
+          y="0px"
+          viewBox="174 168 635 631"
+          enable-background="new 174 168 635 631"
+          xml:space="preserve"
+        >
+          <g id="Layer_2">
+            <circle fill="#FFFFFF" cx="492" cy="483" r="23" />
+            <path
+              fill="#FFFFFF"
+              d="M492,220.5c-144.975,0-262.5,117.525-262.5,262.5s117.526,262.5,262.499,262.5
                C636.975,745.5,754.5,627.975,754.5,483S636.975,220.5,492,220.5z M492,724c-133.1,0-241-107.899-241-241
-               c0-133.102,107.899-241,241-241s241,107.898,241,241C733,616.101,625.101,724,492,724z" />
-                        <path fill="#FFFFFF" d="M492,351.5c-72.625,0-131.5,58.875-131.5,131.5S419.375,614.5,492,614.5
+               c0-133.102,107.899-241,241-241s241,107.898,241,241C733,616.101,625.101,724,492,724z"
+            />
+            <path
+              fill="#FFFFFF"
+              d="M492,351.5c-72.625,0-131.5,58.875-131.5,131.5S419.375,614.5,492,614.5
                c72.625-0.001,131.5-58.875,131.5-131.5S564.625,351.5,492,351.5z M492,606.679c-68.306,0-123.678-55.373-123.678-123.679
                c0-68.307,55.372-123.678,123.678-123.68c68.306,0,123.679,55.373,123.679,123.68C615.679,551.306,560.306,606.679,492,606.679z"
-                        />
-                        <rect x="174" y="474" fill="#FFFFFF" width="120" height="18" />
-                        <rect x="689" y="474" fill="#FFFFFF" width="120" height="18" />
-                        <rect x="483" y="168" fill="#FFFFFF" width="18" height="120" />
-                        <rect x="483" y="679" fill="#FFFFFF" width="18" height="120" />
-                    </g>
-                </svg>
-            </div>
-        </ng-template>
-        <app-combat></app-combat>
-    </mat-tab>
-    <mat-tab>
-        <ng-template mat-tab-label>
-            <div class="icon-container">
-                <svg version="1.1" id="Layer_2" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
-                    viewBox="0 0 724.327 827.11" enable-background="new 0 0 724.327 827.11" xml:space="preserve">
-                    <path fill="#FFFFFF" d="M724.327,413.56c0,228.4-191.75,413.55-428.3,413.55c-28.88,0-29.521-10.031-5.706-13.93
+            />
+            <rect x="174" y="474" fill="#FFFFFF" width="120" height="18" />
+            <rect x="689" y="474" fill="#FFFFFF" width="120" height="18" />
+            <rect x="483" y="168" fill="#FFFFFF" width="18" height="120" />
+            <rect x="483" y="679" fill="#FFFFFF" width="18" height="120" />
+          </g>
+        </svg>
+      </div>
+    </ng-template>
+    <app-combat></app-combat>
+  </mat-tab>
+  <mat-tab>
+    <ng-template mat-tab-label>
+      <div class="icon-container">
+        <svg
+          version="1.1"
+          id="Layer_2"
+          xmlns="http://www.w3.org/2000/svg"
+          xmlns:xlink="http://www.w3.org/1999/xlink"
+          x="0px"
+          y="0px"
+          viewBox="0 0 724.327 827.11"
+          enable-background="new 0 0 724.327 827.11"
+          xml:space="preserve"
+        >
+          <path
+            fill="#FFFFFF"
+            d="M724.327,413.56c0,228.4-191.75,413.55-428.3,413.55c-28.88,0-29.521-10.031-5.706-13.93
                c201.628-33.002,355.006-199.81,355.006-400.621c0-200.061-152.217-366.361-352.714-400.253C269.903,8.468,271.057,0,296.027,0
-               C532.577,0,724.327,185.16,724.327,413.56z" />
-                    <path fill="#FFFFFF" d="M-1.351,400.443c-5.857,177.074,138.056,325.534,321.449,331.601c22.39,0.739,23.146-7.021,4.782-10.653
+               C532.577,0,724.327,185.16,724.327,413.56z"
+          />
+          <path
+            fill="#FFFFFF"
+            d="M-1.351,400.443c-5.857,177.074,138.056,325.534,321.449,331.601c22.39,0.739,23.146-7.021,4.782-10.653
                C169.407,690.634,54.773,557.378,59.922,401.693c5.13-155.103,127.405-280.129,283.716-301.265
-               c17.704-2.395,17.028-8.989-2.332-9.629C157.914,84.733,4.505,223.368-1.351,400.443z" />
-                    <path fill="#FFFFFF" d="M445.624,533.667c-167.587,0-317.811-65.461-391.527-147.456l8.152-36.509
-               c79.989,86.73,237.497,156.214,421.282,155.108C534.957,504.5,530.688,533.667,445.624,533.667z" />
-                    <path fill="#FFFFFF" d="M382.521,29.789c0,0-25.224,115.211-10.224,115.211s50.97-96.267,50.97-96.267L382.521,29.789z" />
-                    <g>
-                    </g>
-                    <g>
-                    </g>
-                    <g>
-                    </g>
-                    <g>
-                    </g>
-                    <g>
-                    </g>
-                    <g>
-                    </g>
-                    <g>
-                    </g>
-                    <g>
-                    </g>
-                    <g>
-                    </g>
-                    <g>
-                    </g>
-                    <g>
-                    </g>
-                    <g>
-                    </g>
-                    <g>
-                    </g>
-                    <g>
-                    </g>
-                    <g>
-                    </g>
-                </svg>
-            </div>
-        </ng-template>
-        <app-exploration></app-exploration>
-    </mat-tab>
-    <mat-tab>
-        <ng-template mat-tab-label>
-            <div class="icon-container png-icon">
-                <img src="../../assets/images/cobra.png" alt="" style="width:100%">
-            </div>
-        </ng-template>
-        <ng-template matTabContent>
-            <app-ships></app-ships>
-        </ng-template>
-    </mat-tab>
-    <mat-tab>
-        <ng-template mat-tab-label>
-            <div class="icon-container">
-                <svg version="1.1" id="Layer_2" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
-                    viewBox="0 0 784.668 913.839" enable-background="new 0 0 784.668 913.839" xml:space="preserve">
-                    <circle fill="#FFFFFF" cx="392.334" cy="460.42" r="180.086" />
-                    <circle fill="#FFFFFF" cx="392.334" cy="67.086" r="67.086" />
-                    <circle fill="#FFFFFF" cx="392.334" cy="843.417" r="70.422" />
-                    <g>
-                        <path fill="#FFFFFF" d="M392.334,852.754c-52.959,0-104.341-10.375-152.718-30.837c-46.72-19.761-88.677-48.048-124.705-84.075
+               c17.704-2.395,17.028-8.989-2.332-9.629C157.914,84.733,4.505,223.368-1.351,400.443z"
+          />
+          <path
+            fill="#FFFFFF"
+            d="M445.624,533.667c-167.587,0-317.811-65.461-391.527-147.456l8.152-36.509
+               c79.989,86.73,237.497,156.214,421.282,155.108C534.957,504.5,530.688,533.667,445.624,533.667z"
+          />
+          <path
+            fill="#FFFFFF"
+            d="M382.521,29.789c0,0-25.224,115.211-10.224,115.211s50.97-96.267,50.97-96.267L382.521,29.789z"
+          />
+          <g></g>
+          <g></g>
+          <g></g>
+          <g></g>
+          <g></g>
+          <g></g>
+          <g></g>
+          <g></g>
+          <g></g>
+          <g></g>
+          <g></g>
+          <g></g>
+          <g></g>
+          <g></g>
+          <g></g>
+        </svg>
+      </div>
+    </ng-template>
+    <app-exploration></app-exploration>
+  </mat-tab>
+  <mat-tab>
+    <ng-template mat-tab-label>
+      <div class="icon-container png-icon">
+        <img src="../../assets/images/cobra.png" alt="" style="width: 100%;" />
+      </div>
+    </ng-template>
+    <ng-template matTabContent>
+      <app-ships></app-ships>
+    </ng-template>
+  </mat-tab>
+  <mat-tab>
+    <ng-template mat-tab-label>
+      <div class="icon-container">
+        <svg
+          version="1.1"
+          id="Layer_2"
+          xmlns="http://www.w3.org/2000/svg"
+          xmlns:xlink="http://www.w3.org/1999/xlink"
+          x="0px"
+          y="0px"
+          viewBox="0 0 784.668 913.839"
+          enable-background="new 0 0 784.668 913.839"
+          xml:space="preserve"
+        >
+          <circle fill="#FFFFFF" cx="392.334" cy="460.42" r="180.086" />
+          <circle fill="#FFFFFF" cx="392.334" cy="67.086" r="67.086" />
+          <circle fill="#FFFFFF" cx="392.334" cy="843.417" r="70.422" />
+          <g>
+            <path
+              fill="#FFFFFF"
+              d="M392.334,852.754c-52.959,0-104.341-10.375-152.718-30.837c-46.72-19.761-88.677-48.048-124.705-84.075
                        c-36.027-36.027-64.314-77.983-84.075-124.704C10.375,564.761,0,513.38,0,460.42c0-52.959,10.375-104.341,30.836-152.718
                        c19.761-46.72,48.048-88.677,84.075-124.705c36.028-36.027,77.984-64.314,124.705-84.075
                        c48.376-20.461,99.758-30.836,152.718-30.836c52.96,0,104.341,10.375,152.718,30.836c46.721,19.761,88.677,48.048,124.704,84.075
                        c36.027,36.028,64.314,77.984,84.075,124.705c20.462,48.376,30.837,99.758,30.837,152.718c0,52.96-10.375,104.341-30.837,152.718
                        c-19.761,46.721-48.048,88.677-84.075,124.704s-77.983,64.314-124.704,84.075C496.675,842.379,445.294,852.754,392.334,852.754z
                         M392.334,92.086C189.234,92.086,24,257.32,24,460.42c0,203.1,165.234,368.334,368.334,368.334
-                       c203.1,0,368.334-165.234,368.334-368.334C760.668,257.32,595.434,92.086,392.334,92.086z" />
-                    </g>
-                </svg>
-            </div>
-        </ng-template>
-        <ng-template matTabContent>
-            <app-materials></app-materials>
-        </ng-template>
-    </mat-tab>
-    <mat-tab>
-        <ng-template mat-tab-label>
-            <div class="icon-container png-icon">
-                <mat-icon>settings</mat-icon>
-            </div>
-        </ng-template>
-        <ng-template matTabContent>
-            <app-settings></app-settings>
-        </ng-template>
-    </mat-tab>
+                       c203.1,0,368.334-165.234,368.334-368.334C760.668,257.32,595.434,92.086,392.334,92.086z"
+            />
+          </g>
+        </svg>
+      </div>
+    </ng-template>
+    <ng-template matTabContent>
+      <app-materials></app-materials>
+    </ng-template>
+  </mat-tab>
+
+  <mat-tab>
+    <ng-template mat-tab-label>
+      <div class="icon-container">
+        <svg
+          version="1.1"
+          id="Layer_1"
+          xmlns="http://www.w3.org/2000/svg"
+          xmlns:xlink="http://www.w3.org/1999/xlink"
+          x="0px"
+          y="0px"
+          viewBox="53.534 207 1898.266 1652.667"
+          enable-background="new 53.534 207 1898.266 1652.667"
+          xml:space="preserve"
+        >
+          <g>
+            <path
+              fill="#FFFFFF"
+              d="M1256,1859.667H749.333c-3.219,0-6.193-1.719-7.799-4.509l-688-1194.667c-1.601-2.78-1.601-6.202,0-8.982
+       l253.333-440c1.606-2.79,4.58-4.509,7.799-4.509h1376c3.22,0,6.193,1.72,7.8,4.509l253.333,440c1.601,2.78,1.601,6.202-0.001,8.982
+       l-688,1194.667C1262.192,1857.948,1259.219,1859.667,1256,1859.667z M754.536,1841.667h496.261L1933.614,656l-248.15-431H319.87
+       L71.719,656L754.536,1841.667z"
+            />
+          </g>
+          <g>
+            <g>
+              <rect
+                x="840"
+                y="862.667"
+                fill="#FFFFFF"
+                width="341.333"
+                height="72"
+              />
+            </g>
+            <g>
+              <path
+                fill="#FFFFFF"
+                d="M1010.667,1207.733c-150.934,9.066-312.8-128-312.267-311.2c0.533-172.8,145.333-311.733,314.933-311.467
+           c173.867,0.267,310.934,152,313.067,309.867C1328.533,1063.467,1170.667,1219.467,1010.667,1207.733z M756,896
+           c-9.867,135.733,116.533,258.934,252.8,258.934c144.533,0,262.934-116.267,262.134-259.467
+           c-0.801-141.601-121.334-254.134-256-255.467C863.2,638.134,746.667,770.4,756,896z"
+              />
+            </g>
+            <g>
+              <path
+                fill="#FFFFFF"
+                d="M1002.934,1639.4c-75.009,0-142.22-38.764-179.79-103.692L362.873,738.366
+           c-37.533-64.864-37.563-142.4-0.076-207.401C400.34,465.865,467.582,427,542.667,427H1463.2
+           c74.956,0,142.105,38.734,179.625,103.614c37.575,64.975,37.641,142.636,0.176,207.741l-460.272,797.344
+           C1145.153,1600.637,1077.942,1639.4,1002.934,1639.4z M542.667,445c-68.575,0-129.987,35.498-164.277,94.957
+           c-34.234,59.361-34.209,130.166,0.067,189.402l460.271,797.342c34.31,59.294,95.697,94.699,164.206,94.699
+           s129.896-35.405,164.21-94.708l460.262-797.326c34.217-59.459,34.158-130.396-0.162-189.742
+           C1592.979,480.374,1531.653,445,1463.2,445H542.667z"
+              />
+            </g>
+          </g>
+        </svg>
+      </div>
+    </ng-template>
+    <ng-template matTabContent>
+      <app-carriers></app-carriers>
+    </ng-template>
+  </mat-tab>
+
+  <mat-tab>
+    <ng-template mat-tab-label>
+      <div class="icon-container png-icon">
+        <mat-icon>settings</mat-icon>
+      </div>
+    </ng-template>
+    <ng-template matTabContent>
+      <app-settings></app-settings>
+    </ng-template>
+  </mat-tab>
 </mat-tab-group>
