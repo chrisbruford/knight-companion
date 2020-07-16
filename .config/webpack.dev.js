@@ -27,6 +27,9 @@ module.exports = webpackMerge(commonConfig, {
         EDDN_JOURNAL_ENDPOINT: JSON.stringify(
           "https://eddn.edcd.io/schemas/journal/1/test"
         ),
+        EDDN_COMMODITY_ENDPOINT: JSON.stringify(
+          "https://eddn.edcd.io/schemas/commodity/3/test"
+        ),
         INARA_API_ENDPOINT: JSON.stringify("https://inara.cz/inapi/v1/"),
       },
     }),

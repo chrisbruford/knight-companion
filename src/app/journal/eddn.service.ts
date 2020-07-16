@@ -1,5 +1,12 @@
 import { Injectable } from "@angular/core";
-import { Docked, FSDJump, Scan, Location } from "cmdr-journal/dist";
+import {
+  Docked,
+  FSDJump,
+  Scan,
+  Location,
+  CarrierJump,
+  MarketJSON,
+} from "cmdr-journal/dist";
 import { HttpClient } from "@angular/common/http";
 import { LoggerService } from "../core/services/logger.service";
 import { remote } from "electron";
@@ -24,7 +31,7 @@ export class EDDNService {
   ): void;
   sendJournalEvent(evt: Location, cmdrName: string): void;
   sendJournalEvent(
-    evt: Docked | FSDJump | Scan | Location,
+    evt: Docked | FSDJump | Scan | Location | CarrierJump,
     cmdrName: string,
     starPos?: [number, number, number],
     starSystem?: string,
@@ -91,6 +98,41 @@ export class EDDNService {
         softwareVersion: remote.app.getVersion(),
       },
       message: removeLocalised(evt),
+    };
+
+    this.http
+      .post("https://eddn.edcd.io:4430/upload/", submission, {
+        responseType: "text",
+      })
+      .subscribe(console.log, (err) => this.logger.error(err));
+  }
+
+  sendCommodityEvent(marketData: MarketJSON, cmdrName: string) {
+    delete marketData.event;
+
+    let submission = {
+      $schemaRef: process.env.EDDN_COMMODITY_ENDPOINT,
+      header: {
+        uploaderID: cmdrName,
+        softwareName: "Knights of Karma Companion",
+        softwareVersion: remote.app.getVersion(),
+      },
+      message: {
+        systemName: marketData.StarSystem,
+        stationName: marketData.StationName,
+        marketId: marketData.MarketID,
+        timestamp: marketData.timestamp,
+        commodities: marketData.Items.map((item) => ({
+          name: item.Name,
+          meanPrice: item.MeanPrice,
+          buyPrice: item.BuyPrice,
+          stock: item.Stock,
+          stockBracket: item.StockBracket,
+          sellPrice: item.SellPrice,
+          demand: item.Demand,
+          demandBracket: item.DemandBracket,
+        })),
+      },
     };
 
     this.http
