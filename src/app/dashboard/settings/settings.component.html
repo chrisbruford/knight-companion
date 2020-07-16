@@ -1,16 +1,37 @@
 <form [formGroup]="settingsForm">
-    <fieldset>
-        <legend>Toggles</legend>
-        <mat-slide-toggle formControlName="broadcasts" (change)="slideToggleChange($event, AppSetting.broadcasts)">Broadcasts</mat-slide-toggle>
-    </fieldset>
-    <fieldset>
-        <legend>Inara</legend>
-        <mat-slide-toggle formControlName="inaraBroadcasts" (change)="slideToggleChange($event,AppSetting.inaraBroadcasts)">Enable</mat-slide-toggle>
-        <mat-form-field>
-            <input matInput formControlName="inaraAPIKey" type="text" placeholder="API Key">
-            <mat-hint>Obtain your key from
-                <a href="https://inara.cz/settings-api/" (click)="openExternal($event)">https://inara.cz/settings-api/</a>
-            </mat-hint>
-        </mat-form-field>
-    </fieldset>
+  <fieldset>
+    <legend>Broadcasts</legend>
+    <mat-slide-toggle
+      class="broadcast-toggle"
+      formControlName="broadcasts"
+      (change)="slideToggleChange($event, AppSetting.broadcasts)"
+      >Discord</mat-slide-toggle
+    >
+    <mat-slide-toggle
+      class="broadcast-toggle"
+      formControlName="eddnBroadcasts"
+      (change)="slideToggleChange($event, AppSetting.eddnBroadcasts)"
+      >EDDN</mat-slide-toggle
+    >
+    <mat-slide-toggle
+      class="broadcast-toggle"
+      formControlName="inaraBroadcasts"
+      (change)="slideToggleChange($event, AppSetting.inaraBroadcasts)"
+      >Inara</mat-slide-toggle
+    >
+    <mat-form-field class="inara-api-key">
+      <input
+        matInput
+        formControlName="inaraAPIKey"
+        type="text"
+        placeholder="Inara API Key"
+      />
+      <mat-hint
+        >Obtain your key from
+        <a href="https://inara.cz/settings-api/" (click)="openExternal($event)"
+          >https://inara.cz/settings-api/</a
+        >
+      </mat-hint>
+    </mat-form-field>
+  </fieldset>
 </form>

@@ -8,14 +8,15 @@ import { shell } from "electron";
 @Component({
   selector: "app-settings",
   templateUrl: "./settings.component.html",
-  styleUrls: ["./settings.component.scss"]
+  styleUrls: ["./settings.component.scss"],
 })
 export class SettingsComponent implements OnInit {
   public settingsForm: FormGroup;
   public readonly AppSetting = AppSetting;
-  private broadcasts = false;
+  private broadcasts = true;
   private inaraBroadcasts = false;
   private inaraAPIKey = "";
+  private eddnBroadcasts = true;
 
   constructor(
     private fb: FormBuilder,
@@ -26,7 +27,8 @@ export class SettingsComponent implements OnInit {
     this.settingsForm = this.fb.group({
       broadcasts: [this.broadcasts],
       inaraBroadcasts: [this.inaraBroadcasts],
-      inaraAPIKey: [this.inaraAPIKey]
+      inaraAPIKey: [this.inaraAPIKey],
+      eddnBroadcasts: [this.eddnBroadcasts],
     });
 
     let settingPromises = [];
@@ -34,10 +36,10 @@ export class SettingsComponent implements OnInit {
     settingPromises.push(
       this.settingsService
         .getSetting<{ key: string; value: any }>(AppSetting.broadcasts)
-        .then(setting => {
-          this.broadcasts = setting !== undefined ? setting.value : true;
+        .then((setting) => {
+          this.broadcasts = setting ? setting.value : true;
         })
-        .catch(err => {
+        .catch((err) => {
           console.log(err);
           this.broadcasts = false;
         })
@@ -46,10 +48,10 @@ export class SettingsComponent implements OnInit {
     settingPromises.push(
       this.settingsService
         .getSetting<{ key: string; value: any }>(AppSetting.inaraBroadcasts)
-        .then(setting => {
+        .then((setting) => {
           this.inaraBroadcasts = setting ? setting.value : false;
         })
-        .catch(err => {
+        .catch((err) => {
           console.log(err);
           this.inaraBroadcasts = false;
         })
@@ -58,12 +60,24 @@ export class SettingsComponent implements OnInit {
     settingPromises.push(
       this.settingsService
         .getSetting<{ key: string; value: any }>(AppSetting.inaraAPIKey)
-        .then(setting => {
+        .then((setting) => {
           this.inaraAPIKey = setting ? setting.value : "";
         })
-        .catch(err => {
+        .catch((err) => {
           console.log(err);
           this.inaraAPIKey = "";
+        })
+    );
+
+    settingPromises.push(
+      this.settingsService
+        .getSetting<{ key: string; value: any }>(AppSetting.eddnBroadcasts)
+        .then((setting) => {
+          this.eddnBroadcasts = setting ? setting.value : true;
+        })
+        .catch((err) => {
+          console.log(err);
+          this.eddnBroadcasts = false;
         })
     );
 
@@ -71,11 +85,12 @@ export class SettingsComponent implements OnInit {
       this.settingsForm.setValue({
         broadcasts: this.broadcasts,
         inaraBroadcasts: this.inaraBroadcasts,
-        inaraAPIKey: this.inaraAPIKey
+        inaraAPIKey: this.inaraAPIKey,
+        eddnBroadcasts: this.eddnBroadcasts,
       });
     });
 
-    this.settingsForm.get("inaraAPIKey").valueChanges.subscribe(value => {
+    this.settingsForm.get("inaraAPIKey").valueChanges.subscribe((value) => {
       this.settingsService.updateSetting(AppSetting.inaraAPIKey, value);
     });
   }

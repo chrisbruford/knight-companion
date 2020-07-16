@@ -1,6 +1,13 @@
 fieldset {
-    display: flex;
-    border: none;
-    margin: 1em 0;
+  display: flex;
+  border: none;
+  margin: 1em 0;
 }
 
+.inara-api-key {
+  margin-top: 0.5rem;
+}
+
+.broadcast-toggle {
+  margin-top: 0.25rem;
+}

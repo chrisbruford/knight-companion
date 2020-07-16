@@ -6,15 +6,33 @@ import {
   Location,
   CarrierJump,
   MarketJSON,
-} from "cmdr-journal/dist";
+} from "cmdr-journal";
 import { HttpClient } from "@angular/common/http";
 import { LoggerService } from "../core/services/logger.service";
 import { remote } from "electron";
 import removeLocalised from "../util/remove-localised";
+import { SettingsService } from "../dashboard/settings/settings.service";
+import { AppSetting } from "../core/enums/app-settings.enum";
+import { filter } from "rxjs/operators";
 
 @Injectable()
 export class EDDNService {
-  constructor(private http: HttpClient, private logger: LoggerService) {}
+  allowBroadcasts: boolean;
+  constructor(
+    private http: HttpClient,
+    private logger: LoggerService,
+    public settingService: SettingsService
+  ) {
+    settingService
+      .getSetting<{ key: string; value: any }>(AppSetting.eddnBroadcasts)
+      .then(
+        (setting) => (this.allowBroadcasts = setting ? setting.value : true)
+      );
+
+    settingService.settings
+      .pipe(filter((setting) => setting.setting === AppSetting.eddnBroadcasts))
+      .subscribe((setting) => (this.allowBroadcasts = setting.value));
+  }
 
   sendJournalEvent(
     evt: Docked,
@@ -37,6 +55,9 @@ export class EDDNService {
     starSystem?: string,
     systemAddress?: number
   ): void {
+    if (this.allowBroadcasts === false) {
+      return;
+    }
     //clean event because EDDN can't ignore extra props
 
     if (evt instanceof Docked) {
@@ -108,6 +129,9 @@ export class EDDNService {
   }
 
   sendCommodityEvent(marketData: MarketJSON, cmdrName: string) {
+    if (this.allowBroadcasts === false) {
+      return;
+    }
     delete marketData.event;
 
     let submission = {

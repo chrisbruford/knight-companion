@@ -1,5 +1,6 @@
 export enum AppSetting {
-    broadcasts = "broadcasts",
-    inaraBroadcasts = "inaraBroadcasts",
-    inaraAPIKey = "inaraAPIKey"
+  broadcasts = "broadcasts",
+  inaraBroadcasts = "inaraBroadcasts",
+  inaraAPIKey = "inaraAPIKey",
+  eddnBroadcasts = "eddnBroadcasts",
 }
