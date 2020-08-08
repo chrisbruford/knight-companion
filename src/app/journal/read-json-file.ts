@@ -7,6 +7,7 @@ function readJSONFile<T>(filename: string) {
         reject(err);
       } else {
         try {
+          if (!data) { throw new Error(`No data to parse from ${filename}`) }
           resolve(JSON.parse(data));
         } catch (e) {
           reject(e);
