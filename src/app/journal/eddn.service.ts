@@ -6,6 +6,7 @@ import {
   Location,
   CarrierJump,
   MarketJSON,
+  COMMODITY_MAP,
 } from "cmdr-journal";
 import { HttpClient } from "@angular/common/http";
 import { LoggerService } from "../core/services/logger.service";
@@ -134,6 +135,34 @@ export class EDDNService {
     }
     delete marketData.event;
 
+    const commodityData: EDDNCommodity[] = [];
+
+    marketData.Items.forEach((item) => {
+      const commoditySymbol = COMMODITY_MAP.get(item.id)?.symbol;
+
+      if (
+        commoditySymbol &&
+        !isNaN(item.MeanPrice) &&
+        !isNaN(item.BuyPrice) &&
+        !isNaN(item.Stock) &&
+        !isNaN(item.StockBracket) &&
+        !isNaN(item.SellPrice) &&
+        !isNaN(item.Demand) &&
+        !isNaN(item.DemandBracket)
+      ) {
+        commodityData.push({
+          name: commoditySymbol,
+          meanPrice: item.MeanPrice,
+          buyPrice: item.BuyPrice,
+          stock: item.Stock,
+          stockBracket: item.StockBracket,
+          sellPrice: item.SellPrice,
+          demand: item.Demand,
+          demandBracket: item.DemandBracket,
+        });
+      }
+    });
+
     let submission = {
       $schemaRef: process.env.EDDN_COMMODITY_ENDPOINT,
       header: {
@@ -146,16 +175,7 @@ export class EDDNService {
         stationName: marketData.StationName,
         marketId: marketData.MarketID,
         timestamp: marketData.timestamp,
-        commodities: marketData.Items.map((item) => ({
-          name: item.Name,
-          meanPrice: item.MeanPrice,
-          buyPrice: item.BuyPrice,
-          stock: item.Stock,
-          stockBracket: item.StockBracket,
-          sellPrice: item.SellPrice,
-          demand: item.Demand,
-          demandBracket: item.DemandBracket,
-        })),
+        commodities: commodityData,
       },
     };
 
